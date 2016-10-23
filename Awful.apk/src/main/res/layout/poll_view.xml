@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+            android:id="@+id/poll_view">
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <com.github.mikephil.charting.charts.HorizontalBarChart
+    android:id="@+id/poll_chart"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone"
+    android:minHeight="@dimen/dialog_size"
+    ></com.github.mikephil.charting.charts.HorizontalBarChart>
+</android.support.v4.widget.NestedScrollView>
+    <ProgressBar
+        android:id="@+id/preview_progress"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>

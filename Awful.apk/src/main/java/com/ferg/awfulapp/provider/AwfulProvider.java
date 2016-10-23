@@ -61,7 +61,7 @@ public class AwfulProvider extends ContentProvider {
      */
 
     private static final String DATABASE_NAME = "awful.db";
-    private static final int DATABASE_VERSION = 32;
+    private static final int DATABASE_VERSION = 33;
 
     public static final String TABLE_FORUM    = "forum";
     public static final String TABLE_THREADS    = "threads";
@@ -70,7 +70,7 @@ public class AwfulProvider extends ContentProvider {
     public static final String TABLE_EMOTES    = "emotes";
     public static final String TABLE_PM    = "private_messages";
     public static final String TABLE_DRAFTS    = "draft_messages";
-    
+
     public static final String UPDATED_TIMESTAMP    = "timestamp_row_update";
 
     private static final int FORUM     = 0;
@@ -96,7 +96,7 @@ public class AwfulProvider extends ContentProvider {
 	private static HashMap<String, String> sDraftProjectionMap;
 	private static HashMap<String, String> sPMReplyProjectionMap;
 	private static HashMap<String, String> sEmoteProjectionMap;
-	
+
 	public static final String[] ThreadProjection = new String[]{
 		AwfulThread.ID,
 		AwfulThread.FORUM_ID,
@@ -120,6 +120,9 @@ public class AwfulProvider extends ContentProvider {
 		AwfulThread.HAS_VIEWED_THREAD,
         AwfulThread.ARCHIVED,
         AwfulThread.RATING,
+        AwfulThread.HAS_POLL,
+		AwfulThread.HAS_VOTED_POLL,
+		AwfulThread.POLL_ID,
 		UPDATED_TIMESTAMP };
 
 	public static final String[] ForumProjection = new String[]{
@@ -207,7 +210,7 @@ public class AwfulProvider extends ContentProvider {
 		AwfulEmote.INDEX,
 		UPDATED_TIMESTAMP
 	};
-	
+
     private static class DatabaseHelper extends SQLiteOpenHelper {
         DatabaseHelper(Context aContext) {
             super(aContext, DATABASE_NAME, null, DATABASE_VERSION);
@@ -259,6 +262,9 @@ public class AwfulProvider extends ContentProvider {
                 AwfulThread.HAS_VIEWED_THREAD + " INTEGER, " +
                 AwfulThread.ARCHIVED + " INTEGER, " +
                 AwfulThread.RATING + " INTEGER, " +
+                AwfulThread.HAS_POLL + " INTEGER, " +
+				AwfulThread.HAS_VOTED_POLL + " INTEGER, " +
+				AwfulThread.POLL_ID + " INTEGER, " +
             	UPDATED_TIMESTAMP   + " DATETIME);");
     	}
         public void createUCPTable(SQLiteDatabase aDb) {
@@ -334,7 +340,6 @@ public class AwfulProvider extends ContentProvider {
 
         }
         
-        
         @Override
         public void onUpgrade(SQLiteDatabase aDb, int aOldVersion, int aNewVersion) {
         	switch(aOldVersion){//this switch intentionally falls through!
@@ -394,6 +399,9 @@ public class AwfulProvider extends ContentProvider {
 			case 31:
 				aDb.execSQL("DROP TABLE IF EXISTS " + TABLE_THREADS);
 				createThreadTable(aDb);
+			case 32:
+				aDb.execSQL("DROP TABLE IF EXISTS " + TABLE_THREADS);
+				createThreadTable(aDb);
 				break;//make sure to keep this break statement on the last case of this switch
     		default:
             	wipeRecreateTables(aDb);
@@ -404,6 +412,10 @@ public class AwfulProvider extends ContentProvider {
 		public void onDowngrade(SQLiteDatabase aDb, int oldVersion,	int newVersion) {
         	wipeRecreateTables(aDb);
 		}
+
+        public void dropTable(SQLiteDatabase aDb, String table){
+        	aDb.execSQL("DROP TABLE IF EXISTS " + table);
+        }
 
 		private void dropAllTables(SQLiteDatabase aDb){
             aDb.execSQL("DROP TABLE IF EXISTS " + TABLE_FORUM);
@@ -759,7 +771,7 @@ public class AwfulProvider extends ContentProvider {
         sUCPThreadProjectionMap = new HashMap<String, String>();
         sDraftProjectionMap = new HashMap<String, String>();
         sPMReplyProjectionMap = new HashMap<String, String>();
-        sEmoteProjectionMap = new HashMap<String, String>();
+		sEmoteProjectionMap = new HashMap<String, String>();
 
 		sUriMatcher.addURI(Constants.AUTHORITY, "forum", FORUM);
 		sUriMatcher.addURI(Constants.AUTHORITY, "forum/#", FORUM_ID);
@@ -822,6 +834,9 @@ public class AwfulProvider extends ContentProvider {
 		sThreadProjectionMap.put(AwfulThread.HAS_VIEWED_THREAD, AwfulThread.HAS_VIEWED_THREAD);
         sThreadProjectionMap.put(AwfulThread.ARCHIVED, AwfulThread.ARCHIVED);
         sThreadProjectionMap.put(AwfulThread.RATING, AwfulThread.RATING);
+        sThreadProjectionMap.put(AwfulThread.HAS_POLL , AwfulThread.HAS_POLL);
+		sThreadProjectionMap.put(AwfulThread.HAS_VOTED_POLL, AwfulThread.HAS_VOTED_POLL);
+		sThreadProjectionMap.put(AwfulThread.POLL_ID, AwfulThread.POLL_ID);
 		sThreadProjectionMap.put(AwfulThread.TAG_URL, TABLE_THREADS+"."+AwfulThread.TAG_URL+" AS "+AwfulThread.TAG_URL);
 		sThreadProjectionMap.put(AwfulThread.TAG_EXTRA, TABLE_THREADS+"."+AwfulThread.TAG_EXTRA+" AS "+AwfulThread.TAG_EXTRA);
 		sThreadProjectionMap.put(AwfulThread.TAG_CACHEFILE, TABLE_THREADS+"."+AwfulThread.TAG_CACHEFILE+" AS "+AwfulThread.TAG_CACHEFILE);
@@ -852,6 +867,9 @@ public class AwfulProvider extends ContentProvider {
 		sUCPThreadProjectionMap.put(AwfulThread.HAS_VIEWED_THREAD, AwfulThread.HAS_VIEWED_THREAD);
         sUCPThreadProjectionMap.put(AwfulThread.ARCHIVED, AwfulThread.ARCHIVED);
         sUCPThreadProjectionMap.put(AwfulThread.RATING, AwfulThread.RATING);
+        sUCPThreadProjectionMap.put(AwfulThread.HAS_POLL , AwfulThread.HAS_POLL);
+		sUCPThreadProjectionMap.put(AwfulThread.HAS_VOTED_POLL, AwfulThread.HAS_VOTED_POLL);
+		sUCPThreadProjectionMap.put(AwfulThread.POLL_ID, AwfulThread.POLL_ID);
 		sUCPThreadProjectionMap.put(AwfulThread.FORUM_TITLE, "null");
 		sUCPThreadProjectionMap.put(UPDATED_TIMESTAMP, TABLE_UCP_THREADS+"."+UPDATED_TIMESTAMP+" AS "+UPDATED_TIMESTAMP);
 
@@ -881,12 +899,13 @@ public class AwfulProvider extends ContentProvider {
 		sPMReplyProjectionMap.put(AwfulMessage.TYPE, AwfulMessage.TYPE);
 		sPMReplyProjectionMap.put(AwfulMessage.ICON, AwfulMessage.ICON);
 		sPMReplyProjectionMap.put(AwfulMessage.FOLDER, AwfulMessage.FOLDER);
-		
+
 		sEmoteProjectionMap.put(AwfulEmote.ID, AwfulEmote.ID);
 		sEmoteProjectionMap.put(AwfulEmote.TEXT, AwfulEmote.TEXT);
 		sEmoteProjectionMap.put(AwfulEmote.SUBTEXT, AwfulEmote.SUBTEXT);
 		sEmoteProjectionMap.put(AwfulEmote.URL, AwfulEmote.URL);
 		sEmoteProjectionMap.put(AwfulEmote.INDEX, AwfulEmote.INDEX);
 		sEmoteProjectionMap.put(UPDATED_TIMESTAMP, UPDATED_TIMESTAMP);
+
     }
 }

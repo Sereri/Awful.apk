@@ -52,6 +52,7 @@ public class Constants {
 	public static final String FUNCTION_MISC 			= BASE_URL + "/misc.php";
     public static final String FUNCTION_REPORT 			= BASE_URL + "/modalert.php";
     public static final String FUNCTION_POSTINGS 		= BASE_URL + "/postings.php";
+    public static final String FUNCTION_POLL 		    = BASE_URL + "/poll.php";
 
 	public static final String PATH_FORUM 				= "forumdisplay.php";
     public static final String PATH_THREAD          	= "showthread.php";
@@ -61,11 +62,12 @@ public class Constants {
     public static final String ACTION_PROFILE             = "getinfo";
     public static final String ACTION_SEARCH_POST_HISTORY = "do_search_posthistory";
     public static final String ACTION_NEW_MESSAGE         = "newmessage";
-	public static final String ACTION_SHOWPOST 			  = "showpost";
+    public static final String ACTION_SHOWPOST 			  = "showpost";
     public static final String ACTION_ADDLIST 			  = "addlist";
     public static final String ACTION_QUERY 			  = "query";
     public static final String ACTION_RESULTS 			  = "results";
     public static final String ACTION_OPEN_CLOSE_THREAD   = "openclosethread";
+    public static final String ACTION_SHOWRESULTS 		  = "showresults";
     
     public static final String PARAM_USER_ID   = "userid";
     public static final String PARAM_USERNAME  = "username";
@@ -93,6 +95,7 @@ public class Constants {
     public static final String PARAM_SUBMIT 	= "submit";
     public static final String PARAM_PREVIEW 	= "preview";
     public static final String PARAM_PARSEURL = "parseurl";
+    public static final String PARAM_POLL_ID = "pollid";
 
 	public static final String USERLIST_IGNORE = "ignore";
 	public static final String USERLIST_BUDDY  = "buddy";

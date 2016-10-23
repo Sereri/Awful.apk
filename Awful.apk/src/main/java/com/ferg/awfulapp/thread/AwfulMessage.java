@@ -88,7 +88,7 @@ public class AwfulMessage extends AwfulPagedItem {
 	 * Generates List view items for PM list.
 	 */
 	public static View getView(View current, AwfulPreferences aPref, Cursor data, boolean selected) {
-		TextView title = (TextView) current.findViewById(R.id.title);
+		TextView title = (TextView) current.findViewById(R.id.thread_title);
 		String t = data.getString(data.getColumnIndex(TITLE));
 		current.findViewById(R.id.unread_count).setVisibility(View.GONE);
 		if(t != null){

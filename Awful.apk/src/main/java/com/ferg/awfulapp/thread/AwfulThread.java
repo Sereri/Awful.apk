@@ -105,6 +105,9 @@ public class AwfulThread extends AwfulPagedItem  {
     public static final String HAS_VIEWED_THREAD    = "has_viewed_thread";
     public static final String ARCHIVED             = "archived";
 	public static final String RATING               = "rating";
+    public static final String HAS_POLL             = "has_poll";
+    public static final String HAS_VOTED_POLL       = "has_voted_poll";
+    public static final String POLL_ID 	            = "poll_id";
     public static final String TAG_URL 		        = "tag_url";
     public static final String TAG_CACHEFILE 	    = "tag_cachefile";
     public static final String TAG_EXTRA            = "tag_extra";
@@ -349,7 +352,32 @@ public class AwfulThread extends AwfulPagedItem  {
     	}
     	thread.put(FORUM_ID, forumId);
     	int lastPage = AwfulPagedItem.parseLastPage(response);
+        try {
+            Elements polls = response.getElementsByClass("standard");
+            if (polls != null) {
 
+
+                Element poll = polls.first();
+                if (poll.getElementsByTag("th").first().text().contains("You have already voted on this poll.") || poll.getElementsByTag("th").first().text().contains(" This poll is closed.")) {
+                    thread.put(HAS_VOTED_POLL, 1);
+                } else {
+                    thread.put(HAS_VOTED_POLL, 0);
+                }
+
+                thread.put(HAS_POLL, 1);
+
+                Element link = poll.nextElementSibling().child(0);
+                String id = link.attr("href").substring(link.attr("href").lastIndexOf("=") + 1);
+                thread.put(POLL_ID, Integer.parseInt(id));
+
+            } else {
+                thread.put(HAS_POLL, 0);
+                thread.put(HAS_VOTED_POLL, 0);
+                thread.put(POLL_ID, 0);
+            }
+        }catch (Exception e){
+            Log.e(TAG,"asfasf asf asf",e);
+        }
         if (threadData != null) {
             threadData.close();
         }
@@ -541,7 +569,7 @@ public class AwfulThread extends AwfulPagedItem  {
         }
 
         TextView info   = (TextView) current.findViewById(R.id.thread_info);
-        TextView title  = (TextView) current.findViewById(R.id.title);
+        TextView title  = (TextView) current.findViewById(R.id.thread_title);
         TextView unread = (TextView) current.findViewById(R.id.unread_count);
         boolean stuck   = data.getInt(data.getColumnIndex(STICKY)) >0;
         int unreadCount = data.getInt(data.getColumnIndex(UNREADCOUNT));

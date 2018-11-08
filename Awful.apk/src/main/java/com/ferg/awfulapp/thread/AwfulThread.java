@@ -66,7 +66,6 @@ import timber.log.Timber;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
-import static butterknife.ButterKnife.findById;
 
 public class AwfulThread extends AwfulPagedItem  {
 
@@ -304,13 +303,13 @@ public class AwfulThread extends AwfulPagedItem  {
 
 
         // thread title
-        TextView title  = findById(item, R.id.title);
+        TextView title  = item.findViewById(R.id.title);
         title.setText(thread.title != null ? thread.title : "UNKNOWN");
         title.setTextColor(ColorProvider.PRIMARY_TEXT.getColor(forumId));
 
 
         // main thread tag
-        final ImageView threadTag = findById(item, R.id.thread_tag);
+        final ImageView threadTag = item.findViewById(R.id.thread_tag);
         threadTag.setVisibility(GONE);
         if (prefs.threadInfo_Tag) {
 			if (!TextUtils.isEmpty(thread.tagCacheFile)) {
@@ -339,8 +338,8 @@ public class AwfulThread extends AwfulPagedItem  {
 
 
         // tag overlay (secondary tags etc)
-        ImageView forumTagOverlay = findById(item, R.id.thread_tag_overlay);
-        ImageView inlineForumTagOverlay = findById(item, R.id.thread_tag_overlay_optional);
+        ImageView forumTagOverlay = item.findViewById(R.id.thread_tag_overlay);
+        ImageView inlineForumTagOverlay = item.findViewById(R.id.thread_tag_overlay_optional);
         forumTagOverlay.setVisibility(GONE);
         inlineForumTagOverlay.setVisibility(GONE);
         if (ExtraTags.getType(thread.tagExtra) != ExtraTags.TYPE_NO_TAG) {
@@ -356,7 +355,7 @@ public class AwfulThread extends AwfulPagedItem  {
 
 
         // page count / author / last poster info line
-        TextView info   = findById(item, R.id.thread_info);
+        TextView info   = item.findViewById(R.id.thread_info);
         info.setVisibility(VISIBLE);
         String tmp = String.format(Locale.US, "%d pgs | %s: %s",
                 thread.getPageCount(prefs.postPerPage),
@@ -367,8 +366,8 @@ public class AwfulThread extends AwfulPagedItem  {
 
 
         // ratings
-        ImageView threadRating = findById(item, R.id.thread_rating);
-        ImageView inlineThreadRating = findById(item, R.id.thread_rating_optional);
+        ImageView threadRating = item.findViewById(R.id.thread_rating);
+        ImageView inlineThreadRating = item.findViewById(R.id.thread_rating_optional);
         threadRating.setVisibility(GONE);
         inlineThreadRating.setVisibility(GONE);
         // if we're showing ratings...
@@ -384,8 +383,8 @@ public class AwfulThread extends AwfulPagedItem  {
 
 
         // locked and sticky status
-        ImageView threadLocked = findById(item, R.id.thread_locked);
-        ImageView threadSticky = findById(item, R.id.thread_sticky);
+        ImageView threadLocked = item.findViewById(R.id.thread_locked);
+        ImageView threadSticky = item.findViewById(R.id.thread_sticky);
         threadSticky.setVisibility(thread.isSticky ? VISIBLE : GONE);
         threadLocked.setVisibility(thread.isLocked && !thread.isSticky ? VISIBLE : GONE);
         if (thread.isLocked && !thread.isSticky) {
@@ -395,7 +394,7 @@ public class AwfulThread extends AwfulPagedItem  {
 
 
         // unread counter
-        TextView unread = findById(item, R.id.unread_count);
+        TextView unread = item.findViewById(R.id.unread_count);
         unread.setVisibility(GONE);
         if(thread.hasBeenViewed) {
             unread.setVisibility(VISIBLE);

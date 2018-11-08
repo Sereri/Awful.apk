@@ -22,8 +22,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static butterknife.ButterKnife.findById;
-
 /**
  * Created by baka kaba on 22/05/2017.
  * <p>
@@ -56,11 +54,11 @@ public abstract class BasePopupMenu<T extends AwfulAction> extends DialogFragmen
         final View result = inflater.inflate(layoutResId, container, false);
         ButterKnife.bind(this, result);
 
-        TextView actionTitle = findById(result, R.id.actionTitle);
+        TextView actionTitle = result.findViewById(R.id.actionTitle);
         actionTitle.setMovementMethod(new ScrollingMovementMethod());
         actionTitle.setText(getTitle());
 
-        RecyclerView actionsView = findById(result, R.id.post_actions);
+        RecyclerView actionsView = result.findViewById(R.id.post_actions);
         actionsView.setAdapter(new ActionHolderAdapter());
         actionsView.setLayoutManager(new LinearLayoutManager(getContext()));
 

@@ -2,7 +2,7 @@ package com.ferg.awfulapp.task;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.ferg.awfulapp.preferences.AwfulPreferences;

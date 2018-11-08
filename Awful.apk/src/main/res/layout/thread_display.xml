@@ -41,7 +41,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent" />
         </com.ferg.awfulapp.widget.SwipyRefreshLayout>
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/just_post"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
             app:srcCompat="@drawable/ic_create"
             android:tint="?attr/justPostButtonFontColor">
 
-        </android.support.design.widget.FloatingActionButton>
+        </com.google.android.material.floatingactionbutton.FloatingActionButton>
     </RelativeLayout>
 
     <com.ferg.awfulapp.widget.PageBar

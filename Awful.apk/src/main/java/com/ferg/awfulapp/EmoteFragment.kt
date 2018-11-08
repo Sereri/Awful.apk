@@ -2,11 +2,11 @@ package com.ferg.awfulapp
 
 import android.database.Cursor
 import android.os.Bundle
-import android.support.design.widget.TabLayout
-import android.support.v4.app.*
-import android.support.v4.content.CursorLoader
-import android.support.v4.content.Loader
-import android.support.v4.view.ViewPager
+import com.google.android.material.tabs.TabLayout
+import androidx.core.app.*
+import androidx.loader.content.CursorLoader
+import androidx.loader.content.Loader
+import androidx.viewpager.widget.ViewPager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -14,6 +14,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.loader.app.LoaderManager
 import com.android.volley.VolleyError
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.preferences.AwfulPreferences

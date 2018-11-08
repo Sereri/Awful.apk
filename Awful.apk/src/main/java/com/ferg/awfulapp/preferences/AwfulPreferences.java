@@ -39,15 +39,14 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import android.util.Log;
 import android.util.TypedValue;
 
 import com.ferg.awfulapp.R;
 import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.util.AwfulUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 

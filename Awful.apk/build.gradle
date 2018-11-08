@@ -37,7 +37,7 @@ android {
         // Stops the Gradle plugin’s automatic rasterization of vectors
         vectorDrawables.useSupportLibrary = true
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // ugh I just want to run unit tests without having to avoid logging
         // this might make things difficult when we develop a comprehensive test suiahahaha
         testOptions {
@@ -117,11 +117,11 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:design:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.0.0-rc01'
+    implementation 'com.google.android.material:material:1.0.0-alpha1'
     // these are all needed to override some old versions that are dependencies... somewhere
-    implementation 'com.android.support:support-media-compat:28.0.0'
-    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'androidx.media:media:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // used to fix SSL issues on older devices
     implementation 'com.google.android.gms:play-services-auth:16.0.1'
@@ -157,5 +157,5 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-library:1.3'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
 }

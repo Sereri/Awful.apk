@@ -1,6 +1,6 @@
 package com.ferg.awfulapp.task;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;

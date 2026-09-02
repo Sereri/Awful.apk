@@ -1,7 +1,8 @@
 /********************************************************************************
  * Copyright (c) 2012, Matthew Shepard
  * All rights reserved.
- * <p/>
+ * 
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * * Redistributions of source code must retain the above copyright
@@ -12,7 +13,8 @@
  * * Neither the name of the software nor the
  * names of its contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
- * <p/>
+ * 
+ * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,86 +25,81 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp
 
-package com.ferg.awfulapp;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.ProgressBar
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.thread.AwfulHtmlPage
+import com.ferg.awfulapp.webview.AwfulWebView
+import com.ferg.awfulapp.webview.WebViewJsInterface
 
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.ProgressBar;
+class PreviewFragment : AwfulDialogFragment() {
+    private var postPreView: AwfulWebView? = null
+    private var progressBar: ProgressBar? = null
 
-import com.ferg.awfulapp.thread.AwfulHtmlPage;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.webview.AwfulWebView;
-import com.ferg.awfulapp.webview.WebViewJsInterface;
-
-import java.util.HashMap;
-
-public class PreviewFragment extends AwfulDialogFragment {
-
-    private AwfulWebView postPreView;
-    private ProgressBar progressBar;
-
-    HashMap<String, String> preferences;
-    WebViewJsInterface jsInterface = new WebViewJsInterface();
+    var preferences: HashMap<String?, String?>? = null
+    var jsInterface: WebViewJsInterface = WebViewJsInterface()
 
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val dialogView = inflater.inflate(R.layout.post_preview, container)
+        progressBar = dialogView.findViewById<ProgressBar>(R.id.preview_progress)
+        postPreView = dialogView.findViewById<AwfulWebView>(R.id.preview_webview)
+        configureWebView()
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View dialogView = inflater.inflate(R.layout.post_preview, container);
-        progressBar = dialogView.findViewById(R.id.preview_progress);
-        postPreView = dialogView.findViewById(R.id.preview_webview);
-        configureWebView();
+        dialog?.setCanceledOnTouchOutside(true)
+        postPreView?.setContent(this.blankPage)
+        awfulActivity?.setPreferredFont(dialogView)
 
-        getDialog().setCanceledOnTouchOutside(true);
-        postPreView.setContent(getBlankPage());
-        getAwfulActivity().setPreferredFont(dialogView);
-
-        return dialogView;
+        return dialogView
     }
 
-    private String getBlankPage() {
-        return AwfulHtmlPage.getContainerHtml(AwfulPreferences.getInstance(), 0, false);
-    }
+    private val blankPage: String
+        get() = AwfulHtmlPage.getContainerHtml(AwfulPreferences.getInstance(), 0, false)
 
 
-    protected void setContent(String content) {
-        jsInterface.updatePreferences();
+    fun setContent(content: String) {
+        jsInterface.updatePreferences()
         // add the basic template HTML structure so this displays as a post, with the correct CSS styling etc
-        String wrappedContent = "<style>iframe{height: auto !important;} </style><article class='post'><section class='postcontent'>"
-                + content + "</section></article>";
-        progressBar.setVisibility(View.GONE);
-        postPreView.setVisibility(View.VISIBLE);
-        postPreView.setBodyHtml(wrappedContent);
+        val wrappedContent =
+            ("<style>iframe{height: auto !important;} </style><article class='post'><section class='postcontent'>"
+                    + content + "</section></article>")
+        progressBar?.visibility = View.GONE
+        postPreView?.visibility = View.VISIBLE
+        postPreView?.setBodyHtml(wrappedContent)
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    override fun onDestroyView() {
+        super.onDestroyView()
         // I don't know why I have to insist on that but alright then.
-        postPreView.destroy();
+        postPreView?.destroy()
     }
 
-    public void configureWebView() {
-        postPreView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest wrr) {
-                return true;
+    fun configureWebView() {
+        postPreView?.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                wrr: WebResourceRequest?
+            ): Boolean {
+                return true
             }
-        });
-        postPreView.setJavascriptHandler(jsInterface);
+        }
+        postPreView?.setJavascriptHandler(jsInterface)
     }
 
-    @Override
-    public String getTitle() {
-        return "Preview";
+    public override fun getTitle(): String {
+        return "Preview"
     }
 }

@@ -1,262 +1,252 @@
-package com.ferg.awfulapp;
+package com.ferg.awfulapp
 
-import android.content.res.AssetManager;
-import android.graphics.Typeface;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import android.text.SpannableStringBuilder;
-import android.text.TextPaint;
-import android.text.style.TypefaceSpan;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.google.android.material.textfield.TextInputLayout;
-
-import org.apache.commons.lang3.text.WordUtils;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import timber.log.Timber;
+import android.content.res.AssetManager
+import android.graphics.Typeface
+import android.text.SpannableStringBuilder
+import android.text.TextPaint
+import android.text.style.TypefaceSpan
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.preferences.AwfulPreferences.AwfulPreferenceUpdate
+import com.google.android.material.textfield.TextInputLayout
+import org.apache.commons.lang3.text.WordUtils
+import timber.log.Timber.Forest.i
+import timber.log.Timber.Forest.w
+import java.io.IOException
+import java.util.regex.Pattern
 
 /**
  * Handles accessing font files from the assets
  */
-public class FontManager implements AwfulPreferences.AwfulPreferenceUpdate {
-    private static FontManager instance;
-    private static final String FONT_PATH = "fonts";
-    private Typeface currentFont;
-    private final Map<String, Typeface> fonts = new HashMap<>();
+class FontManager private constructor(preferredFont: String?, assets: AssetManager) :
+    AwfulPreferenceUpdate {
+    companion object {
+        /**
+         * Get the singleton instance of FontManager.
+         *
+         *
+         * Note: Will be null if it hasn't been built using [.createInstance]
+         *
+         * @return The instance of FontManager or null.
+         */
+        @JvmStatic
+        fun getInstance() : FontManager {
+            return fontManagerInstance
+        }
+        lateinit var fontManagerInstance: FontManager
+            private set
+        private const val FONT_PATH = "fonts"
 
-    /**
-     * Get the singleton instance of FontManager.
-     * <p>
-     * Note: Will be null if it hasn't been built using {@link #createInstance(AwfulPreferences, AssetManager)}
-     *
-     * @return The instance of FontManager or null.
-     */
-    public static FontManager getInstance() {
-        return instance;
+        /**
+         * Create the singleton instance of FontManager.
+         *
+         * @param preferences The AwfulPreferences
+         * @param assets      An AssetManager for accessing the font files
+         */
+        fun createInstance(preferences: AwfulPreferences, assets: AssetManager) {
+            fontManagerInstance = FontManager(preferences.preferredFont, assets)
+            preferences.registerCallback(fontManagerInstance)
+        }
+
+        /**
+         * Check if the passed text style is valid.
+         *
+         * @param textStyle A text style
+         * @return True iff textStyle is valid
+         */
+        private fun isValidTextStyle(textStyle: Int): Boolean {
+            return textStyle == Typeface.NORMAL || textStyle == Typeface.BOLD || textStyle == Typeface.ITALIC || textStyle == Typeface.BOLD_ITALIC
+        }
+
+        /**
+         * Create clean font names from the given file names.
+         *
+         * @param fontList An array of font file names
+         * @return An array of font names
+         */
+        private fun extractFontNames(fontList: Array<String?>): Array<String?> {
+            val fontNames = arrayOfNulls<String>(fontList.size)
+
+            val pattern = Pattern.compile("$FONT_PATH/(.*).ttf.mp3", Pattern.CASE_INSENSITIVE)
+
+            for (i in fontList.indices) {
+                val fontName: String?
+                val matcher = pattern.matcher(fontList[i] ?: "")
+
+                fontName = if (matcher.find()) {
+                    matcher.group(1)?.replace("_".toRegex(), " ")
+                } else {
+                    //if the regex fails, try our best to clean up the filename.
+                    fontList[i]?.let {
+                        it.replace(Regex(".ttf.mp3"), "")
+                        it.replace(Regex("fonts/"), "")
+                        it.replace(Regex("_"), " ")
+                    }
+                }
+
+                fontNames[i] = WordUtils.capitalize(fontName)
+            }
+
+            return fontNames
+        }
     }
 
-    /**
-     * Create the singleton instance of FontManager.
-     *
-     * @param preferences The AwfulPreferences
-     * @param assets      An AssetManager for accessing the font files
-     */
-    public static void createInstance(@NonNull AwfulPreferences preferences, @NonNull AssetManager assets) {
-        instance = new FontManager(preferences.preferredFont, assets);
-        preferences.registerCallback(instance);
+    private var currentFont: Typeface? = null
+    private val fonts: MutableMap<String?, Typeface?> = HashMap<String?, Typeface?>()
+
+    init {
+        /**
+         * Initialising FontManager
+         *
+         * @param preferredFont The filename of the selected font
+         * @param assets        An AssetManager for accessing the font files
+         */
+        buildFontList(preferredFont, assets)
     }
 
-    /**
-     * Constructor for FontManager
-     *
-     * @param preferredFont The filename of the selected font
-     * @param assets        An AssetManager for accessing the font files
-     */
-    private FontManager(String preferredFont, AssetManager assets) {
-        buildFontList(preferredFont, assets);
-    }
+    val fontFilenames: Array<String?>
+        /**
+         * Get the list of font filenames.
+         * 
+         * @return The list of font filenames as a String array
+         */
+        get() {
+            i("Font list: %s", fonts.keys)
+            return fonts.keys.toTypedArray<String?>()
+        }
 
-    /**
-     * Get the list of font filenames.
-     *
-     * @return The list of font filenames as a String array
-     */
-    public String[] getFontFilenames() {
-        Timber.i("Font list: %s", fonts.keySet());
-        return fonts.keySet().toArray(new String[0]);
-    }
-
-    /**
-     * Get the list of clean font names
-     *
-     * @return The list of font filenames as a String array
-     */
-    public String[] getFontNames() {
-        return extractFontNames(getFontFilenames());
-    }
+    val fontNames: Array<String?>
+        /**
+         * Get the list of clean font names
+         * 
+         * @return The list of font filenames as a String array
+         */
+        get() = extractFontNames(this.fontFilenames)
 
     /**
      * Called to update the current font when the AwfulPreferences have changed.
-     *
+     * 
      * @param preferences The new AwfulPreferences
      * @param key         Not used
      */
-    @Override
-    public void onPreferenceChange(AwfulPreferences preferences, @Nullable String key) {
-        setCurrentFont(preferences.preferredFont);
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        setCurrentFont(preferences.preferredFont)
     }
 
     /**
      * Set the current font from the fonts map.
-     *
+     * 
      * @param fontName Filename of the current font
      */
-    public void setCurrentFont(String fontName) {
-        currentFont = fonts.get(fontName);
+    fun setCurrentFont(fontName: String?) {
+        currentFont = fonts[fontName]
 
-        if (currentFont != null)
-            Timber.i("Font Selected: %s", fontName);
-        else
-            Timber.w("Couldn't select font: %s", fontName);
+        if (currentFont != null) i("Font Selected: %s", fontName)
+        else w("Couldn't select font: %s", fontName)
     }
 
     /**
      * Set typeface of TextViews and all child TextViews to the current font.
-     *
+     * 
      * @param view  View to be processed
-     * @param flags {@link Typeface#NORMAL}, {@link Typeface#BOLD},
-     *              {@link Typeface#ITALIC}, or {@link Typeface#BOLD_ITALIC},
+     * @param flags [Typeface.NORMAL], [Typeface.BOLD],
+     * [Typeface.ITALIC], or [Typeface.BOLD_ITALIC],
      */
-    public void setTypefaceToCurrentFont(View view, int flags) {
-        if (view instanceof TextView) {
-            setTextViewTypefaceToCurrentFont((TextView) view, flags);
-        } else if(view instanceof TextInputLayout){
-            setTextViewTypefaceToCurrentFont((TextInputLayout) view);
-        } else if (view instanceof ViewGroup) {
-            ViewGroup viewGroup = (ViewGroup) view;
+    fun setTypefaceToCurrentFont(view: View?, flags: Int) {
+        if (view is TextView) {
+            setTextViewTypefaceToCurrentFont(view, flags)
+        } else if (view is TextInputLayout) {
+            setTextViewTypefaceToCurrentFont(view)
+        } else if (view is ViewGroup) {
 
-            for (int i = 0; i < viewGroup.getChildCount(); i++)
-                setTypefaceToCurrentFont(viewGroup.getChildAt(i), flags);
+            for (i in 0..<view.childCount) setTypefaceToCurrentFont(
+                view.getChildAt(i),
+                flags
+            )
         }
     }
 
     /**
      * Recreate the font Map from the asset files.
-     *
+     * 
      * @param preferredFont The filename of the currently selected font
      * @param assets        An AssetManager for accessing the font files
      */
-    public void buildFontList(String preferredFont, AssetManager assets) {
-        fonts.clear();
-        fonts.put("default", Typeface.defaultFromStyle(Typeface.NORMAL));
+    fun buildFontList(preferredFont: String?, assets: AssetManager) {
+        fonts.clear()
+        fonts["default"] = Typeface.defaultFromStyle(Typeface.NORMAL)
 
-        String[] files = null;
+        var files: Array<String?>? = null
 
         try {
-            files = assets.list(FONT_PATH);
-        } catch (IOException | RuntimeException e) {
-            e.printStackTrace();
+            files = assets.list(FONT_PATH)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } catch (e: RuntimeException) {
+            e.printStackTrace()
         }
 
         if (files == null) {
-            Timber.w("Couldn't load font assets from %s", FONT_PATH);
-            return;
+            w("Couldn't load font assets from %s", FONT_PATH)
+            return
         }
 
-        for (String file : files) {
-            String fileName = String.format("%s/%s", FONT_PATH, file);
-            fonts.put(fileName, Typeface.createFromAsset(assets, fileName));
-            Timber.i("Processed Font: %s", fileName);
+        for (file in files) {
+            val fileName = String.format("%s/%s", FONT_PATH, file)
+            fonts[fileName] = Typeface.createFromAsset(assets, fileName)
+            i("Processed Font: %s", fileName)
         }
 
-        setCurrentFont(preferredFont);
+        setCurrentFont(preferredFont)
     }
 
     /**
      * Set a TextView's typeface to the current font.
-     *
+     * 
      * @param textView  TextView to set
-     * @param textStyle {@link Typeface#NORMAL}, {@link Typeface#BOLD},
-     *                  {@link Typeface#ITALIC}, or {@link Typeface#BOLD_ITALIC},
+     * @param textStyle [Typeface.NORMAL], [Typeface.BOLD],
+     * [Typeface.ITALIC], or [Typeface.BOLD_ITALIC],
      */
-    private void setTextViewTypefaceToCurrentFont(TextView textView, int textStyle) {
+    private fun setTextViewTypefaceToCurrentFont(textView: TextView, textStyle: Int) {
+        var textStyle = textStyle
         if (!isValidTextStyle(textStyle)) {
-            textStyle = textView.getTypeface() != null ?
-                    textView.getTypeface().getStyle() : Typeface.NORMAL;
+            textStyle = if (textView.typeface != null) textView.typeface
+                .style else Typeface.NORMAL
         }
 
-        if (currentFont != null)
-            textView.setTypeface(currentFont, textStyle);
-        else
-            Timber.w("Couldn't set typeface as currentFont is null");
+        if (currentFont != null) textView.setTypeface(currentFont, textStyle)
+        else w("Couldn't set typeface as currentFont is null")
     }
 
     /**
      * Set a TextView's typeface to the current font.
-     *
+     * 
      * @param textLayout  TextView to set
      */
-    private void setTextViewTypefaceToCurrentFont(TextInputLayout textLayout) {
-
-        if (currentFont != null)
-            textLayout.setTypeface(currentFont);
-        else
-            Timber.w("Couldn't set typeface as currentFont is null");
+    private fun setTextViewTypefaceToCurrentFont(textLayout: TextInputLayout) {
+        if (currentFont != null) textLayout.typeface = currentFont
+        else w("Couldn't set typeface as currentFont is null")
     }
 
-    public class AwfulTypefaceSpan extends TypefaceSpan {
-
-        public AwfulTypefaceSpan() {
-            super("An awful font");
+    inner class AwfulTypefaceSpan : TypefaceSpan("An awful font") {
+        override fun updateDrawState(drawState: TextPaint) {
+            drawState.typeface = currentFont
         }
 
-        @Override
-        public void updateDrawState(TextPaint drawState) {
-            drawState.setTypeface(currentFont);
-        }
-
-        @Override
-        public void updateMeasureState(TextPaint paint) {
-            paint.setTypeface(currentFont);
+        override fun updateMeasureState(paint: TextPaint) {
+            paint.typeface = currentFont
         }
     }
 
-    public void setMenuItemFont(MenuItem item) {
-        SpannableStringBuilder title = new SpannableStringBuilder(item.getTitle());
-        TypefaceSpan face = new AwfulTypefaceSpan();
-        title.setSpan(face, 0, title.length(), 0);
-        item.setTitle(title);
-    }
-
-    /**
-     * Check if the passed text style is valid.
-     *
-     * @param textStyle A text style
-     * @return True iff textStyle is valid
-     */
-    private static boolean isValidTextStyle(int textStyle) {
-        return textStyle == Typeface.NORMAL || textStyle == Typeface.BOLD ||
-                textStyle == Typeface.ITALIC || textStyle == Typeface.BOLD_ITALIC;
-    }
-
-    /**
-     * Create clean font names from the given file names.
-     *
-     * @param fontList An array of font file names
-     * @return An array of font names
-     */
-    private static String[] extractFontNames(@NonNull String[] fontList) {
-        String[] fontNames = new String[fontList.length];
-
-        Pattern pattern = Pattern.compile(FONT_PATH + "/(.*).ttf.mp3", Pattern.CASE_INSENSITIVE);
-
-        for (int i = 0; i < fontList.length; i++) {
-            String fontName;
-            Matcher matcher = pattern.matcher(fontList[i]);
-
-            if (matcher.find()) {
-                fontName = matcher.group(1).replaceAll("_", " ");
-            } else {
-                //if the regex fails, try our best to clean up the filename.
-                fontName = fontList[i].replaceAll(".ttf.mp3", "")
-                        .replaceAll("fonts/", "")
-                        .replaceAll("_", " ");
-            }
-
-            fontNames[i] = WordUtils.capitalize(fontName);
+    fun setMenuItemFont(item: MenuItem?) {
+        item?.let {
+            val title = SpannableStringBuilder(it.title)
+            val face: TypefaceSpan = AwfulTypefaceSpan()
+            title.setSpan(face, 0, title.length, 0)
+            it.title = title
         }
-
-        return fontNames;
     }
 }

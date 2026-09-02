@@ -50,28 +50,30 @@ class AwfulApplication : Application() {
          * from Awful must be synchronized. Setting a custom user-agent does not work, because
          * Cloudflare only allows mainstream browser user-agents.
          */
-        lateinit var awfulUserAgent: String
-            private set
-    }
-    private val webViewUserAgent: String
-        /**
-         * Instantiates an ephemeral WebView which is only used to retrieve the default user agent
-         * of web views on this system.
-         * 
-         * @return User-Agent string of WebView instances on this system.
-         */
-        get() {
-            if (Constants.DEBUG) {
-                return "Microsoft Outlook 15.0.4833"
-            }
-            val view = WebView(applicationContext)
-            return view.settings.userAgentString
+        lateinit var AWFUL_USER_AGENT: String
+        @JvmStatic
+        fun getAwfulUserAgent(): String {
+            return AWFUL_USER_AGENT
         }
+    }
+
+    /**
+     * Instantiates an ephemeral WebView which is only used to retrieve the default user agent
+     * of web views on this system.
+     *
+     * @return User-Agent string of WebView instances on this system.
+     */
+    val webViewUserAgent: String by lazy {
+        when {
+            Constants.DEBUG -> "Microsoft Outlook 15.0.4833"
+            else -> WebView(applicationContext).settings.userAgentString
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
 
-        awfulUserAgent = this.webViewUserAgent
+        AWFUL_USER_AGENT = this.webViewUserAgent
 
         // initialize the AwfulPreferences singleton first since a lot of things rely on it for a Context
         val mPref = AwfulPreferences.getInstance(this)

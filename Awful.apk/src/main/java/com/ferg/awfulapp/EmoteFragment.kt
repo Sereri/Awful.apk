@@ -95,7 +95,7 @@ class EmotePicker : AwfulDialogFragment() {
             savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.emote_picker_container_fragment, container, false);
-        awfulActivity.setPreferredFont(view)
+        awfulActivity?.setPreferredFont(view)
         return view;
     }
 

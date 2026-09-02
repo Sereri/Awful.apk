@@ -146,10 +146,10 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         aSavedState: Bundle?
     ): View {
         val result = inflateView(R.layout.forum_display, aContainer, aInflater)
-        mListView = result.findViewById<ListView?>(R.id.forum_list)
+        mListView = result.findViewById(R.id.forum_list)
 
         // page bar
-        mPageBar = result.findViewById<PageBar?>(R.id.page_bar)
+        mPageBar = result.findViewById(R.id.page_bar)
         mPageBar?.let {
             it.setListener(object : PageBarCallbacks {
                 override fun onPageNavigation(nextPage: Boolean) {

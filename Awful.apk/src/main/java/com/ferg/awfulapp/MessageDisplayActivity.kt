@@ -1,40 +1,39 @@
-package com.ferg.awfulapp;
+package com.ferg.awfulapp
 
-import android.os.Bundle;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.appcompat.widget.Toolbar;
+import android.os.Bundle
+import androidx.appcompat.widget.Toolbar
+import com.ferg.awfulapp.MessageFragment.PrivateMessageCallbacks
+import com.ferg.awfulapp.constants.Constants
 
-import com.ferg.awfulapp.constants.Constants;
+class MessageDisplayActivity : AwfulActivity(), PrivateMessageCallbacks {
+    var mToolbar: Toolbar? = null
 
-public class MessageDisplayActivity extends AwfulActivity implements MessageFragment.PrivateMessageCallbacks {
-
-    Toolbar mToolbar;
-
-	@Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.private_message_activity);
-        mToolbar = findViewById(R.id.awful_toolbar);
-        setSupportActionBar(mToolbar);
-        setUpActionBar();
-        setActionbarTitle("Message");
-        setContentPane();
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.private_message_activity)
+        mToolbar = findViewById(R.id.awful_toolbar)
+        setSupportActionBar(mToolbar)
+        setUpActionBar()
+        setActionbarTitle("Message")
+        setContentPane()
     }
 
-    public void setContentPane() {
-    	if (getSupportFragmentManager().findFragmentById(R.id.fragment_pane) == null) {
-	        MessageFragment fragment = new MessageFragment(getIntent().getStringExtra(Constants.PARAM_USERNAME),getIntent().getIntExtra(Constants.PARAM_PRIVATE_MESSAGE_ID, 0));
-	
-	        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-	        transaction.replace(R.id.fragment_pane, fragment);
-	        transaction.commit();
-    	}
+    fun setContentPane() {
+        if (supportFragmentManager.findFragmentById(R.id.fragment_pane) == null) {
+            val fragment = MessageFragment(
+                intent.getStringExtra(Constants.PARAM_USERNAME), intent.getIntExtra(
+                    Constants.PARAM_PRIVATE_MESSAGE_ID, 0
+                )
+            )
+
+            val transaction = supportFragmentManager.beginTransaction()
+            transaction.replace(R.id.fragment_pane, fragment)
+            transaction.commit()
+        }
     }
 
 
-    @Override
-    public void onMessageClosed() {
-        finish();
+    override fun onMessageClosed() {
+        finish()
     }
 }

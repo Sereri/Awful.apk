@@ -252,23 +252,15 @@ public abstract class AwfulHtmlPage {
 
         // user has a custom template selected (nobody uses this I bet)
         if (!"default".equals(aPrefs.layout)) {
-            if (AwfulUtils.isMarshmallow23()) {
-                int permissionCheck = ContextCompat.checkSelfPermission(aPrefs.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
+            int permissionCheck = ContextCompat.checkSelfPermission(aPrefs.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
 
-                if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
-                    File template = new File(Environment.getExternalStorageDirectory() + "/awful/" + aPrefs.layout);
-                    if (template.isFile() && template.canRead()) {
-                        templateReader = new FileReader(template);
-                    }
-                } else {
-                    Toast.makeText(aPrefs.getContext(), "Can't access custom layout because Awful lacks storage permissions. Reverting to default layout.", Toast.LENGTH_LONG).show();
-                }
-            } else {
+            if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
                 File template = new File(Environment.getExternalStorageDirectory() + "/awful/" + aPrefs.layout);
                 if (template.isFile() && template.canRead()) {
                     templateReader = new FileReader(template);
                 }
-
+            } else {
+                Toast.makeText(aPrefs.getContext(), "Can't access custom layout because Awful lacks storage permissions. Reverting to default layout.", Toast.LENGTH_LONG).show();
             }
         }
 

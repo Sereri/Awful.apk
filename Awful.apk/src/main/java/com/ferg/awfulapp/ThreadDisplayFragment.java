@@ -1341,7 +1341,7 @@ public class ThreadDisplayFragment extends AwfulFragment implements NavigationEv
 	}
 
 	public void enqueueDownload(Uri link) {
-		if(AwfulUtils.isMarshmallow23() && !AwfulUtils.isTiramisu33()){
+		if(!AwfulUtils.isTiramisu33()){
 			int permissionCheck = ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
 			if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
 				downloadLink = link;

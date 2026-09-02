@@ -47,10 +47,6 @@ public class AwfulUtils {
         return Build.VERSION.SDK_INT >= code;
     }
 
-    public static boolean isMarshmallow23() {
-        return isAtLeast(Build.VERSION_CODES.M);
-    }
-
     public static boolean isTiramisu33() {
         return isAtLeast(Build.VERSION_CODES.TIRAMISU);
     }

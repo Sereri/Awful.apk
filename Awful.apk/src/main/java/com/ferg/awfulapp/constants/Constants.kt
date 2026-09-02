@@ -1,18 +1,18 @@
 /********************************************************************************
  * Copyright (c) 2011, Scott Ferguson
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,217 +23,220 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp.constants
 
-package com.ferg.awfulapp.constants;
+import com.ferg.awfulapp.BuildConfig
 
-import com.ferg.awfulapp.BuildConfig;
+object Constants {
+    @JvmField
+    val DEBUG: Boolean = BuildConfig.DEBUG
 
-public class Constants {
-    public static final boolean DEBUG = BuildConfig.DEBUG;
+    const val SITE_HTML_ENCODING: String = "CP1252"
 
-    public static final String SITE_HTML_ENCODING = "CP1252";
+    const val BASE_URL: String = "https://forums.somethingawful.com"
 
-    public static final String BASE_URL = "https://forums.somethingawful.com";
+    const val FUNCTION_LOGIN: String = "$BASE_URL/account.php"
+    const val FUNCTION_INDEX: String = "$BASE_URL/index.php"
+    const val FUNCTION_BOOKMARK: String = "$BASE_URL/bookmarkthreads.php"
+    const val FUNCTION_ANNOUNCEMENTS: String = "$BASE_URL/announcement.php"
+    const val FUNCTION_USERCP: String = "$BASE_URL/usercp.php"
+    const val FUNCTION_FORUM: String = "$BASE_URL/forumdisplay.php"
+    const val FUNCTION_THREAD: String = "$BASE_URL/showthread.php"
+    const val FUNCTION_POST_THREAD: String = "$BASE_URL/newthread.php"
+    const val FUNCTION_POST_REPLY: String = "$BASE_URL/newreply.php"
+    const val FUNCTION_EDIT_POST: String = "$BASE_URL/editpost.php"
+    const val FUNCTION_MEMBER: String = "$BASE_URL/member.php"
+    const val FUNCTION_MEMBER2: String = "$BASE_URL/member2.php"
+    const val FUNCTION_SEARCH: String = "$BASE_URL/query.php"
+    const val FUNCTION_PRIVATE_MESSAGE: String = "$BASE_URL/private.php"
+    const val FUNCTION_BANLIST: String = "$BASE_URL/banlist.php"
+    const val FUNCTION_RATE_THREAD: String = "$BASE_URL/threadrate.php"
+    const val FUNCTION_MISC: String = "$BASE_URL/misc.php"
+    const val FUNCTION_REPORT: String = "$BASE_URL/modalert.php"
+    const val FUNCTION_POSTINGS: String = "$BASE_URL/postings.php"
+    const val FUNCTION_NEW_THREAD: String = "$BASE_URL/newthread.php"
 
-    public static final String FUNCTION_LOGIN           = BASE_URL + "/account.php";
-    public static final String FUNCTION_INDEX           = BASE_URL + "/index.php";
-    public static final String FUNCTION_BOOKMARK        = BASE_URL + "/bookmarkthreads.php";
-    public static final String FUNCTION_ANNOUNCEMENTS   = BASE_URL + "/announcement.php";
-    public static final String FUNCTION_USERCP          = BASE_URL + "/usercp.php";
-    public static final String FUNCTION_FORUM           = BASE_URL + "/forumdisplay.php";
-    public static final String FUNCTION_THREAD          = BASE_URL + "/showthread.php";
-    public static final String FUNCTION_POST_THREAD      = BASE_URL + "/newthread.php";
-    public static final String FUNCTION_POST_REPLY      = BASE_URL + "/newreply.php";
-    public static final String FUNCTION_EDIT_POST       = BASE_URL + "/editpost.php";
-    public static final String FUNCTION_MEMBER          = BASE_URL + "/member.php";
-    public static final String FUNCTION_MEMBER2         = BASE_URL + "/member2.php";
-    public static final String FUNCTION_SEARCH          = BASE_URL + "/query.php";
-    public static final String FUNCTION_PRIVATE_MESSAGE = BASE_URL + "/private.php";
-    public static final String FUNCTION_BANLIST         = BASE_URL + "/banlist.php";
-    public static final String FUNCTION_RATE_THREAD     = BASE_URL + "/threadrate.php";
-    public static final String FUNCTION_MISC            = BASE_URL + "/misc.php";
-    public static final String FUNCTION_REPORT 			= BASE_URL + "/modalert.php";
-    public static final String FUNCTION_POSTINGS 		= BASE_URL + "/postings.php";
-    public static final String FUNCTION_NEW_THREAD 		= BASE_URL + "/newthread.php";
+    const val PATH_FORUM: String = "forumdisplay.php"
+    const val PATH_THREAD: String = "showthread.php"
+    const val PATH_BOOKMARKS: String = "bookmarkthreads.php"
+    const val PATH_USERCP: String = "usercp.php"
+    const val PATH_BANLIST: String = "banlist.php"
 
-    public static final String PATH_FORUM 				= "forumdisplay.php";
-    public static final String PATH_THREAD          	= "showthread.php";
-    public static final String PATH_BOOKMARKS          	= "bookmarkthreads.php";
-    public static final String PATH_USERCP          	= "usercp.php";
-    public static final String PATH_BANLIST          	= "banlist.php";
+    const val ACTION_PROFILE: String = "getinfo"
+    const val ACTION_SEARCH_POST_HISTORY: String = "do_search_posthistory"
+    const val ACTION_NEW_MESSAGE: String = "newmessage"
+    const val ACTION_NEW_THREAD: String = "newthread"
+    const val ACTION_SHOWPOST: String = "showpost"
+    const val ACTION_ADDLIST: String = "addlist"
+    const val ACTION_QUERY: String = "query"
+    const val ACTION_RESULTS: String = "results"
+    const val ACTION_TOGGLE_THREAD_LOCKED: String = "openclosethread"
 
-    public static final String ACTION_PROFILE             = "getinfo";
-    public static final String ACTION_SEARCH_POST_HISTORY = "do_search_posthistory";
-    public static final String ACTION_NEW_MESSAGE         = "newmessage";
-    public static final String ACTION_NEW_THREAD          = "newthread";
-	public static final String ACTION_SHOWPOST 			  = "showpost";
-    public static final String ACTION_ADDLIST 			  = "addlist";
-    public static final String ACTION_QUERY 			  = "query";
-    public static final String ACTION_RESULTS 			  = "results";
-    public static final String ACTION_TOGGLE_THREAD_LOCKED = "openclosethread";
+    const val PARAM_USER_ID: String = "userid"
+    const val PARAM_USERNAME: String = "username"
+    const val PARAM_PASSWORD: String = "password"
+    const val PARAM_ACTION: String = "action"
+    const val PARAM_THREAD_ID: String = "threadid"
+    const val PARAM_PAGE: String = "pagenumber"
+    const val PARAM_FORUM_ID: String = "forumid"
+    const val PARAM_GOTO: String = "goto"
+    const val PARAM_PER_PAGE: String = "perpage"
+    const val PARAM_INDEX: String = "index"
+    const val PARAM_BOOKMARK: String = "bookmark"
+    const val PARAM_PRIVATE_MESSAGE_ID: String = "privatemessageid"
+    const val PARAM_VOTE: String = "vote"
+    const val PARAM_POST_ID: String = "postid"
+    const val PARAM_USERLIST: String = "userlist"
+    const val PARAM_FORMKEY: String = "formkey"
+    const val PARAM_FORM_COOKIE: String = "form_cookie"
+    const val PARAM_ATTACHMENT: String = "attachment"
+    const val PARAM_FOLDERID: String = "folderid"
+    const val PARAM_SHOWALL: String = "showall"
+    const val PARAM_QUERY: String = "q"
+    const val PARAM_QID: String = "qid"
+    const val PARAM_FORUMS: String = "forums[%d]"
+    const val PARAM_SUBMIT: String = "submit"
+    const val PARAM_PREVIEW: String = "preview"
+    const val PARAM_PARSEURL: String = "parseurl"
+    const val PARAM_ATTACHMENT_ACTION: String = "attachmentaction"
 
-    public static final String PARAM_USER_ID   = "userid";
-    public static final String PARAM_USERNAME  = "username";
-    public static final String PARAM_PASSWORD  = "password";
-    public static final String PARAM_ACTION    = "action";
-    public static final String PARAM_THREAD_ID = "threadid";
-    public static final String PARAM_PAGE      = "pagenumber";
-    public static final String PARAM_FORUM_ID  = "forumid";
-    public static final String PARAM_GOTO      = "goto";
-    public static final String PARAM_PER_PAGE  = "perpage";
-    public static final String PARAM_INDEX     = "index";
-    public static final String PARAM_BOOKMARK  = "bookmark";
-	public static final String PARAM_PRIVATE_MESSAGE_ID = "privatemessageid";
-	public static final String PARAM_VOTE 	   = "vote";
-	public static final String PARAM_POST_ID   = "postid";
-	public static final String PARAM_USERLIST  = "userlist";
-    public static final String PARAM_FORMKEY = "formkey";
-    public static final String PARAM_FORM_COOKIE = "form_cookie";
-    public static final String PARAM_ATTACHMENT = "attachment";
-    public static final String PARAM_FOLDERID 	= "folderid";
-    public static final String PARAM_SHOWALL 	= "showall";
-    public static final String PARAM_QUERY 	= "q";
-    public static final String PARAM_QID 	= "qid";
-    public static final String PARAM_FORUMS 	= "forums[%d]";
-    public static final String PARAM_SUBMIT 	= "submit";
-    public static final String PARAM_PREVIEW 	= "preview";
-    public static final String PARAM_PARSEURL = "parseurl";
-    public static final String PARAM_ATTACHMENT_ACTION = "attachmentaction";
+    const val USERLIST_IGNORE: String = "ignore"
+    const val USERLIST_BUDDY: String = "buddy"
 
-	public static final String USERLIST_IGNORE = "ignore";
-	public static final String USERLIST_BUDDY  = "buddy";
+    const val VALUE_POST: String = "post"
+    const val VALUE_NEWPOST: String = "newpost"
+    const val VALUE_LASTPOST: String = "lastpost"
 
-	public static final String VALUE_POST 	   = "post";
-	public static final String VALUE_NEWPOST   = "newpost";
-	public static final String VALUE_LASTPOST  = "lastpost";
-
-    public static final String FRAGMENT_PTI    = "pti";
+    const val FRAGMENT_PTI: String = "pti"
 
     // Intent parameters
-    public static final String FORUM     = "forum";
-    public static final String FORUM_ID  = "forum_id";
-    public static final String THREAD    = "thread";
-    public static final String THREAD_ID = "thread_id";
-    public static final String POST_ID   = "post_id";
-    public static final String QUOTE     = "quote";
-    public static final String PAGE      = "page";
-    public static final String EDITING   = "editing";
-    public static final String MODAL     = "modal";
-    public static final String SHORTCUT  = "shortcut";
-    public static final String PRIVATE_MESSAGE = "private";
-    public static final String THREAD_FRAGMENT = "fragment";
+    const val FORUM: String = "forum"
+    const val FORUM_ID: String = "forum_id"
+    const val THREAD: String = "thread"
+    const val THREAD_ID: String = "thread_id"
+    const val POST_ID: String = "post_id"
+    const val QUOTE: String = "quote"
+    const val PAGE: String = "page"
+    const val EDITING: String = "editing"
+    const val MODAL: String = "modal"
+    const val SHORTCUT: String = "shortcut"
+    const val PRIVATE_MESSAGE: String = "private"
+    const val THREAD_FRAGMENT: String = "fragment"
 
-    public static final String FORM_KEY = "form_key";
-    public static final String FORMKEY  = "formkey";
+    const val FORM_KEY: String = "form_key"
+    const val FORMKEY: String = "formkey"
 
-    public static final String PREFERENCES = "prefs";
+    const val PREFERENCES: String = "prefs"
 
-	public static final String COOKIE_DOMAIN        = "forums.somethingawful.com";
-	public static final String COOKIE_PATH          = "/";
-	public static final String COOKIE_NAME_USERID   = "bbuserid";
-	public static final String COOKIE_NAME_PASSWORD = "bbpassword";
-	public static final String COOKIE_NAME_SESSIONID = "sessionid";
-	public static final String COOKIE_NAME_SESSIONHASH = "sessionhash";
+    const val COOKIE_DOMAIN: String = "forums.somethingawful.com"
+    const val COOKIE_PATH: String = "/"
+    const val COOKIE_NAME_USERID: String = "bbuserid"
+    const val COOKIE_NAME_PASSWORD: String = "bbpassword"
+    const val COOKIE_NAME_SESSIONID: String = "sessionid"
+    const val COOKIE_NAME_SESSIONHASH: String = "sessionhash"
 
-	public static final String COOKIE_PREFERENCE       = "awful_cookie_pref";
-	public static final String COOKIE_PREF_USERID      = "bbuserid";
-	public static final String COOKIE_PREF_PASSWORD    = "bbpassword";
-	public static final String COOKIE_PREF_SESSIONID    = "sessionid";
-	public static final String COOKIE_PREF_SESSIONHASH    = "sessionhash";
-	public static final String COOKIE_PREF_EXPIRY_DATE = "expiration";
-	public static final String COOKIE_PREF_VERSION     = "version";
+    const val COOKIE_PREFERENCE: String = "awful_cookie_pref"
+    const val COOKIE_PREF_USERID: String = "bbuserid"
+    const val COOKIE_PREF_PASSWORD: String = "bbpassword"
+    const val COOKIE_PREF_SESSIONID: String = "sessionid"
+    const val COOKIE_PREF_SESSIONHASH: String = "sessionhash"
+    const val COOKIE_PREF_EXPIRY_DATE: String = "expiration"
+    const val COOKIE_PREF_VERSION: String = "version"
 
     // Cloudflare cookie which is set after completing captcha challenges.
-    public static final String COOKIE_NAME_CAPTCHA = "cf_clearance";
-    public static final String COOKIE_DOMAIN_CAPTCHA = "somethingawful.com";
+    const val COOKIE_NAME_CAPTCHA: String = "cf_clearance"
+    const val COOKIE_DOMAIN_CAPTCHA: String = "somethingawful.com"
 
-	// Content provider
-    public static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".provider";
+    // Content provider
+    const val AUTHORITY: String = BuildConfig.APPLICATION_ID + ".provider"
 
     //default per-page, user configurable
-    public static final int ITEMS_PER_PAGE = 40;
+    const val ITEMS_PER_PAGE: Int = 40
+
     //we can have up to 80 threads per forum page (SAMart)
-    public static final int THREADS_PER_PAGE = 80;
+    const val THREADS_PER_PAGE: Int = 80
 
     // private message folder IDs
-    public static final int PRIVATE_MESSAGE_DEFAULT_FOLDER = 0;
-    public static final int PRIVATE_MESSAGE_SENT_FOLDER = -1;
+    const val PRIVATE_MESSAGE_DEFAULT_FOLDER: Int = 0
+    const val PRIVATE_MESSAGE_SENT_FOLDER: Int = -1
 
     // attachments
-    public static final int ATTACHMENT_MAX_BYTES = 1024 * 1024 * 2;
-    public static final int ATTACHMENT_MAX_WIDTH = 4096;
-    public static final int ATTACHMENT_MAX_HEIGHT = 4096;
+    const val ATTACHMENT_MAX_BYTES: Int = 1024 * 1024 * 2
+    const val ATTACHMENT_MAX_WIDTH: Int = 4096
+    const val ATTACHMENT_MAX_HEIGHT: Int = 4096
 
     //asynctasks are managed by ID number, but PM page has no id
-	public static final int PRIVATE_MESSAGE_THREAD = 998;//can't use negative numbers anymore.
-	public static final int USERCP_ID = 999;//can't use negative numbers anymore.
-	public static final int FORUM_INDEX_ID = 0;
-	/** To prevent loader ID collisions. */
-	public static final int REPLY_LOADER_ID = 884;
-	public static final int FORUM_LOADER_ID = 885;
-	public static final int SUBFORUM_LOADER_ID = 886;
-	public static final int EMOTE_LOADER_ID = 887;
-	public static final int MISC_LOADER_ID = 888;
-	public static final int THREAD_LOADER_ID = 889;
-	public static final int FORUM_THREADS_LOADER_ID = 890;
-	public static final int THREAD_INFO_LOADER_ID = 891;
-	public static final int POST_LOADER_ID = 892;
-	public static final int FORUM_INDEX_LOADER_ID = 893;
-    public static final int THREAD_DRAFT_LOADER_ID = 894;
+    const val PRIVATE_MESSAGE_THREAD: Int = 998 //can't use negative numbers anymore.
+    const val USERCP_ID: Int = 999 //can't use negative numbers anymore.
+    const val FORUM_INDEX_ID: Int = 0
 
-	public static final String ACTION_DOSEND = "dosend";
-	public static final String DESTINATION_TOUSER = "touser";
-	public static final String PARAM_TITLE = "title";
-    public static final String PARAM_MESSAGE = "message";
-    public static final String PARAM_SUBJECT = "subject";
+    /** To prevent loader ID collisions.  */
+    const val REPLY_LOADER_ID: Int = 884
+    const val FORUM_LOADER_ID: Int = 885
+    const val SUBFORUM_LOADER_ID: Int = 886
+    const val EMOTE_LOADER_ID: Int = 887
+    const val MISC_LOADER_ID: Int = 888
+    const val THREAD_LOADER_ID: Int = 889
+    const val FORUM_THREADS_LOADER_ID: Int = 890
+    const val THREAD_INFO_LOADER_ID: Int = 891
+    const val POST_LOADER_ID: Int = 892
+    const val FORUM_INDEX_LOADER_ID: Int = 893
+    const val THREAD_DRAFT_LOADER_ID: Int = 894
 
-	public static final String EXTRA_BUNDLE = "extras";
+    const val ACTION_DOSEND: String = "dosend"
+    const val DESTINATION_TOUSER: String = "touser"
+    const val PARAM_TITLE: String = "title"
+    const val PARAM_MESSAGE: String = "message"
+    const val PARAM_SUBJECT: String = "subject"
 
-    public static final String SUBMIT_REPLY = "Submit Reply";
-    public static final String PREVIEW_REPLY = "Preview Reply";
-    public static final String PREVIEW_POST = "Preview Post";
+    const val EXTRA_BUNDLE: String = "extras"
 
-	public static final String YES = "yes";//heh
-    public static final String DELETE = "delete";//heh
+    const val SUBMIT_REPLY: String = "Submit Reply"
+    const val PREVIEW_REPLY: String = "Preview Reply"
+    const val PREVIEW_POST: String = "Preview Post"
+
+    const val YES: String = "yes" //heh
+    const val DELETE: String = "delete" //heh
 
 
     //NOT FOR NETWORK USE
-	public static final String FORUM_PAGE = "forum_page";
-	//NOT FOR NETWORK USE
-	public static final String THREAD_PAGE = "thread_page";
+    const val FORUM_PAGE: String = "forum_page"
 
-	public static final int LOGIN_ACTIVITY_REQUEST = 99;
+    //NOT FOR NETWORK USE
+    const val THREAD_PAGE: String = "thread_page"
 
-	public static final int DEFAULT_FONT_SIZE_SP = 16;
-    public static final int DEFAULT_FIXED_FONT_SIZE_SP = 13;
-    public static final int MINIMUM_FONT_SIZE_SP = 5;
+    const val LOGIN_ACTIVITY_REQUEST: Int = 99
 
-	public static final double TABLET_MIN_SIZE = 7; //everything above this is considered tablet layout
+    const val DEFAULT_FONT_SIZE_SP: Int = 16
+    const val DEFAULT_FIXED_FONT_SIZE_SP: Int = 13
+    const val MINIMUM_FONT_SIZE_SP: Int = 5
 
-    public static final String REPLY_POST_ID = "reply_post_id";
-    public static final String REPLY_THREAD_ID = "reply_thread_id";
+    const val TABLET_MIN_SIZE: Double = 7.0 //everything above this is considered tablet layout
 
-    public static final String POST_FORUM_ID = "post_forum_id";
+    const val REPLY_POST_ID: String = "reply_post_id"
+    const val REPLY_THREAD_ID: String = "reply_thread_id"
 
-    public static final int AWFUL_THREAD_ID = 3571717;
-    public static final int FORUM_ID_SHSC = 22;
-    public static final int FORUM_ID_YOSPOS = 219;
-    public static final int FORUM_ID_FYAD = 26;
-    public static final int FORUM_ID_FYAD_SUB = 154;
+    const val POST_FORUM_ID: String = "post_forum_id"
 
-    public static final int FORUM_ID_BYOB = 268;
-    public static final int FORUM_ID_COOL_CREW = 196;
+    const val AWFUL_THREAD_ID: Int = 3571717
+    const val FORUM_ID_SHSC: Int = 22
+    const val FORUM_ID_YOSPOS: Int = 219
+    const val FORUM_ID_FYAD: Int = 26
+    const val FORUM_ID_FYAD_SUB: Int = 154
 
-    public static final int FORUM_ID_GOLDMINE = 21;
+    const val FORUM_ID_BYOB: Int = 268
+    const val FORUM_ID_COOL_CREW: Int = 196
 
-    public static final String SETTINGS_PAGE = "settings_page";
+    const val FORUM_ID_GOLDMINE: Int = 21
 
-    public static final int AWFUL_PERMISSION_READ_EXTERNAL_STORAGE = 123;
-    public static final int AWFUL_PERMISSION_WRITE_EXTERNAL_STORAGE = 124;
-    public static final int AWFUL_PERMISSION_READ_MEDIA_IMAGES = 125;
+    const val SETTINGS_PAGE: String = "settings_page"
 
-    public enum POST_ICON_REQUEST_TYPES {
+    const val AWFUL_PERMISSION_READ_EXTERNAL_STORAGE: Int = 123
+    const val AWFUL_PERMISSION_WRITE_EXTERNAL_STORAGE: Int = 124
+    const val AWFUL_PERMISSION_READ_MEDIA_IMAGES: Int = 125
+
+    enum class POST_ICON_REQUEST_TYPES {
         FORUM_POST, PM
     }
 }

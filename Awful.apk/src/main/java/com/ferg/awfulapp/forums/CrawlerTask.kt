@@ -2,7 +2,9 @@ package com.ferg.awfulapp.forums
 
 import android.content.Context
 import android.net.Uri
-import com.ferg.awfulapp.constants.Constants.*
+import com.ferg.awfulapp.constants.Constants.BASE_URL
+import com.ferg.awfulapp.constants.Constants.DEBUG
+import com.ferg.awfulapp.constants.Constants.PARAM_FORUM_ID
 import com.ferg.awfulapp.util.AwfulError
 import org.jsoup.nodes.Document
 import timber.log.Timber

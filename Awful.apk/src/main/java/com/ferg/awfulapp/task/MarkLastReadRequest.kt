@@ -4,7 +4,10 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import com.android.volley.VolleyError
-import com.ferg.awfulapp.constants.Constants.*
+import com.ferg.awfulapp.constants.Constants.FUNCTION_THREAD
+import com.ferg.awfulapp.constants.Constants.PARAM_ACTION
+import com.ferg.awfulapp.constants.Constants.PARAM_INDEX
+import com.ferg.awfulapp.constants.Constants.PARAM_THREAD_ID
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.thread.AwfulPost
 import com.ferg.awfulapp.thread.AwfulThread

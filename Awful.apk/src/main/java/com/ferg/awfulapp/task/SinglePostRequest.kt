@@ -1,7 +1,10 @@
 package com.ferg.awfulapp.task
 
 import android.content.Context
-import com.ferg.awfulapp.constants.Constants.*
+import com.ferg.awfulapp.constants.Constants.ACTION_SHOWPOST
+import com.ferg.awfulapp.constants.Constants.FUNCTION_THREAD
+import com.ferg.awfulapp.constants.Constants.PARAM_ACTION
+import com.ferg.awfulapp.constants.Constants.PARAM_POST_ID
 import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.thread.AwfulPost
 import com.ferg.awfulapp.util.AwfulError

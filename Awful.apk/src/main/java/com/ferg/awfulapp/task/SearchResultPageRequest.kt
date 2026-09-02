@@ -1,10 +1,13 @@
 package com.ferg.awfulapp.task
 
 import android.content.Context
-import com.ferg.awfulapp.constants.Constants.*
+import com.ferg.awfulapp.constants.Constants.ACTION_RESULTS
+import com.ferg.awfulapp.constants.Constants.FUNCTION_SEARCH
+import com.ferg.awfulapp.constants.Constants.PAGE
+import com.ferg.awfulapp.constants.Constants.PARAM_ACTION
+import com.ferg.awfulapp.constants.Constants.PARAM_QID
 import com.ferg.awfulapp.thread.AwfulSearch
 import org.jsoup.nodes.Document
-import java.util.*
 
 /**
  * Fetch a [page] of results from an existing search query by providing its [queryId].

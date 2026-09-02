@@ -4,7 +4,14 @@ import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
 import android.widget.Toast
-import com.ferg.awfulapp.constants.Constants.*
+import com.ferg.awfulapp.constants.Constants.ACTION_DOSEND
+import com.ferg.awfulapp.constants.Constants.DESTINATION_TOUSER
+import com.ferg.awfulapp.constants.Constants.FUNCTION_PRIVATE_MESSAGE
+import com.ferg.awfulapp.constants.Constants.PARAM_ACTION
+import com.ferg.awfulapp.constants.Constants.PARAM_MESSAGE
+import com.ferg.awfulapp.constants.Constants.PARAM_PARSEURL
+import com.ferg.awfulapp.constants.Constants.PARAM_TITLE
+import com.ferg.awfulapp.constants.Constants.YES
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.thread.AwfulMessage

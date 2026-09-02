@@ -1,7 +1,10 @@
 package com.ferg.awfulapp.forums
 
 import android.content.Context
-import com.ferg.awfulapp.constants.Constants.*
+import com.ferg.awfulapp.constants.Constants.DEBUG
+import com.ferg.awfulapp.constants.Constants.FORUM_ID_GOLDMINE
+import com.ferg.awfulapp.constants.Constants.FUNCTION_FORUM
+import com.ferg.awfulapp.constants.Constants.PARAM_FORUM_ID
 import com.ferg.awfulapp.util.AwfulError
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element

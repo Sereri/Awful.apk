@@ -1,216 +1,142 @@
-package com.ferg.awfulapp.forums;
+package com.ferg.awfulapp.forums
 
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.SparseArray;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.List;
+import android.util.SparseArray
+import kotlin.collections.mutableListOf
 
 /**
  * Created by baka kaba on 04/04/2016.
- * <p/>
+ *
  * Immutable class representing a Forum, including references to any subforums
  */
-@SuppressWarnings("SpellCheckingInspection")
-public class Forum {
 
-    @NonNull
-    public final String title;
-    @NonNull
-    public final String subtitle;
-    public final int id;
-    public final int parentId;
-    @NonNull
-    public final List<Forum> subforums;
 
-    @Nullable
-    private String tagUrl = null;
+enum class ForumType {
+    FORUM, SECTION, BOOKMARKS
+}
 
-    private boolean isFavourite = false;
+class Forum (
+    val id: Int,
+    val parentId: Int,
+    var title: String?,
+    var subtitle: String?,
+    val subforums: MutableList<Forum>,
+    var tagUrl: String? = null,
+    var isFavourite: Boolean = false,
+    var type: ForumType = ForumType.FORUM
+) {
 
-    @ForumType
-    private int type = FORUM;
+    constructor(id: Int, parentId: Int, title: String?, subtitle: String?) :
+            this(id, parentId, title, subtitle, mutableListOf())
 
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({FORUM, SECTION, BOOKMARKS})
-    public @interface ForumType {
+    // Copy constructor (omitting subforums)
+    constructor(sourceForum: Forum) : this(
+        id = sourceForum.id,
+        parentId = sourceForum.parentId,
+        title = sourceForum.title,
+        subtitle = sourceForum.subtitle,
+        subforums = mutableListOf(),
+        tagUrl = sourceForum.tagUrl,
+        type = sourceForum.type,
+        isFavourite = sourceForum.isFavourite
+    )
 
+    fun isType( forumType: ForumType): Boolean {
+        return forumType == type
     }
-
-    public static final int FORUM = 0;
-
-    public static final int SECTION = 1;
-    public static final int BOOKMARKS = 2;
-
-    Forum(int id, int parentId, String title, String subtitle) {
-        this(id, parentId, title, subtitle, new ArrayList<>());
-    }
-
-
-    Forum(int id, int parentId, String title, String subtitle,
-          @NonNull List<Forum> subforums) {
-        this.id = id;
-        this.parentId = parentId;
-        this.title = (title == null) ? "" : title;
-        this.subtitle = (subtitle == null) ? "" : subtitle;
-        this.subforums = subforums;
-    }
-
-
-    /**
-     * Copy the supplied Forum, omitting its subfolders
-     *
-     * @param sourceForum The Forum object to copy
-     */
-    Forum(Forum sourceForum) {
-        this(sourceForum.id, sourceForum.parentId, sourceForum.title, sourceForum.subtitle);
-        setTagUrl(sourceForum.getTagUrl());
-        setType(sourceForum.getType());
-        setFavourite(sourceForum.isFavourite());
-    }
-
-
-    public boolean isFavourite() {
-        return isFavourite;
-    }
-
-    public void setFavourite(boolean favourite) {
-        isFavourite = favourite;
-    }
-
-
-    public void setType(@ForumType int forumType) {
-        type = forumType;
-    }
-
-
-    @ForumType
-    public int getType() {
-        return type;
-    }
-
-
-    public boolean isType(@ForumType int forumType) {
-        return forumType == type;
-    }
-
-
-    public void setTagUrl(@Nullable String url) {
-        tagUrl = url;
-    }
-
-
-    @Nullable
-    public String getTagUrl() {
-        return tagUrl;
-    }
-
 
     /**
      * Get this forum's abbreviated name, as overlaid on its tag on the website.
      *
      * @return its tag text, or a generated abbreviation
      */
-    @NonNull
-    public String getAbbreviation() {
-        return forumAbbreviations.get(id, abbreviateTitle());
-    }
-
+    val abbreviation: String
+        get() = forumAbbreviations.get(id, abbreviateTitle())
 
     /**
      * Generate an abbreviated version of this forum's title.
      *
      * @return the result, or an empty string if it couldn't be abbreviated
      */
-    private String abbreviateTitle() {
-        String cleanTitle = title.replaceAll("[^A-Za-z0-9/ :&]", "");
-        // maybe someone did the work for us
+    private fun abbreviateTitle(): String {
+        var cleanTitle = title?.replace(Regex("[^A-Za-z0-9/ :&]"), "") ?: ""
         if (cleanTitle.contains(":")) {
-            String firstPart = cleanTitle.split(":")[0];
-            if (firstPart.length() > 6){
-                cleanTitle = firstPart;
+            val firstPart = cleanTitle.split(":")[0]
+            if (firstPart.length > 6) {
+                cleanTitle = firstPart
             } else {
-                return cleanTitle.split(":")[0];
+                return cleanTitle.split(":")[0]
             }
         }
-        // really basic version - just split on spaces and use the first char,
-        // works with punctuation like in 'Debate & Discussion'
-        String[] words = cleanTitle.split(" ");
-        StringBuilder sb = new StringBuilder("");
-        for (String word : words) {
-            if (word.length() > 0) {
-                if (word.matches("^\\d{0,3}$")) {
-                    sb.append(word);
+
+        val words = cleanTitle.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val sb = StringBuilder()
+        for (word in words) {
+            if (word.isNotEmpty()) {
+                if (word.matches(Regex("^\\d{0,3}$"))) {
+                    sb.append(word)
                 } else {
-                    sb.append(Character.toUpperCase(word.charAt(0)));
+                    sb.append(word[0].uppercaseChar())
                 }
             }
         }
-        return sb.toString();
+        return sb.toString()
     }
 
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Forum)) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        if (other !is Forum) {
+            return false
         }
-        Forum other = (Forum) o;
-        return other.id == id
-                && other.parentId == parentId
-                && other.title.equals(title)
-                && other.subtitle.equals(subtitle);
+        return other.id == id &&
+                other.parentId == parentId &&
+                other.title == title &&
+                other.subtitle == subtitle
     }
 
+    companion object  {
 
-    private static final SparseArray<String> forumAbbreviations = new SparseArray<>();
+        private val forumAbbreviations = SparseArray<String>().apply {
+            append(692, "1999")
+            append(273, "GBS")
+            append(26, "FYAD")
+            append(268, "BYOB")
+            append(272, "RSF")
+            append(242, "P/C")
 
-    static {
-        forumAbbreviations.append(692, "1999");
-        forumAbbreviations.append(273, "GBS");
-        forumAbbreviations.append(26, "FYAD");
-        forumAbbreviations.append(268, "BYOB");
-        forumAbbreviations.append(272, "RSF");
-        forumAbbreviations.append(242, "P/C");
+            append(44, "GAMES")
+            append(46, "D&D")
+            append(269, "C-SPAM")
+            append(167, "PYF")
+            append(158, "A/T")
+            append(22, "SH/SC")
+            append(192, "IYG")
+            append(122, "SAS")
+            append(179, "YLLS")
+            append(161, "GWS")
+            append(91, "AI")
+            append(210, "DIY")
+            append(124, "PI")
+            append(132, "TFR")
+            append(90, "TCC")
+            append(218, "GIP")
 
-        forumAbbreviations.append(44, "GAMES");
-        forumAbbreviations.append(46, "D&D");
-        forumAbbreviations.append(269, "C-SPAM");
-        forumAbbreviations.append(167, "PYF");
-        forumAbbreviations.append(158, "A/T");
-        forumAbbreviations.append(22, "SH/SC");
-        forumAbbreviations.append(192, "IYG");
-        forumAbbreviations.append(122, "SAS");
-        forumAbbreviations.append(179, "YLLS");
-        forumAbbreviations.append(161, "GWS");
-        forumAbbreviations.append(91, "AI");
-        forumAbbreviations.append(210, "DIY");
-        forumAbbreviations.append(124, "PI");
-        forumAbbreviations.append(132, "TFR");
-        forumAbbreviations.append(90, "TCC");
-        forumAbbreviations.append(218, "GIP");
+            append(31, "CC")
+            append(151, "CD")
+            append(182, "TBB")
+            append(150, "NMD")
+            append(130, "TVIV")
+            append(144, "BSS")
+            append(27, "ADTRW")
+            append(215, "PHIZ")
+            append(255, "RGD")
 
-        forumAbbreviations.append(31, "CC");
-        forumAbbreviations.append(151, "CD");
-        forumAbbreviations.append(182, "TBB");
-        forumAbbreviations.append(150, "NMD");
-        forumAbbreviations.append(130, "TVIV");
-        forumAbbreviations.append(144, "BSS");
-        forumAbbreviations.append(27, "ADTRW");
-        forumAbbreviations.append(215, "PHIZ");
-        forumAbbreviations.append(255, "RGD");
+            append(61, "SAMART")
+            append(43, "GM")
+            append(241, "LAN")
+            append(188, "QCS")
 
-        forumAbbreviations.append(61, "SAMART");
-        forumAbbreviations.append(43, "GM");
-        forumAbbreviations.append(241, "LAN");
-        forumAbbreviations.append(188, "QCS");
-
-        forumAbbreviations.append(21, "55555");
-        forumAbbreviations.append(25, "11111");
-        forumAbbreviations.append(1, "RIP");
+            append(21, "55555")
+            append(25, "11111")
+            append(1, "RIP")
+        }
     }
 }

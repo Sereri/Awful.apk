@@ -29,7 +29,7 @@ import java.util.List;
 import static android.view.View.GONE;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
-import static com.ferg.awfulapp.forums.Forum.SECTION;
+import static com.ferg.awfulapp.forums.ForumType.SECTION;
 
 /**
  * Created by baka kaba on 13/04/2016.
@@ -132,10 +132,10 @@ public class ForumListAdapter extends ExpandableRecyclerAdapter<ForumListAdapter
                          @NonNull TextView title,
                          @NonNull TextView subtitle,
                          @Nullable TextView sectionTitle) {
-        title.setText(forum.title);
-        subtitle.setText(forum.subtitle);
+        title.setText(forum.getTitle());
+        subtitle.setText(forum.getSubtitle());
         if (sectionTitle != null) {
-            sectionTitle.setText(forum.title);
+            sectionTitle.setText(forum.getTitle());
         }
     }
 
@@ -150,7 +150,7 @@ public class ForumListAdapter extends ExpandableRecyclerAdapter<ForumListAdapter
         if (awfulPrefs != null) {
             subtitlesEnabled = awfulPrefs.forumIndexShowSubtitles;
         }
-        subtitleView.setVisibility(!forum.subtitle.isEmpty() && subtitlesEnabled ? VISIBLE : GONE);
+        subtitleView.setVisibility(!forum.getSubtitle().isEmpty() && subtitlesEnabled ? VISIBLE : GONE);
     }
 
     /**
@@ -226,7 +226,7 @@ public class ForumListAdapter extends ExpandableRecyclerAdapter<ForumListAdapter
 
         @Override
         public List<?> getChildItemList() {
-            return forum.subforums;
+            return forum.getSubforums();
         }
 
 

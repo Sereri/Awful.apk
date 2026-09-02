@@ -263,8 +263,8 @@ internal abstract class UpdateTask(protected val context: Context, private val t
 
     private fun StringBuilder.printForum(forum: Forum, depth: Int) {
         with(forum) {
-            appendPadded(title, depth)
-            if (subtitle.isNotBlank()) appendPadded(subtitle, depth)
+            appendPadded(title!!, depth)
+            if (subtitle?.isNotBlank() == true) appendPadded(subtitle!!, depth)
             subforums.forEach { printForum(it, depth + 1) }
         }
     }

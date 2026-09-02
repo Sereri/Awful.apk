@@ -32,8 +32,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import static com.ferg.awfulapp.forums.Forum.BOOKMARKS;
-import static com.ferg.awfulapp.forums.Forum.SECTION;
+import static com.ferg.awfulapp.forums.ForumType.*;
 import static com.ferg.awfulapp.forums.ForumStructure.FLAT;
 
 /**
@@ -311,7 +310,7 @@ public class ForumRepository implements UpdateTask.ResultListener {
     public void toggleFavorite(@NonNull Forum forum) {
         // generate a new set of favourite forum IDs by removing or adding the toggled one
         List<String> favourites = new ArrayList<>(Arrays.asList(getFavouriteForumIds()));
-        String forumId = Integer.toString(forum.id);
+        String forumId = Integer.toString(forum.getId());
         if (favourites.remove(forumId)) {
             forum.setFavourite(false);
         } else {
@@ -409,12 +408,12 @@ public class ForumRepository implements UpdateTask.ResultListener {
             forum.setTagUrl(tagUrl);
 
             // set favourite status by checking the favourites list
-            forum.setFavourite(favouriteForumIds.contains(Integer.toString(forum.id)));
+            forum.setFavourite(favouriteForumIds.contains(Integer.toString(forum.getId())));
 
             // set the type e.g. for the index list to handle formatting
-            if (forum.id == Constants.USERCP_ID) {
+            if (forum.getId() == Constants.USERCP_ID) {
                 forum.setType(BOOKMARKS);
-            } else if (forum.parentId == TOP_LEVEL_PARENT_ID) {
+            } else if (forum.getParentId() == TOP_LEVEL_PARENT_ID) {
                 forum.setType(SECTION);
             }
             forumList.add(forum);
@@ -473,10 +472,10 @@ public class ForumRepository implements UpdateTask.ResultListener {
             contentValues = new ContentValues();
             // use the current list size (before we add this element) as the index counter
             contentValues.put(AwfulForum.INDEX, allContentValues.size());
-            contentValues.put(AwfulForum.ID, forum.id);
-            contentValues.put(AwfulForum.PARENT_ID, forum.parentId);
-            contentValues.put(AwfulForum.TITLE, forum.title);
-            contentValues.put(AwfulForum.SUBTEXT, forum.subtitle);
+            contentValues.put(AwfulForum.ID, forum.getId());
+            contentValues.put(AwfulForum.PARENT_ID, forum.getParentId());
+            contentValues.put(AwfulForum.TITLE, forum.getTitle());
+            contentValues.put(AwfulForum.SUBTEXT, forum.getSubtitle());
             contentValues.put(DatabaseHelper.UPDATED_TIMESTAMP, updateTime);
             allContentValues.add(contentValues);
         }

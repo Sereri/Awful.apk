@@ -245,8 +245,8 @@ public class ThreadIconPicker extends Fragment {
         }
         if (allTheForums.hasNext()) {
             Forum forum = allTheForums.next();
-            useForumIcons(forum.id);
-            Toast.makeText(getContext(), "Icons from\n" + forum.title, Toast.LENGTH_SHORT).show();
+            useForumIcons(forum.getId());
+            Toast.makeText(getContext(), "Icons from\n" + forum.getTitle(), Toast.LENGTH_SHORT).show();
         }
         return true;
     }

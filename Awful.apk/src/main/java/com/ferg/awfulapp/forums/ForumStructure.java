@@ -1,8 +1,5 @@
 package com.ferg.awfulapp.forums;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Log;
 
 import java.lang.annotation.Retention;
@@ -11,6 +8,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import static com.ferg.awfulapp.forums.ForumType.SECTION;
 
 /**
  * Created by baka kaba on 09/04/2016.
@@ -57,7 +60,7 @@ public class ForumStructure {
         Map<Integer, Forum> forumsById = new LinkedHashMap<>();
         for (Forum forum : orderedForums) {
             Forum forumCopy = new Forum(forum);
-            forumsById.put(forumCopy.id, forumCopy);
+            forumsById.put(forumCopy.getId(), forumCopy);
         }
 
         /*
@@ -66,18 +69,18 @@ public class ForumStructure {
 
         Forum parentForum;
         for (Forum forum : forumsById.values()) {
-            parentForum = forumsById.get(forum.parentId);
+            parentForum = forumsById.get(forum.getParentId());
 
             // check if this forum is a top-level category 'forum' like Main or Community
-            if (topLevelParentId == null && parentForum == null || topLevelParentId != null && forum.parentId == topLevelParentId) {
+            if (topLevelParentId == null && parentForum == null || topLevelParentId != null && forum.getParentId() == topLevelParentId) {
                 forumTree.add(forum);
             }
             // otherwise add the forum to its parent's subforum list
             else {
                 if (parentForum != null) {
-                    parentForum.subforums.add(forum);
+                    parentForum.getSubforums().add(forum);
                 } else {
-                    Log.w(TAG, "Unable to find parent forum with ID: " + forum.parentId);
+                    Log.w(TAG, "Unable to find parent forum with ID: " + forum.getParentId());
                 }
             }
         }
@@ -115,13 +118,13 @@ public class ForumStructure {
     private static void copyTreeWithParentId(List<Forum> sourceTree, List<Forum> destinationTree, int parentId) {
         for (Forum sourceForum : sourceTree) {
             // TODO: this is hacky, should be able to set things all at once
-            Forum forumCopy = new Forum(sourceForum.id, parentId, sourceForum.title, sourceForum.subtitle);
+            Forum forumCopy = new Forum(sourceForum.getId(), parentId, sourceForum.getTitle(), sourceForum.getSubtitle());
             forumCopy.setType(sourceForum.getType());
             forumCopy.setTagUrl(sourceForum.getTagUrl());
             forumCopy.setFavourite(sourceForum.isFavourite());
             destinationTree.add(forumCopy);
             // copy this Forum's subforums, but ensure the parent IDs refer to this Forum's ID
-            copyTreeWithParentId(sourceForum.subforums, forumCopy.subforums, forumCopy.id);
+            copyTreeWithParentId(sourceForum.getSubforums(), forumCopy.getSubforums(), forumCopy.getId());
         }
     }
 
@@ -138,7 +141,7 @@ public class ForumStructure {
     private int countForums(List<Forum> forums, int total) {
         for (Forum forum : forums) {
             total++;
-            countForums(forum.subforums, total);
+            countForums(forum.getSubforums(), total);
         }
         return total;
     }
@@ -206,29 +209,29 @@ public class ForumStructure {
             for (Forum rootForum : forumTree) {
                 Forum rootForumCopy = new Forum(rootForum);
                 // only include sections if required
-                if (!rootForum.isType(Forum.SECTION) || includeSections) {
+                if (!rootForum.isType(SECTION) || includeSections) {
                     generatedList.add(rootForumCopy);
                 }
                 // add its subforums to the same level, or to the subforum list as appropriate
-                for (Forum mainForum : rootForum.subforums) {
+                for (Forum mainForum : rootForum.getSubforums()) {
                     Forum forumCopy = new Forum(mainForum);
                     // the only time we don't add a top-level forum to the root list is when we're doing
                     // the full tree structure, and we're including sections (so the TLF is added as a subforum)
                     if (listFormat == FULL_TREE && includeSections) {
-                        rootForumCopy.subforums.add(forumCopy);
+                        rootForumCopy.getSubforums().add(forumCopy);
                     } else {
                         generatedList.add(forumCopy);
                     }
 
                     if (listFormat == FLAT) {
                         // flat list - add main forum and everything below it to the top level
-                        collectSubforums(mainForum.subforums, generatedList);
+                        collectSubforums(mainForum.getSubforums(), generatedList);
                     } else if (listFormat == TWO_LEVEL) {
                         // two-level list - add main forum to the top level, and everything below it into its subforum list
-                        collectSubforums(mainForum.subforums, forumCopy.subforums);
+                        collectSubforums(mainForum.getSubforums(), forumCopy.getSubforums());
                     } else if (listFormat == FULL_TREE) {
                         // full tree structure
-                        copyForumTree(mainForum.subforums, forumCopy.subforums);
+                        copyForumTree(mainForum.getSubforums(), forumCopy.getSubforums());
                     }
                 }
             }
@@ -250,7 +253,7 @@ public class ForumStructure {
         for (Forum forum : source) {
             forumCopy = new Forum(forum);
             collection.add(forumCopy);
-            copyForumTree(forum.subforums, forumCopy.subforums);
+            copyForumTree(forum.getSubforums(), forumCopy.getSubforums());
         }
     }
 
@@ -264,7 +267,7 @@ public class ForumStructure {
     private static void collectSubforums(List<Forum> source, List<Forum> collection) {
         for (Forum forum : source) {
             collection.add(new Forum(forum));
-            collectSubforums(forum.subforums, collection);
+            collectSubforums(forum.getSubforums(), collection);
         }
     }
 

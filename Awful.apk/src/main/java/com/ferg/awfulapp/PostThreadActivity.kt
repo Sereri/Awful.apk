@@ -1,7 +1,8 @@
 /********************************************************************************
  * Copyright (c) 2011, Scott Ferguson
  * All rights reserved.
- * <p>
+ * 
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * * Redistributions of source code must retain the above copyright
@@ -12,7 +13,8 @@
  * * Neither the name of the software nor the
  * names of its contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
- * <p>
+ * 
+ * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,81 +25,70 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp
 
-package com.ferg.awfulapp;
+import android.os.Bundle
+import android.view.MenuItem
+import android.view.View
+import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.ferg.awfulapp.databinding.PostThreadActivityBinding
 
-import android.os.Bundle;
-import android.view.MenuItem;
+class PostThreadActivity : AwfulActivity() {
+    var mToolbar: Toolbar? = null
+    var threadFragment: PostThreadFragment? = null
 
-import com.ferg.awfulapp.databinding.PostThreadActivityBinding;
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val binding = PostThreadActivityBinding.inflate(layoutInflater)
+        setContentView(binding.getRoot())
+        mToolbar = binding.postThreadToolbar.awfulToolbar
 
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.FragmentManager;
+        setSupportActionBar(mToolbar)
+        setUpActionBar()
 
+        val fm = supportFragmentManager
+        threadFragment = fm.findFragmentById(R.id.thread_fragment) as PostThreadFragment?
 
-public class PostThreadActivity extends AwfulActivity {
-
-
-    Toolbar mToolbar;
-    PostThreadFragment threadFragment;
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        PostThreadActivityBinding binding = PostThreadActivityBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        mToolbar = binding.postThreadToolbar.awfulToolbar;
-
-        setSupportActionBar(mToolbar);
-        setUpActionBar();
-
-        FragmentManager fm = getSupportFragmentManager();
-        threadFragment = (PostThreadFragment) fm.findFragmentById(R.id.thread_fragment);
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (view, insets) -> {
-            Insets innerPadding = insets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
-            );
-
-            boolean imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
-            int imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+        ViewCompat.setOnApplyWindowInsetsListener(
+            binding.getRoot()
+        ) { _: View?, insets: WindowInsetsCompat ->
+            val innerPadding = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
 
             ViewCompat.setPaddingRelative(
-                    binding.getRoot(),
-                    innerPadding.left,
-                    0,
-                    innerPadding.right,
-                    imeVisible ? imeHeight : innerPadding.bottom
-            );
-            return insets;
-        });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onLeaveActivity();
-                break;
+                binding.getRoot(),
+                innerPadding.left,
+                0,
+                innerPadding.right,
+                if (imeVisible) imeHeight else innerPadding.bottom
+            )
+            insets
         }
-        return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onBackPressed() {
-        onLeaveActivity();
+    override fun onStart() {
+        super.onStart()
     }
 
-    private void onLeaveActivity() {
-        threadFragment.onNavigateBack();
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> onLeaveActivity()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        onLeaveActivity()
+    }
+
+    private fun onLeaveActivity() {
+        threadFragment?.onNavigateBack()
     }
 }

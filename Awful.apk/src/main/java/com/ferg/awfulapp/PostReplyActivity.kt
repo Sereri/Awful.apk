@@ -32,7 +32,6 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.ferg.awfulapp.databinding.PostReplyActivityBinding
@@ -54,23 +53,23 @@ class PostReplyActivity : AwfulActivity() {
         replyFragment = fm.findFragmentById(R.id.reply_fragment) as PostReplyFragment?
 
         ViewCompat.setOnApplyWindowInsetsListener(
-            binding.getRoot(),
-            OnApplyWindowInsetsListener { view: View?, insets: WindowInsetsCompat ->
-                val innerPadding = insets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-                )
-                val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
-                val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            binding.getRoot()
+        ) { _: View?, insets: WindowInsetsCompat ->
+            val innerPadding = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
 
-                ViewCompat.setPaddingRelative(
-                    binding.getRoot(),
-                    innerPadding.left,
-                    0,
-                    innerPadding.right,
-                    if (imeVisible) imeHeight else innerPadding.bottom
-                )
-                insets
-            })
+            ViewCompat.setPaddingRelative(
+                binding.getRoot(),
+                innerPadding.left,
+                0,
+                innerPadding.right,
+                if (imeVisible) imeHeight else innerPadding.bottom
+            )
+            insets
+        }
     }
 
     protected override fun onStart() {

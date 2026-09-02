@@ -4,14 +4,14 @@
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,310 +23,290 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp
 
-package com.ferg.awfulapp;
+import android.app.Activity
+import android.content.Intent
+import android.database.ContentObserver
+import android.database.Cursor
+import android.os.Bundle
+import android.os.Handler
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemClickListener
+import android.widget.ListView
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.CursorLoader
+import androidx.loader.content.Loader
+import com.android.volley.VolleyError
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.provider.AwfulProvider
+import com.ferg.awfulapp.provider.ColorProvider
+import com.ferg.awfulapp.service.AwfulCursorAdapter
+import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
+import com.ferg.awfulapp.task.PMListRequest
+import com.ferg.awfulapp.thread.AwfulForum
+import com.ferg.awfulapp.thread.AwfulMessage
+import com.ferg.awfulapp.util.AwfulUtils
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
+import timber.log.Timber.Forest.tag
+import timber.log.Timber.Forest.w
+import androidx.core.view.isEmpty
 
 
-import android.app.Activity;
-import android.content.Intent;
-import android.database.ContentObserver;
-import android.database.Cursor;
-import android.os.Bundle;
-import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.CursorLoader;
-import androidx.loader.content.Loader;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ListView;
+class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListener {
+    companion object {
+        private const val TAG = "PrivateMessageList"
 
-import com.android.volley.VolleyError;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.provider.AwfulProvider;
-import com.ferg.awfulapp.provider.ColorProvider;
-import com.ferg.awfulapp.service.AwfulCursorAdapter;
-import com.ferg.awfulapp.task.AwfulRequest;
-import com.ferg.awfulapp.task.PMListRequest;
-import com.ferg.awfulapp.thread.AwfulForum;
-import com.ferg.awfulapp.thread.AwfulMessage;
-import com.ferg.awfulapp.util.AwfulUtils;
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
+        const val FOLDER_INBOX: Int = Constants.PRIVATE_MESSAGE_DEFAULT_FOLDER
+        const val FOLDER_SENT: Int = Constants.PRIVATE_MESSAGE_SENT_FOLDER
+    }
+    private var mPMList: ListView? = null
 
-import timber.log.Timber;
+    private var isAllMessages = false
 
-public class PrivateMessageListFragment extends AwfulFragment implements SwipyRefreshLayout.OnRefreshListener {
-	
+    private var mCursorAdapter: AwfulCursorAdapter? = null
+    private val mPMDataCallback = PMIndexCallback(handler)
 
-    private static final String TAG = "PrivateMessageList";
+    private var mSRL: SwipyRefreshLayout? = null
 
-    private ListView mPMList;
+    private var mFAB: FloatingActionButton? = null
 
-    private boolean isAllMessages = false;
+    private var currentFolder: Int = FOLDER_INBOX
 
-	private AwfulCursorAdapter mCursorAdapter;
-    private PMIndexCallback mPMDataCallback = new PMIndexCallback(getHandler());
-
-    private SwipyRefreshLayout mSRL;
-
-    private FloatingActionButton mFAB;
-    
-    private int currentFolder = FOLDER_INBOX;
-
-    public final static int FOLDER_INBOX	= Constants.PRIVATE_MESSAGE_DEFAULT_FOLDER;
-    public final static int FOLDER_SENT		= Constants.PRIVATE_MESSAGE_SENT_FOLDER;
-    
-    
-    @Override
-    public void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
     }
 
-    @Override
-    public void onAttach(@NonNull Activity aActivity) {
-    	super.onAttach(aActivity);
-    }
-    
-    @Override
-    public View onCreateView(@NonNull LayoutInflater aInflater, ViewGroup aContainer, Bundle aSavedState) {
-        super.onCreateView(aInflater, aContainer, aSavedState);
-
-        View result = aInflater.inflate(R.layout.private_message_list_fragment, aContainer, false);
-
-        mPMList = (ListView) result.findViewById(R.id.message_listview);
-
-
-        mFAB  = (FloatingActionButton) result.findViewById(R.id.just_pm);
-        mFAB.setOnClickListener(onButtonClick);
-        mFAB.setVisibility((getPrefs().noFAB ? View.GONE : View.VISIBLE));
-
-        getAwfulActivity().setPreferredFont(result);
-        return result;
+    override fun onAttach(aActivity: Activity) {
+        super.onAttach(aActivity)
     }
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    override fun onCreateView(
+        aInflater: LayoutInflater,
+        aContainer: ViewGroup?,
+        aSavedState: Bundle?
+    ): View {
+        super.onCreateView(aInflater, aContainer, aSavedState)
 
-        mSRL = (SwipyRefreshLayout) view.findViewById(R.id.pm_swipe);
-        mSRL.setOnRefreshListener(this);
-        mSRL.setColorSchemeResources(ColorProvider.getSRLProgressColors(null));
-        mSRL.setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null));
+        val result = aInflater.inflate(R.layout.private_message_list_fragment, aContainer, false)
+
+        mPMList = result.findViewById<View?>(R.id.message_listview) as ListView
+
+
+        mFAB = result.findViewById<View?>(R.id.just_pm) as FloatingActionButton
+        mFAB?.setOnClickListener(onButtonClick)
+        mFAB?.setVisibility((if (prefs.noFAB) View.GONE else View.VISIBLE))
+
+        awfulActivity?.setPreferredFont(result)
+        return result
     }
 
-    @Override
-    public void onActivityCreated(Bundle aSavedState) {
-        super.onActivityCreated(aSavedState);
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-
-        mPMList.setOnItemClickListener(onPMSelected);
-        
-        mCursorAdapter = new AwfulCursorAdapter((AwfulActivity) getActivity(), null, this);
-        mPMList.setAdapter(mCursorAdapter);
-    }
-    
-    @Override
-    public void onStart(){
-    	super.onStart();
-		restartLoader(Constants.PRIVATE_MESSAGE_THREAD, null, mPMDataCallback);
-        getActivity().getContentResolver().registerContentObserver(AwfulForum.CONTENT_URI, true, mPMDataCallback);
-        syncPMs();
-        setActionBarTitle(getTitle());
+        mSRL = view.findViewById<View?>(R.id.pm_swipe) as SwipyRefreshLayout
+        mSRL?.let {
+            it.setOnRefreshListener(this)
+            it.setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
+            it.setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null))
+        }
     }
 
-    private void syncPMs() {
-        syncPMs(isAllMessages);
+    public override fun onActivityCreated(aSavedState: Bundle?) {
+        super.onActivityCreated(aSavedState)
+
+
+        mPMList?.onItemClickListener = onPMSelected
+
+        mCursorAdapter = AwfulCursorAdapter(activity as AwfulActivity?, null, this)
+        mPMList?.adapter = mCursorAdapter
     }
-    
-    private void syncPMs(boolean loadAll) {
-        mSRL.setRefreshing(true);
-    	if(getActivity() != null){
-            queueRequest(new PMListRequest(getActivity(), currentFolder, loadAll).build(this, new AwfulRequest.AwfulResultCallback<Void>() {
-                @Override
-                public void success(Void result) {
-                    restartLoader(Constants.PRIVATE_MESSAGE_THREAD, null, mPMDataCallback);
-                    mSRL.setRefreshing(false);
-                    mPMList.setSelectionAfterHeaderView();
+
+    override fun onStart() {
+        super.onStart()
+        restartLoader(Constants.PRIVATE_MESSAGE_THREAD, null, mPMDataCallback)
+        requireActivity().contentResolver
+            .registerContentObserver(AwfulForum.CONTENT_URI, true, mPMDataCallback)
+        syncPMs()
+        setActionBarTitle(getTitle())
+    }
+
+    private fun syncPMs(loadAll: Boolean = isAllMessages) {
+        mSRL?.isRefreshing = true
+        if (activity != null) {
+            queueRequest(
+                PMListRequest(requireActivity(), currentFolder, loadAll).build(
+                    this,
+                    object : AwfulResultCallback<Void?> {
+                        override fun success(result: Void?) {
+                            restartLoader(Constants.PRIVATE_MESSAGE_THREAD, null, mPMDataCallback)
+                            mSRL?.isRefreshing = false
+                            mPMList?.setSelectionAfterHeaderView()
+                        }
+
+                        override fun failure(error: VolleyError?) {
+                            w("Failed to sync PMs! Error: %s", error?.message)
+                            // TODO: 28/01/2018 might be able to remove this everywhere - it's being set in AwfulFragment#onRequestEnded
+                            mSRL?.isRefreshing = false
+                        }
+                    })
+            )
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        requireActivity().supportLoaderManager.destroyLoader(Constants.PRIVATE_MESSAGE_THREAD)
+        requireActivity().contentResolver.unregisterContentObserver(mPMDataCallback)
+    }
+
+    public override fun onDetach() {
+        super.onDetach()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        if (menu.isEmpty()) {
+            inflater.inflate(R.menu.private_message_list, menu)
+        }
+
+        val newPM = menu.findItem(R.id.new_pm)
+        if (null != newPM) {
+            newPM.isVisible = prefs.noFAB
+        }
+        val sendPM = menu.findItem(R.id.send_pm)
+        if (null != sendPM) {
+            sendPM.isVisible = AwfulUtils.isTablet(activity)
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.new_pm -> if (activity is PrivateMessageActivity) {
+                (activity as PrivateMessageActivity).showMessage(null, 0)
+            }
+
+            R.id.refresh -> syncPMs()
+            R.id.toggle_folder -> {
+                currentFolder = if (currentFolder == FOLDER_INBOX) FOLDER_SENT else FOLDER_INBOX
+                setActionBarTitle(getTitle())
+                changeIcon(item)
+                syncPMs()
+            }
+
+            R.id.settings -> awfulActivity?.navigate(NavigationEvent.Settings())
+            else -> return super.onOptionsItemSelected(item)
+        }
+        return true
+    }
+
+    private fun changeIcon(item: MenuItem) {
+        if (currentFolder == FOLDER_SENT) {
+            item.setIcon(R.drawable.ic_inbox)
+        } else {
+            item.setIcon(R.drawable.ic_drawer_outbox)
+        }
+    }
+
+    private val onButtonClick: View.OnClickListener = object : View.OnClickListener {
+        override fun onClick(aView: View) {
+            when (aView.id) {
+                R.id.just_pm -> if (activity is PrivateMessageActivity) {
+                    (activity as PrivateMessageActivity).showMessage(null, 0)
                 }
 
-                @Override
-                public void failure(VolleyError error) {
-                    Timber.w("Failed to sync PMs! Error: %s", error.getMessage());
-                    // TODO: 28/01/2018 might be able to remove this everywhere - it's being set in AwfulFragment#onRequestEnded
-                    mSRL.setRefreshing(false);
-                }
-            }));
-    	}
-	}
+                R.id.new_pm -> startActivity(
+                    Intent().setClass(
+                        requireActivity(),
+                        MessageDisplayActivity::class.java
+                    )
+                )
 
-	@Override
-    public void onResume() {
-        super.onResume();
-    }
-	
-	@Override
-	public void onStop(){
-		super.onStop();
-		getActivity().getSupportLoaderManager().destroyLoader(Constants.PRIVATE_MESSAGE_THREAD);
-		getActivity().getContentResolver().unregisterContentObserver(mPMDataCallback);
-	}
-    
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
-    
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if(menu.size() == 0){
-            inflater.inflate(R.menu.private_message_list, menu);
-        }
-
-        MenuItem newPM = menu.findItem(R.id.new_pm);
-        if(null != newPM){
-            newPM.setVisible(getPrefs().noFAB);
-        }
-        MenuItem sendPM = menu.findItem(R.id.send_pm);
-        if(null != sendPM){
-            sendPM.setVisible(AwfulUtils.isTablet(getActivity()));
-        }
-    }
-    
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-        case R.id.new_pm:
-        	if(getActivity() instanceof PrivateMessageActivity){
-                ((PrivateMessageActivity) getActivity()).showMessage(null, 0);
-        	}
-        	break;
-        case R.id.refresh:
-        	syncPMs();
-        	break;
-        case R.id.toggle_folder:
-        	currentFolder = (currentFolder==FOLDER_INBOX) ? FOLDER_SENT : FOLDER_INBOX;
-            setActionBarTitle(getTitle());
-            changeIcon(item);
-        	syncPMs();
-        	break;
-        case R.id.settings:
-            getAwfulActivity().navigate(new NavigationEvent.Settings());
-        	break;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-        return true;
-    }
-
-    private void changeIcon(MenuItem item) {
-        int[] attrs;
-        if(currentFolder == FOLDER_SENT){
-            item.setIcon(R.drawable.ic_inbox);
-        }else{
-            item.setIcon(R.drawable.ic_drawer_outbox);
-        }
-    }
-
-    private View.OnClickListener onButtonClick = new View.OnClickListener() {
-        public void onClick(View aView) {
-            switch (aView.getId()) {
-                case R.id.just_pm:
-                    if(getActivity() instanceof PrivateMessageActivity){
-                        ((PrivateMessageActivity) getActivity()).showMessage(null, 0);
-                    }
-                    break;
-                case R.id.new_pm:
-                    startActivity(new Intent().setClass(getActivity(), MessageDisplayActivity.class));
-                    break;
-                case R.id.refresh:
-                	syncPMs();
-                    break;
+                R.id.refresh -> syncPMs()
             }
         }
-    };
-    
-    private AdapterView.OnItemClickListener onPMSelected = new AdapterView.OnItemClickListener() {
-        public void onItemClick(AdapterView<?> aParent, View aView, int aPosition, long aId) {
-            if(getActivity() instanceof PrivateMessageActivity){
-            	((PrivateMessageActivity) getActivity()).showMessage(null, (int)aId);
-            }else{
-            	startActivity(new Intent(getActivity(), MessageDisplayActivity.class).putExtra(Constants.PARAM_PRIVATE_MESSAGE_ID, (int) aId));
+    }
+
+    private val onPMSelected: OnItemClickListener =
+        OnItemClickListener { aParent, aView, aPosition, aId ->
+            if (activity is PrivateMessageActivity) {
+                (activity as PrivateMessageActivity).showMessage(null, aId.toInt())
+            } else {
+                startActivity(
+                    Intent(activity, MessageDisplayActivity::class.java).putExtra(
+                        Constants.PARAM_PRIVATE_MESSAGE_ID, aId.toInt()
+                    )
+                )
             }
         }
-    };
 
-	@Override
-	public void onPreferenceChange(@NonNull AwfulPreferences mPrefs, String key) {
-        super.onPreferenceChange(mPrefs, key);
-        if("no_fab".equals(key)){
-            mFAB.setVisibility((mPrefs.noFAB ? View.GONE : View.VISIBLE));
-            invalidateOptionsMenu();
+    public override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(prefs, key)
+        if ("no_fab" == key) {
+            mFAB?.setVisibility((if (prefs.noFAB) View.GONE else View.VISIBLE))
+            invalidateOptionsMenu()
         }
-	}
-	private class PMIndexCallback extends ContentObserver implements LoaderManager.LoaderCallbacks<Cursor> {
-        public PMIndexCallback(Handler handler) {
-			super(handler);
-		}
+    }
 
-		@NonNull
-        public Loader<Cursor> onCreateLoader(int aId, Bundle aArgs) {
-            Timber.tag(TAG).i("Load PM Cursor.");
-			return new CursorLoader(getActivity(), 
-					AwfulMessage.CONTENT_URI, 
-					AwfulProvider.PMProjection, 
-					AwfulMessage.FOLDER+"=?", 
-					AwfulProvider.int2StrArray(currentFolder),
-					AwfulMessage.ID+" DESC");
+    private inner class PMIndexCallback(handler: Handler?) : ContentObserver(handler),
+        LoaderManager.LoaderCallbacks<Cursor> {
+        override fun onCreateLoader(aId: Int, aArgs: Bundle?): Loader<Cursor?> {
+            tag(Companion.TAG).i("Load PM Cursor.")
+            return CursorLoader(
+                requireActivity(),
+                AwfulMessage.CONTENT_URI,
+                AwfulProvider.PMProjection,
+                AwfulMessage.FOLDER + "=?",
+                AwfulProvider.int2StrArray(currentFolder),
+                AwfulMessage.ID + " DESC"
+            )
         }
 
-        public void onLoadFinished(Loader<Cursor> aLoader, Cursor aData) {
+        override fun onLoadFinished(aLoader: Loader<Cursor>, aData: Cursor) {
             if (aData != null) {
-                Timber.tag(TAG).v("PM load finished, populating: %s", aData.getCount());
+                tag(Companion.TAG).v("PM load finished, populating: %s", aData.count)
             }
-        	mCursorAdapter.swapCursor(aData);
+            mCursorAdapter?.swapCursor(aData)
         }
-        
-        @Override
-        public void onLoaderReset(Loader<Cursor> aLoader) {
-        	mCursorAdapter.swapCursor(null);
+
+        override fun onLoaderReset(aLoader: Loader<Cursor>) {
+            mCursorAdapter?.swapCursor(null)
         }
-        
-        @Override
-        public void onChange (boolean selfChange){
-            Timber.tag(TAG).i("PM Data update.");
-        	restartLoader(Constants.PRIVATE_MESSAGE_THREAD, null, this);
+
+        override fun onChange(selfChange: Boolean) {
+            tag(Companion.TAG).i("PM Data update.")
+            restartLoader(Constants.PRIVATE_MESSAGE_THREAD, null, this)
         }
     }
 
 
-	@Override
-	public String getTitle() {
-        return switch (currentFolder) {
-            case FOLDER_INBOX -> "Inbox";
-            case FOLDER_SENT -> "Sent";
-            default -> "Messages";
-        };
+    override fun getTitle(): String {
+        return when (currentFolder) {
+            FOLDER_INBOX -> "Inbox"
+            FOLDER_SENT -> "Sent"
+            else -> "Messages"
+        }
     }
 
 
-	@Override
-	public void onRefresh(SwipyRefreshLayoutDirection swipyRefreshLayoutDirection) {
+    override fun onRefresh(swipyRefreshLayoutDirection: SwipyRefreshLayoutDirection?) {
         if (swipyRefreshLayoutDirection == SwipyRefreshLayoutDirection.BOTTOM) {
-            isAllMessages = true;
+            isAllMessages = true
         }
-        syncPMs(isAllMessages);
-	}
+        syncPMs(isAllMessages)
+    }
 }

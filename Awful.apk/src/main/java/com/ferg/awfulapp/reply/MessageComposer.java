@@ -310,10 +310,8 @@ public class MessageComposer extends Fragment implements EmotePickerListener {
 
         editText.setCustomSelectionActionModeCallback(callback);
         // add it to the insert menu too for consistency, why not
-        if (AwfulUtils.isMarshmallow23()) {
-            // noinspection AndroidLintNewApi
-            editText.setCustomInsertionActionModeCallback(callback);
-        }
+        // noinspection AndroidLintNewApi
+        editText.setCustomInsertionActionModeCallback(callback);
     }
 
 

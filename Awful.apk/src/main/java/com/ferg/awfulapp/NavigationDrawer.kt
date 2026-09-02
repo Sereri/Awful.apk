@@ -83,7 +83,12 @@ class NavigationDrawer(val activity: AwfulActivity, toolbar: Toolbar, val prefs:
         avatar = nav.findViewById(R.id.sidebar_avatar) as ImageView
 
         prefs.registerCallback { _, _ -> refresh() }
-        AnnouncementsManager.getInstance().registerListener { _, _, _, _ -> refresh() }
+        AnnouncementsManager.getInstance().registerListener(object : AnnouncementsManager.AnnouncementListener {
+            override fun onAnnouncementsUpdated(newCount: Int, oldUnread: Int, oldRead: Int, isFirstUpdate: Boolean) {
+                refresh()
+            }
+        })
+
         refresh()
         activity.setPreferredFont(navigationMenu)
         navigationMenu.menu.forEach {

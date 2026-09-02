@@ -4,14 +4,14 @@
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,1848 +23,1939 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp
 
-package com.ferg.awfulapp;
-
-import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.DownloadManager;
-import android.app.DownloadManager.Request;
-import android.content.ActivityNotFoundException;
-import android.content.ContentUris;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.ContentObserver;
-import android.database.Cursor;
-import android.graphics.Color;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
-import android.text.TextUtils;
-import android.text.format.Formatter;
-import android.text.style.ForegroundColorSpan;
-import android.view.InflateException;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.CookieManager;
-import android.webkit.DownloadListener;
-import android.webkit.JavascriptInterface;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.android.volley.VolleyError;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.network.CookieController;
-import com.ferg.awfulapp.network.NetworkUtils;
-import com.ferg.awfulapp.popupmenu.PostContextMenu;
-import com.ferg.awfulapp.popupmenu.UrlContextMenu;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.preferences.Keys;
-import com.ferg.awfulapp.provider.AwfulProvider;
-import com.ferg.awfulapp.provider.AwfulTheme;
-import com.ferg.awfulapp.provider.ColorProvider;
-import com.ferg.awfulapp.search.SearchFilter;
-import com.ferg.awfulapp.task.AwfulRequest;
-import com.ferg.awfulapp.task.BookmarkRequest;
-import com.ferg.awfulapp.task.IgnoreRequest;
-import com.ferg.awfulapp.task.ImageSizeRequest;
-import com.ferg.awfulapp.task.MarkLastReadRequest;
-import com.ferg.awfulapp.task.RedirectTask;
-import com.ferg.awfulapp.task.RefreshUserProfileRequest;
-import com.ferg.awfulapp.task.ReportCheckRequest;
-import com.ferg.awfulapp.task.ReportCheckResult;
-import com.ferg.awfulapp.task.ReportRequest;
-import com.ferg.awfulapp.task.SinglePostRequest;
-import com.ferg.awfulapp.task.ThreadLockUnlockRequest;
-import com.ferg.awfulapp.task.ThreadPageRequest;
-import com.ferg.awfulapp.task.VoteRequest;
-import com.ferg.awfulapp.thread.AwfulHtmlPage;
-import com.ferg.awfulapp.thread.AwfulMessage;
-import com.ferg.awfulapp.thread.AwfulPagedItem;
-import com.ferg.awfulapp.thread.AwfulPost;
-import com.ferg.awfulapp.thread.AwfulThread;
-import com.ferg.awfulapp.thread.AwfulURL;
-import com.ferg.awfulapp.thread.AwfulURL.TYPE;
-import com.ferg.awfulapp.util.AwfulError;
-import com.ferg.awfulapp.util.AwfulUtils;
-import com.ferg.awfulapp.webview.AwfulWebView;
-import com.ferg.awfulapp.webview.LoggingWebChromeClient;
-import com.ferg.awfulapp.webview.WebViewJsInterface;
-import com.ferg.awfulapp.widget.PageBar;
-import com.ferg.awfulapp.widget.PagePicker;
-import com.ferg.awfulapp.widget.WebViewSearchBar;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.ShareActionProvider;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.MenuItemCompat;
-import androidx.fragment.app.FragmentManager;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.CursorLoader;
-import androidx.loader.content.Loader;
-import timber.log.Timber;
+import android.Manifest
+import android.app.Activity
+import android.app.AlertDialog
+import android.app.DownloadManager
+import android.content.ActivityNotFoundException
+import android.content.ContentUris
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.database.ContentObserver
+import android.database.Cursor
+import android.graphics.Color
+import android.net.Uri
+import android.os.AsyncTask
+import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.TextUtils
+import android.text.format.Formatter
+import android.text.style.ForegroundColorSpan
+import android.view.InflateException
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.widget.ShareActionProvider
+import androidx.core.content.ContextCompat
+import androidx.core.view.MenuItemCompat
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.CursorLoader
+import androidx.loader.content.Loader
+import com.android.volley.Response
+import com.android.volley.VolleyError
+import com.ferg.awfulapp.CaptchaActivity.Companion.handleCaptchaChallenge
+import com.ferg.awfulapp.FontManager.Companion.getInstance
+import com.ferg.awfulapp.NavigationEvent.LepersColony
+import com.ferg.awfulapp.NavigationEvent.SearchForums
+import com.ferg.awfulapp.NavigationEvent.Url
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.network.CookieController
+import com.ferg.awfulapp.network.NetworkUtils
+import com.ferg.awfulapp.popupmenu.BasePopupMenu.OnActionClickedListener
+import com.ferg.awfulapp.popupmenu.PostContextMenu
+import com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction
+import com.ferg.awfulapp.popupmenu.UrlContextMenu
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.provider.AwfulProvider
+import com.ferg.awfulapp.provider.AwfulTheme
+import com.ferg.awfulapp.provider.ColorProvider
+import com.ferg.awfulapp.search.SearchFilter
+import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
+import com.ferg.awfulapp.task.BookmarkRequest
+import com.ferg.awfulapp.task.IgnoreRequest
+import com.ferg.awfulapp.task.ImageSizeRequest
+import com.ferg.awfulapp.task.MarkLastReadRequest
+import com.ferg.awfulapp.task.RedirectTask
+import com.ferg.awfulapp.task.RefreshUserProfileRequest
+import com.ferg.awfulapp.task.ReportCheckRequest
+import com.ferg.awfulapp.task.ReportCheckResult
+import com.ferg.awfulapp.task.ReportRequest
+import com.ferg.awfulapp.task.SinglePostRequest
+import com.ferg.awfulapp.task.ThreadLockUnlockRequest
+import com.ferg.awfulapp.task.ThreadPageRequest
+import com.ferg.awfulapp.task.ThreadPageRequest.Companion.REQUEST_TAG
+import com.ferg.awfulapp.task.VoteRequest
+import com.ferg.awfulapp.thread.AwfulHtmlPage
+import com.ferg.awfulapp.thread.AwfulMessage
+import com.ferg.awfulapp.thread.AwfulPagedItem
+import com.ferg.awfulapp.thread.AwfulPost
+import com.ferg.awfulapp.thread.AwfulThread
+import com.ferg.awfulapp.thread.AwfulURL
+import com.ferg.awfulapp.thread.AwfulURL.TYPE
+import com.ferg.awfulapp.util.AwfulError
+import com.ferg.awfulapp.util.AwfulUtils
+import com.ferg.awfulapp.webview.AwfulWebView
+import com.ferg.awfulapp.webview.LoggingWebChromeClient
+import com.ferg.awfulapp.webview.WebViewJsInterface
+import com.ferg.awfulapp.widget.MinMaxNumberPicker
+import com.ferg.awfulapp.widget.PageBar
+import com.ferg.awfulapp.widget.PageBar.PageBarCallbacks
+import com.ferg.awfulapp.widget.PagePicker
+import com.ferg.awfulapp.widget.WebViewSearchBar
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
+import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.Strings
+import timber.log.Timber.Forest.d
+import timber.log.Timber.Forest.e
+import timber.log.Timber.Forest.i
+import timber.log.Timber.Forest.w
+import java.util.LinkedList
+import java.util.Locale
+import java.util.regex.Pattern
+import androidx.core.net.toUri
+import androidx.core.view.get
+import androidx.core.view.size
+import androidx.core.view.isEmpty
 
 /**
  * Uses intent extras:
- *  TYPE - STRING ID - DESCRIPTION
- *	int - Constants.THREAD_ID - id number for that thread
- *	int - Constants.THREAD_PAGE - page number to load
- *
- *  Can also handle an HTTP intent that refers to an SA showthread.php? url.
+ * TYPE - STRING ID - DESCRIPTION
+ * int - Constants.THREAD_ID - id number for that thread
+ * int - Constants.THREAD_PAGE - page number to load
+ * 
+ * Can also handle an HTTP intent that refers to an SA showthread.php? url.
  */
-public class ThreadDisplayFragment extends AwfulFragment implements NavigationEventHandler, SwipyRefreshLayout.OnRefreshListener {
+class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
+    SwipyRefreshLayout.OnRefreshListener {
 
-	private static final String THREAD_ID_KEY = "thread_id";
-	private static final String THREAD_PAGE_KEY = "thread_page";
-	private static final String SCROLL_POSITION_KEY = "scroll_position";
-	private static final String KEEP_SCREEN_ON_KEY = "screen_stays_on";
-	private PostLoaderManager mPostLoaderCallback;
-    private ThreadDataCallback mThreadLoaderCallback;
+    companion object {
+        private const val THREAD_ID_KEY = "thread_id"
+        private const val THREAD_PAGE_KEY = "thread_page"
+        private const val SCROLL_POSITION_KEY = "scroll_position"
+        private const val KEEP_SCREEN_ON_KEY = "screen_stays_on"
+        private const val BLANK_USER_ID = 0
+        const val FIRST_PAGE: Int = 1
 
-	/*
+
+        const val NULL_THREAD_ID: Int = 0
+    }
+
+    private var mPostLoaderCallback: PostLoaderManager? = null
+    private var mThreadLoaderCallback: ThreadDataCallback? = null
+
+    /*
 		Potentially null views, if layout inflation failed (i.e. the WebView package is updating)
 	 */
-	@Nullable
-	private PageBar pageBar = null;
-	@Nullable
-	private TextView mUserPostNotice;
-	@Nullable
-	private FloatingActionButton mFAB = null;
-	@Nullable
-    private AwfulWebView mThreadView = null;
+    private var pageBar: PageBar? = null
+    private var mUserPostNotice: TextView? = null
+    private var mFAB: FloatingActionButton? = null
+    private var mThreadView: AwfulWebView? = null
 
-	/** An optional ID to only display posts by a specific user */
-    private Integer postFilterUserId = null;
-	/** The username to display when filtering by a specific user */
-    private String postFilterUsername;
-	/** Stores the page the user was on before enabling filtering, so they can jump back */
-	private int pageBeforeFiltering = 0;
+    /** An optional ID to only display posts by a specific user  */
+    private var postFilterUserId: Int? = null
 
-	private static final int BLANK_USER_ID = 0;
-	public static final int FIRST_PAGE = 1;
+    /** The username to display when filtering by a specific user  */
+    private var postFilterUsername: String? = null
 
+    /** Stores the page the user was on before enabling filtering, so they can jump back  */
+    private var pageBeforeFiltering = 0
 
-	private int currentPage = FIRST_PAGE;
-	public static final int NULL_THREAD_ID = 0;
-	private int currentThreadId = NULL_THREAD_ID;
-	
-	// TODO: fix this it's all over the place, getting assigned as 1 in loadThread etc - maybe it should default to FIRST_PAGE?
-	/** Current thread's last page */
-	private int mLastPage = 0;
-	private int mParentForumId = 0;
-	private boolean threadLocked = false;
-	private boolean threadBookmarked = false;
-    private boolean threadArchived = false;
-	private boolean threadLockableUnlockable = false;
+    var pageNumber: Int = FIRST_PAGE
+        private set
+    private var currentThreadId: Int = NULL_THREAD_ID
 
-    private boolean keepScreenOn = false;
-	//oh god i'm replicating core android functionality, this is a bad sign.
-    private final LinkedList<AwfulStackEntry> backStack = new LinkedList<>();
-	private boolean bypassBackStack = false;
+    // TODO: fix this it's all over the place, getting assigned as 1 in loadThread etc - maybe it should default to FIRST_PAGE?
+    /** Current thread's last page  */
+    private var lastPage = 0
 
-    private String mTitle = null;
-	private String postJump = "";
-	private int savedScrollPosition = 0;
-	/** Whether the currently displayed page represents a full page of posts */
-	private boolean displayingFullPage = false;
+    /**
+     * Get the current thread's parent forum's ID.
+     * 
+     * @return the parent forum's ID, or 0 if something went wrong
+     */
+    var parentForumId: Int = 0
+        private set
+    private var threadLocked = false
+    private var threadBookmarked = false
+    private var threadArchived = false
+    private var threadLockableUnlockable = false
 
-	private ShareActionProvider shareProvider;
+    private var keepScreenOn = false
 
-    private ForumsIndexActivity parentActivity;
-    
-    private final ThreadDisplayFragment mSelf = this;
+    //oh god i'm replicating core android functionality, this is a bad sign.
+    private val backStack: LinkedList<AwfulStackEntry?> = LinkedList<AwfulStackEntry?>()
+    private var bypassBackStack = false
 
-    @Nullable
-	private NavigationEvent pendingNavigation = null;
+    private var mTitle: String? = null
+    private var postJump = ""
+    private var savedScrollPosition = 0
 
+    /** Whether the currently displayed page represents a full page of posts  */
+    private var displayingFullPage = false
 
-	private final HashMap<String,String> ignorePostsHtml = new HashMap<>();
-    private AsyncTask<Void, Void, String> redirect = null;
-	private Uri downloadLink;
+    private var shareProvider: ShareActionProvider? = null
 
-	private final ThreadContentObserver mThreadObserver = new ThreadContentObserver(getHandler());
+    private var parentActivity: ForumsIndexActivity? = null
+
+    private val mSelf = this
+
+    private var pendingNavigation: NavigationEvent? = null
 
 
+    private val ignorePostsHtml = HashMap<String?, String?>()
+    private var redirect: AsyncTask<Void?, Void?, String?>? = null
+    private var downloadLink: Uri? = null
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater aInflater, ViewGroup aContainer, Bundle aSavedState) {
-		try {
-			return inflateView(R.layout.thread_display, aContainer, aInflater);
-		} catch (InflateException e) {
-			if (webViewIsMissing(e)) {
-				return null;
-			} else {
-				throw e;
-			}
-		}
-	}
+    private val mThreadObserver = ThreadContentObserver(handler)
 
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-		pageBar = view.findViewById(R.id.page_bar);
-		pageBar.setListener(new PageBar.PageBarCallbacks() {
-			@Override
-			public void onPageNavigation(boolean nextPage) {
-				turnPage(nextPage);
-			}
-
-			@Override
-			public void onRefreshClicked() {
-				refresh();
-			}
-
-			@Override
-			public void onPageNumberClicked() {
-				displayPagePicker();
-			}
-		});
-		getAwfulActivity().setPreferredFont(pageBar.getTextView());
-
-		if (savedInstanceState != null) {
-			// setting this before the thread view is initialised, so it will reflect the stored state
-			keepScreenOn = savedInstanceState.getBoolean(KEEP_SCREEN_ON_KEY);
-		}
-		mThreadView = view.findViewById(R.id.thread);
-		initThreadViewProperties();
-
-		mUserPostNotice = view.findViewById(R.id.thread_userpost_notice);
-		refreshProbationBar();
-
-		mFAB = view.findViewById(R.id.just_post);
-		mFAB.setOnClickListener(onButtonClick);
-		mFAB.hide();
-
-        setAllowedSwipeRefreshDirections(SwipyRefreshLayoutDirection.BOTH);
-        setSwipyLayout(view.findViewById(R.id.thread_swipe));
-		getSwipyLayout().setColorSchemeResources(ColorProvider.getSRLProgressColors(null));
-		getSwipyLayout().setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null));
-		getSwipyLayout().setEnabled(!getPrefs().disablePullNext);
-    }
-
-
-    @Override
-	public void onActivityCreated(Bundle aSavedState) {
-		super.onActivityCreated(aSavedState);
-
-        setHasOptionsMenu(true);
-        parentActivity = (ForumsIndexActivity) getActivity();
-        mPostLoaderCallback = new PostLoaderManager();
-        mThreadLoaderCallback = new ThreadDataCallback();
-
-		// if a navigation event is pending, we don't care about any saved state - just do the navigation
-		if (pendingNavigation != null) {
-			Timber.d("Activity attached: found pending navigation event, going there");
-			NavigationEvent event = pendingNavigation;
-			pendingNavigation = null;
-			navigate(event);
-			return;
-		}
-
-		boolean loadFromCache = false;
-		if (aSavedState != null) {
-			// restoring old state - we have a thread ID and page
-			// TODO: 04/05/2017 post filtering state isn't restored properly - need to do filtering AND maintain filtered page/position AND recreate the backstack/'go back' UI
-			Timber.i("Restoring fragment - loading cached posts from database");
-			setThreadId(aSavedState.getInt(THREAD_ID_KEY, NULL_THREAD_ID));
-			setPageNumber(aSavedState.getInt(THREAD_PAGE_KEY, FIRST_PAGE));
-			// TODO: 04/05/2017 saved scroll position doesn't seem to actually get used to set the position?
-			savedScrollPosition = aSavedState.getInt(SCROLL_POSITION_KEY, 0);
-			loadFromCache = true;
-		}
-		// no valid thread ID means do nothing I guess? If the intent that created the activity+fragments didn't request a thread
-		if (getThreadId() <= 0) {
-			return;
-		}
-		// if we recreated the fragment (and had a valid thread ID) we just want to load the cached page data,
-		// so we get the same state as before (we don't want to reload the page and e.g. have all the posts marked as seen)
-		if(loadFromCache) {
-			refreshPosts();
-			refreshInfo();
-		} else {
-			syncThread();
-		}
-		updateUiElements();
-	}
-
-
-	/**
-	 * Check if an InflateException is caused by a missing WebView.
-	 * <p>
-	 * Also displays a message for the user.
-	 *
-	 * @param e the exception thrown when inflating the layout
-	 * @return true if the WebView is missing
-	 */
-	private boolean webViewIsMissing(InflateException e) {
-		String message = e.getMessage();
-		//noinspection SpellCheckingInspection
-		if (message == null || !message.toLowerCase().contains("webview")) {
-			return false;
-		}
-		Timber.w("Can't inflate thread view, WebView package is updating?:\n");
-		e.printStackTrace();
-		getAlertView()
-				.setIcon(R.drawable.ic_error)
-				.setTitle(R.string.web_view_missing_alert_title)
-				.setSubtitle(R.string.web_view_missing_alert_message)
-				.show();
-		return true;
-	}
-
-
-
-	private WebViewClient threadWebViewClient = new WebViewClient() {
-
-		@Override
-		public boolean shouldOverrideUrlLoading(WebView aView, String aUrl) {
-			AwfulURL aLink = AwfulURL.parse(aUrl);
-			switch (aLink.getType()) {
-				case FORUM:
-					navigate(new NavigationEvent.Forum((int) aLink.getId(), (int) aLink.getPage()));
-					break;
-				case THREAD:
-					if (aLink.isRedirect()) {
-						startPostRedirect(aLink.getURL(getPrefs().postPerPage));
-					} else {
-						pushThread((int) aLink.getId(), (int) aLink.getPage(), aLink.getFragment().replaceAll("\\D", ""));
-					}
-					break;
-				case POST:
-					startPostRedirect(aLink.getURL(getPrefs().postPerPage));
-					break;
-				case EXTERNAL:
-					if (getPrefs().alwaysOpenUrls) {
-						startUrlIntent(aUrl);
-					} else {
-						showUrlMenu(aUrl);
-					}
-					break;
-				case BANLIST:
-					navigate(new NavigationEvent.LepersColony((int) aLink.getId()));
-					break;
-				case INDEX:
-					navigate(NavigationEvent.ForumIndex.INSTANCE);
-					break;
-			}
-			return true;
-		}
-	};
-
-
-	private void initThreadViewProperties() {
-		if (mThreadView == null) {
-			Timber.w("initThreadViewProperties called for null WebView");
-			return;
-		}
-		mThreadView.setWebViewClient(threadWebViewClient);
-		mThreadView.setWebChromeClient(new LoggingWebChromeClient(mThreadView) {
-                @Override
-                public void onProgressChanged(WebView view, int newProgress) {
-                    super.onProgressChanged(view, newProgress);
-                    setProgress(newProgress / 2 + 50);//second half of progress bar
-                }
-        });
-        mThreadView.setJavascriptHandler(clickInterface);
-
-        refreshSessionCookie();
-		Timber.d("Setting up WebView container HTML");
-		mThreadView.setContent(getBlankPage());
-		mThreadView.setKeepScreenOn(keepScreenOn);
-
-		mThreadView.setDownloadListener(new DownloadListener() {
-			@Override
-			public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength)  {
-				enqueueDownload(Uri.parse(url));
-			}
-		});
-	}
-
-	private void updatePageBar() {
-		if(pageBar != null){
-			pageBar.updatePagePosition(getPageNumber(), getLastPage());
-		}
-		if (getActivity() != null) {
-			invalidateOptionsMenu();
-		}
-		if (mThreadView != null) {
-			getSwipyLayout().setOnRefreshListener(getPrefs().disablePullNext ? null : this);
-		}
-	}
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-		if(mThreadView != null){
-			mThreadView.onResume();
-		}
-        getActivity().getContentResolver().registerContentObserver(AwfulThread.CONTENT_URI, true, mThreadObserver);
-        refreshInfo();
-    }
-
-    
-	@Override
-	public void setAsFocusedPage() {
-        if(mThreadView != null){
-			mThreadView.onResume();
-        	mThreadView.setKeepScreenOn(keepScreenOn);
-        }
-	}
-
-	@Override
-	public void setAsBackgroundPage() {
-        if(mThreadView != null){
-        	mThreadView.setKeepScreenOn(false);
-			mThreadView.onPause();
-		}
-	}
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        getActivity().getContentResolver().unregisterContentObserver(mThreadObserver);
-        getLoaderManager().destroyLoader(Constants.THREAD_INFO_LOADER_ID);
-		if (mThreadView != null) {
-			mThreadView.onPause();
-		}
-	}
-
-	@Override
-	protected void cancelNetworkRequests() {
-		super.cancelNetworkRequests();
-		NetworkUtils.cancelRequests(ThreadPageRequest.Companion.getREQUEST_TAG());
-	}
-
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        getLoaderManager().destroyLoader(Constants.POST_LOADER_ID);
-    }
-
-	private synchronized void refreshSessionCookie(){
-		if(mThreadView != null){
-			CookieManager cookieMonster = CookieManager.getInstance();
-			cookieMonster.removeAllCookies(null /* status not interesting/actionable */);
-			cookieMonster.setCookie(Constants.COOKIE_DOMAIN, CookieController.getCookieString(Constants.COOKIE_NAME_SESSIONID));
-			cookieMonster.setCookie(Constants.COOKIE_DOMAIN, CookieController.getCookieString(Constants.COOKIE_NAME_SESSIONHASH));
-			cookieMonster.setCookie(Constants.COOKIE_DOMAIN, CookieController.getCookieString(Constants.COOKIE_NAME_USERID));
-			cookieMonster.setCookie(Constants.COOKIE_DOMAIN, CookieController.getCookieString(Constants.COOKIE_NAME_PASSWORD));
-
-			// Add the captcha cookie if it is present.
-			final String captchaCookie = CookieController.getCookieString(Constants.COOKIE_NAME_CAPTCHA);
-			if (!captchaCookie.isEmpty()) {
-				cookieMonster.setCookie(Constants.COOKIE_DOMAIN_CAPTCHA, captchaCookie);
-			}
-
-			cookieMonster.setAcceptThirdPartyCookies(mThreadView, true);
-			cookieMonster.flush();
-		}
-	}
- 
-    
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-    	menu.clear();
-    	if(menu.size() == 0){
-    		inflater.inflate(R.menu.post_menu, menu);
-        	MenuItem share = menu.findItem(R.id.share_thread);
-        	if(share != null && MenuItemCompat.getActionProvider(share) instanceof ShareActionProvider){
-        		shareProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(share);
-        		shareProvider.setShareIntent(createShareIntent(null));
-        	}
-    	}
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        if(menu == null || getActivity() == null){
-            return;
-        }
-		MenuItem lockUnlock = menu.findItem(R.id.lock_unlock);
-		if(lockUnlock != null){
-			lockUnlock.setVisible(threadLockableUnlockable);
-			lockUnlock.setTitle((threadLocked ?getString(R.string.thread_unlock):getString(R.string.thread_lock)));
-		}
-		MenuItem find = menu.findItem(R.id.find);
-		if(find != null){
-			find.setVisible(true);
-		}
-		MenuItem reply = menu.findItem(R.id.reply);
-		if(reply != null){
-			reply.setVisible(getPrefs().noFAB);
-		}
-        MenuItem bk = menu.findItem(R.id.bookmark);
-        if(bk != null){
-            if(threadArchived){
-                bk.setTitle(getString(R.string.bookmarkarchived));
-            }else{
-                bk.setTitle((threadBookmarked? getString(R.string.unbookmark):getString(R.string.bookmark)));
+    override fun onCreateView(
+        aInflater: LayoutInflater,
+        aContainer: ViewGroup?,
+        aSavedState: Bundle?
+    ): View? {
+        try {
+            return inflateView(R.layout.thread_display, aContainer, aInflater)
+        } catch (e: InflateException) {
+            if (webViewIsMissing(e)) {
+                return null
+            } else {
+                throw e
             }
-            bk.setEnabled(!threadArchived);
         }
-		MenuItem screen = menu.findItem(R.id.keep_screen_on);
-		if(screen != null){
-			screen.setChecked(keepScreenOn);
-		}
-		MenuItem yospos = menu.findItem(R.id.yospos);
-		if(yospos != null){
-			yospos.setVisible(mParentForumId == Constants.FORUM_ID_YOSPOS);
-		}
-		FontManager fm = FontManager.getInstance();
-		for (int i = 0; i < menu.size(); i++) {
-			fm.setMenuItemFont(menu.getItem(i));
-		}
     }
-    
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-			case R.id.lock_unlock:
-				showThreadLockUnlockDialog();
-				break;
-			case R.id.reply:
-				displayPostReplyDialog();
-				break;
-            case R.id.next_page:
-            	turnPage(true);
-                break;
-    		case R.id.rate_thread:
-    			rateThread();
-    			break;
-    		case R.id.copy_url:
-    			copyThreadURL(null, postFilterUserId);
-    			break;
-    		case R.id.find:
-				((WebViewSearchBar) item.getActionView()).setWebView(mThreadView);
-				break;
-    		case R.id.keep_screen_on:
-    			this.toggleScreenOn();
-                item.setChecked(!item.isChecked());
-    			break;
-            case R.id.bookmark:
-                toggleThreadBookmark();
-                break;
-			case R.id.yospos:
-				toggleYospos();
-				break;
-			case R.id.show_self:
-				showUsersPosts(getPrefs().userId, getPrefs().username);
-				break;
-			case R.id.search_this_thread:
-				SearchFilter threadFilter = new SearchFilter(SearchFilter.FilterType.ThreadId, Integer.toString(currentThreadId));
-				navigate(new NavigationEvent.SearchForums(threadFilter));
-				return true;
-    		default:
-    			return super.onOptionsItemSelected(item);
-    		}
-
-    		return true;
-    	}
 
 
-	/**
-	 * Get a URL that links to a particular thread.
-	 *
-	 * @param postId An optional post ID, appended as the URL's fragment
-	 * @param userId An optional user ID, appended as a query parameter
-	 * @return the full URL
-	 */
-	@NonNull
-	private String generateThreadUrl(@Nullable Integer postId, @Nullable Integer userId) {
-		Uri.Builder builder = Uri.parse(Constants.FUNCTION_THREAD).buildUpon()
-				.appendQueryParameter(Constants.PARAM_THREAD_ID, String.valueOf(getThreadId()))
-				.appendQueryParameter(Constants.PARAM_PAGE, String.valueOf(getPageNumber()))
-				.appendQueryParameter(Constants.PARAM_PER_PAGE, String.valueOf(getPrefs().postPerPage));
-		if (userId != null) {
-			builder.appendQueryParameter(Constants.PARAM_USER_ID, String.valueOf(userId));
-		}
-		if (postId != null) {
-			builder.fragment("post" + postId);
-		}
-		return builder.toString();
-	}
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        pageBar = view.findViewById(R.id.page_bar)
+        pageBar?.setListener(object : PageBarCallbacks {
+            override fun onPageNavigation(nextPage: Boolean) {
+                turnPage(nextPage)
+            }
+
+            override fun onRefreshClicked() {
+                refresh()
+            }
+
+            override fun onPageNumberClicked() {
+                displayPagePicker()
+            }
+        })
+        awfulActivity?.setPreferredFont(pageBar?.textView)
+
+        if (savedInstanceState != null) {
+            // setting this before the thread view is initialized, so it will reflect the stored state
+            keepScreenOn = savedInstanceState.getBoolean(KEEP_SCREEN_ON_KEY)
+        }
+        mThreadView = view.findViewById(R.id.thread)
+        initThreadViewProperties()
+
+        mUserPostNotice = view.findViewById(R.id.thread_userpost_notice)
+        refreshProbationBar()
+
+        mFAB = view.findViewById(R.id.just_post)
+        mFAB?.setOnClickListener(onButtonClick)
+        mFAB?.hide()
+
+        allowedSwipeRefreshDirections = SwipyRefreshLayoutDirection.BOTH
+        swipyLayout = view.findViewById(R.id.thread_swipe)
+        swipyLayout?.let {
+            it.setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
+            it.setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null))
+            it.isEnabled = !prefs.disablePullNext
+        }
+    }
 
 
-	/**
-	 * Get a URL that links to a particular post.
-	 *
-	 * @param postId The ID of the post to link to
-	 * @return the full URL
-	 */
-	@NonNull
-	private String generatePostUrl(int postId) {
-		return Uri.parse(Constants.FUNCTION_THREAD).buildUpon()
-				.appendQueryParameter(Constants.PARAM_GOTO, Constants.VALUE_POST)
-				.appendQueryParameter(Constants.PARAM_POST_ID, Integer.toString(postId))
-				.toString();
-	}
+    override fun onActivityCreated(aSavedState: Bundle?) {
+        super.onActivityCreated(aSavedState)
+
+        setHasOptionsMenu(true)
+        parentActivity = activity as ForumsIndexActivity?
+        mPostLoaderCallback = PostLoaderManager()
+        mThreadLoaderCallback = ThreadDataCallback()
+
+        // if a navigation event is pending, we don't care about any saved state - just do the navigation
+        pendingNavigation?.let {
+            d("Activity attached: found pending navigation event, going there")
+            val event = pendingNavigation!!
+            pendingNavigation = null
+            navigate(event)
+            return
+        }
+
+        var loadFromCache = false
+        if (aSavedState != null) {
+            // restoring old state - we have a thread ID and page
+            // TODO: 04/05/2017 post filtering state isn't restored properly - need to do filtering AND maintain filtered page/position AND recreate the backstack/'go back' UI
+            i("Restoring fragment - loading cached posts from database")
+            this.threadId = aSavedState.getInt(
+                THREAD_ID_KEY,
+                NULL_THREAD_ID
+            )
+            this.pageNumber = aSavedState.getInt(
+                THREAD_PAGE_KEY,
+                FIRST_PAGE
+            )
+            // TODO: 04/05/2017 saved scroll position doesn't seem to actually get used to set the position?
+            savedScrollPosition = aSavedState.getInt(SCROLL_POSITION_KEY, 0)
+            loadFromCache = true
+        }
+        // no valid thread ID means do nothing I guess? If the intent that created the activity+fragments didn't request a thread
+        if (this.threadId <= 0) {
+            return
+        }
+        // if we recreated the fragment (and had a valid thread ID) we just want to load the cached page data,
+        // so we get the same state as before (we don't want to reload the page and e.g. have all the posts marked as seen)
+        if (loadFromCache) {
+            refreshPosts()
+            refreshInfo()
+        } else {
+            syncThread()
+        }
+        updateUiElements()
+    }
 
 
-	/**
-	 * Get a share intent for a url.
-	 * <p/>
-	 * If url is null, a link to the current thread will be generated.
-	 *
-	 * @param url The url to share
-	 */
-	@NonNull
-	public Intent createShareIntent(@Nullable String url) {
-		Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain");
-		if (url == null) {
-			// we're sharing the current thread - we can add the title in here
-			intent.putExtra(Intent.EXTRA_SUBJECT, mTitle);
-			url = generateThreadUrl(null, postFilterUserId);
-		}
-		return intent.putExtra(Intent.EXTRA_TEXT, url);
-	}
+    /**
+     * Check if an InflateException is caused by a missing WebView.
+     * 
+     * 
+     * Also displays a message for the user.
+     * 
+     * @param e the exception thrown when inflating the layout
+     * @return true if the WebView is missing
+     */
+    private fun webViewIsMissing(e: InflateException): Boolean {
+        val message = e.message
+        if (message == null || !message.lowercase(Locale.getDefault()).contains("webview")) {
+            return false
+        }
+        w("Can't inflate thread view, WebView package is updating?:\n")
+        e.printStackTrace()
+        alertView
+            .setIcon(R.drawable.ic_error)
+            .setTitle(R.string.web_view_missing_alert_title)
+            .setSubtitle(R.string.web_view_missing_alert_message)
+            .show()
+        return true
+    }
 
 
+    private val threadWebViewClient: WebViewClient = object : WebViewClient() {
+        override fun shouldOverrideUrlLoading(aView: WebView?, aUrl: String?): Boolean {
+            val aLink = AwfulURL.parse(aUrl)
+            when (aLink.type) {
+                TYPE.FORUM -> navigate(
+                    NavigationEvent.Forum(
+                        aLink.id.toInt(),
+                        aLink.page.toInt()
+                    )
+                )
 
-	/**
-	 * Copy a thread's URL to the clipboard
-	 * @param postId    An optional post ID, used as the url's fragment
-	 * @param userId    An optional user ID, appended to the url as a parameter
-	 */
-	public void copyThreadURL(@Nullable Integer postId, @Nullable Integer userId) {
-		String clipLabel = getString(R.string.copy_url) + getPageNumber();
-		String clipText  = generateThreadUrl(postId, userId);
-		safeCopyToClipboard(clipLabel, clipText, R.string.copy_url_success);
-	}
+                TYPE.THREAD -> if (aLink.isRedirect) {
+                    startPostRedirect(aLink.getURL(prefs.postPerPage))
+                } else {
+                    pushThread(
+                        aLink.id.toInt(),
+                        aLink.page.toInt(),
+                        aLink.fragment.replace("\\D".toRegex(), "")
+                    )
+                }
+
+                TYPE.POST -> startPostRedirect(aLink.getURL(prefs.postPerPage))
+                TYPE.EXTERNAL -> if (prefs.alwaysOpenUrls) {
+                    startUrlIntent(aUrl)
+                } else {
+                    showUrlMenu(aUrl)
+                }
+
+                TYPE.BANLIST -> navigate(LepersColony(aLink.id.toInt()))
+                TYPE.INDEX -> navigate(NavigationEvent.ForumIndex)
+                else -> return true
+            }
+            return true
+        }
+    }
 
 
-	/**
-	 * Display a thread-rating dialog.
-	 *
-	 * This handles the network request to submit the vote, and user feedback.
-	 */
-	private void rateThread() {
-		final CharSequence[] items = {"1", "2", "3", "4", "5"};
-		final Activity activity = this.getActivity();
+    private fun initThreadViewProperties() {
+        if (mThreadView == null) {
+            w("initThreadViewProperties called for null WebView")
+            return
+        }
+        mThreadView?.let {
+            it.webViewClient = threadWebViewClient
+            it.webChromeClient = object : LoggingWebChromeClient(mThreadView) {
+                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                    super.onProgressChanged(view, newProgress)
+                    setProgress(newProgress / 2 + 50) //second half of progress bar
+                }
+            }
+            it.setJavascriptHandler(clickInterface)
 
-		new AlertDialog.Builder(activity)
-				.setTitle("Rate this thread")
-				.setItems(items, (dialog, item) -> queueRequest(new VoteRequest(activity, getThreadId(), item+1)
-                        .build(ThreadDisplayFragment.this, new AwfulRequest.AwfulResultCallback<Void>() {
-                            @Override
-                            public void success(Void result) {
-                                getAlertView().setTitle(R.string.vote_succeeded)
+            refreshSessionCookie()
+            d("Setting up WebView container HTML")
+            it.setContent(this.blankPage)
+            it.keepScreenOn = keepScreenOn
+
+            it.setDownloadListener { url, _, _, _, _ ->
+                enqueueDownload(
+                    Uri.parse(url)
+                )
+            }
+        }
+    }
+
+    private fun updatePageBar() {
+        pageBar?.updatePagePosition(this.pageNumber, this.lastPage)
+        if (activity != null) {
+            invalidateOptionsMenu()
+        }
+        if (mThreadView != null) {
+            swipyLayout?.setOnRefreshListener(if (prefs.disablePullNext) null else this)
+        }
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        mThreadView?.onResume()
+        requireActivity().contentResolver
+            .registerContentObserver(AwfulThread.CONTENT_URI, true, mThreadObserver)
+        refreshInfo()
+    }
+
+
+    public override fun setAsFocusedPage() {
+        mThreadView?.onResume()
+        mThreadView?.keepScreenOn = keepScreenOn
+    }
+
+    public override fun setAsBackgroundPage() {
+        mThreadView?.keepScreenOn = false
+        mThreadView?.onPause()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        requireActivity().contentResolver.unregisterContentObserver(mThreadObserver)
+        loaderManager.destroyLoader(Constants.THREAD_INFO_LOADER_ID)
+        mThreadView?.onPause()
+    }
+
+    override fun cancelNetworkRequests() {
+        super.cancelNetworkRequests()
+        NetworkUtils.cancelRequests(REQUEST_TAG)
+    }
+
+
+    public override fun onDestroy() {
+        super.onDestroy()
+        loaderManager.destroyLoader(Constants.POST_LOADER_ID)
+    }
+
+    @Synchronized
+    private fun refreshSessionCookie() {
+        if (mThreadView != null) {
+            val cookieMonster = CookieManager.getInstance()
+            cookieMonster.removeAllCookies(null /* status not interesting/actionable */)
+            cookieMonster.setCookie(
+                Constants.COOKIE_DOMAIN, CookieController.getCookieString(
+                    Constants.COOKIE_NAME_SESSIONID
+                )
+            )
+            cookieMonster.setCookie(
+                Constants.COOKIE_DOMAIN, CookieController.getCookieString(
+                    Constants.COOKIE_NAME_SESSIONHASH
+                )
+            )
+            cookieMonster.setCookie(
+                Constants.COOKIE_DOMAIN, CookieController.getCookieString(
+                    Constants.COOKIE_NAME_USERID
+                )
+            )
+            cookieMonster.setCookie(
+                Constants.COOKIE_DOMAIN, CookieController.getCookieString(
+                    Constants.COOKIE_NAME_PASSWORD
+                )
+            )
+
+            // Add the captcha cookie if it is present.
+            val captchaCookie = CookieController.getCookieString(Constants.COOKIE_NAME_CAPTCHA)
+            if (!captchaCookie.isEmpty()) {
+                cookieMonster.setCookie(Constants.COOKIE_DOMAIN_CAPTCHA, captchaCookie)
+            }
+
+            cookieMonster.setAcceptThirdPartyCookies(mThreadView, true)
+            cookieMonster.flush()
+        }
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        menu.clear()
+        if (menu.isEmpty()) {
+            inflater.inflate(R.menu.post_menu, menu)
+            val share = menu.findItem(R.id.share_thread)
+            if (share != null && MenuItemCompat.getActionProvider(share) is ShareActionProvider) {
+                shareProvider = MenuItemCompat.getActionProvider(share) as ShareActionProvider?
+                shareProvider?.setShareIntent(createShareIntent(null))
+            }
+        }
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        if (activity == null) {
+            return
+        }
+        val lockUnlock = menu.findItem(R.id.lock_unlock)
+        if (lockUnlock != null) {
+            lockUnlock.isVisible = threadLockableUnlockable
+            lockUnlock.setTitle(
+                (if (threadLocked) getString(R.string.thread_unlock) else getString(
+                    R.string.thread_lock
+                ))
+            )
+        }
+        val find = menu.findItem(R.id.find)
+        if (find != null) {
+            find.isVisible = true
+        }
+        val reply = menu.findItem(R.id.reply)
+        if (reply != null) {
+            reply.isVisible = prefs.noFAB
+        }
+        val bk = menu.findItem(R.id.bookmark)
+        if (bk != null) {
+            if (threadArchived) {
+                bk.title = getString(R.string.bookmarkarchived)
+            } else {
+                bk.setTitle((if (threadBookmarked) getString(R.string.unbookmark) else getString(R.string.bookmark)))
+            }
+            bk.isEnabled = !threadArchived
+        }
+        val screen = menu.findItem(R.id.keep_screen_on)
+        if (screen != null) {
+            screen.isChecked = keepScreenOn
+        }
+        val yospos = menu.findItem(R.id.yospos)
+        if (yospos != null) {
+            yospos.isVisible = this.parentForumId == Constants.FORUM_ID_YOSPOS
+        }
+        val fm = getInstance()
+        for (i in 0..<menu.size) {
+            fm.setMenuItemFont(menu[i])
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.lock_unlock -> showThreadLockUnlockDialog()
+            R.id.reply -> displayPostReplyDialog()
+            R.id.next_page -> turnPage(true)
+            R.id.rate_thread -> rateThread()
+            R.id.copy_url -> copyThreadURL(null, postFilterUserId)
+            R.id.find -> (item.actionView as WebViewSearchBar).webView = mThreadView
+            R.id.keep_screen_on -> {
+                this.toggleScreenOn()
+                item.isChecked = !item.isChecked
+            }
+
+            R.id.bookmark -> toggleThreadBookmark()
+            R.id.yospos -> toggleYospos()
+            R.id.show_self -> showUsersPosts(prefs.userId, prefs.username)
+            R.id.search_this_thread -> {
+                val threadFilter =
+                    SearchFilter(SearchFilter.FilterType.ThreadId, currentThreadId.toString())
+                navigate(SearchForums(threadFilter))
+                return true
+            }
+
+            else -> return super.onOptionsItemSelected(item)
+        }
+
+        return true
+    }
+
+
+    /**
+     * Get a URL that links to a particular thread.
+     * 
+     * @param postId An optional post ID, appended as the URL's fragment
+     * @param userId An optional user ID, appended as a query parameter
+     * @return the full URL
+     */
+    private fun generateThreadUrl(postId: Int?, userId: Int?): String {
+        val builder = Constants.FUNCTION_THREAD.toUri().buildUpon()
+            .appendQueryParameter(Constants.PARAM_THREAD_ID, this.threadId.toString())
+            .appendQueryParameter(Constants.PARAM_PAGE, this.pageNumber.toString())
+            .appendQueryParameter(Constants.PARAM_PER_PAGE, prefs.postPerPage.toString())
+        if (userId != null) {
+            builder.appendQueryParameter(Constants.PARAM_USER_ID, userId.toString())
+        }
+        if (postId != null) {
+            builder.fragment("post" + postId)
+        }
+        return builder.toString()
+    }
+
+
+    /**
+     * Get a URL that links to a particular post.
+     * 
+     * @param postId The ID of the post to link to
+     * @return the full URL
+     */
+    private fun generatePostUrl(postId: Int): String {
+        return Constants.FUNCTION_THREAD.toUri().buildUpon()
+            .appendQueryParameter(Constants.PARAM_GOTO, Constants.VALUE_POST)
+            .appendQueryParameter(Constants.PARAM_POST_ID, postId.toString())
+            .toString()
+    }
+
+
+    /**
+     * Get a share intent for a url.
+     * 
+     * 
+     * If url is null, a link to the current thread will be generated.
+     * 
+     * @param url The url to share
+     */
+    fun createShareIntent(url: String?): Intent {
+        var url = url
+        val intent = Intent(Intent.ACTION_SEND).setType("text/plain")
+        if (url == null) {
+            // we're sharing the current thread - we can add the title in here
+            intent.putExtra(Intent.EXTRA_SUBJECT, mTitle)
+            url = generateThreadUrl(null, postFilterUserId)
+        }
+        return intent.putExtra(Intent.EXTRA_TEXT, url)
+    }
+
+
+    /**
+     * Copy a thread's URL to the clipboard
+     * @param postId    An optional post ID, used as the url's fragment
+     * @param userId    An optional user ID, appended to the url as a parameter
+     */
+    fun copyThreadURL(postId: Int?, userId: Int?) {
+        val clipLabel = getString(R.string.copy_url) + this.pageNumber
+        val clipText = generateThreadUrl(postId, userId)
+        safeCopyToClipboard(clipLabel, clipText, R.string.copy_url_success)
+    }
+
+
+    /**
+     * Display a thread-rating dialog.
+     * 
+     * This handles the network request to submit the vote, and user feedback.
+     */
+    private fun rateThread() {
+        val items = arrayOf<CharSequence?>("1", "2", "3", "4", "5")
+        val activity: Activity? = this.activity
+
+        AlertDialog.Builder(activity)
+            .setTitle("Rate this thread")
+            .setItems(
+                items,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, item: Int ->
+                    queueRequest(
+                        VoteRequest(
+                            requireActivity(),
+                            this.threadId, item + 1
+                        )
+                            .build(this@ThreadDisplayFragment, object : AwfulResultCallback<Void?> {
+                                override fun success(result: Void?) {
+                                    alertView.setTitle(R.string.vote_succeeded)
                                         .setSubtitle(R.string.vote_succeeded_sub)
                                         .setIcon(R.drawable.ic_mood)
-                                        .show();
-                            }
+                                        .show()
+                                }
 
 
-                            @Override
-                            public void failure(VolleyError error) {
-                            }
-                        }))).show();
-	}
-
-
-	/**
-	 * Add a user to the ignore list.
-	 *
-	 * @param userId The awful ID of the user
-	 */
-	public void ignoreUser(int userId) {
-		final Activity activity = getActivity();
-		if (getPrefs().ignoreFormkey == null) {
-			queueRequest(new RefreshUserProfileRequest(activity).build());
-		}
-		if (getPrefs().showIgnoreWarning) {
-
-			DialogInterface.OnClickListener onClickListener = (dialog, which) -> {
-                if (which == AlertDialog.BUTTON_NEUTRAL) {
-                    // cancel future alerts if the user clicks the "don't warn" option
-                    getPrefs().setPreference(Keys.SHOW_IGNORE_WARNING, false);
-                }
-                doIgnoreUser(activity, userId);
-            };
-
-			new AlertDialog.Builder(activity)
-			.setPositiveButton(R.string.confirm, onClickListener)
-			.setNeutralButton(R.string.dont_show_again, onClickListener)
-			.setNegativeButton(R.string.cancel, null)
-			.setTitle(R.string.ignore_title)
-			.setMessage(R.string.ignore_message)
-			.show();
-		} else {
-			doIgnoreUser(activity, userId);
-		}
-	}
-
-
-	/**
-	 * Carry out the ignore user request
-     */
-	private void doIgnoreUser(@NonNull Context context, int userId) {
-		//we don't care about status callbacks for this, so we use the build() that doesn't do callbacks
-		queueRequest(new IgnoreRequest(context, userId).build());
-	}
-
-
-    /**
-	 * Toggle a user as marked or unmarked.
-     */
-	public void toggleMarkUser(String username){
-        if(getPrefs().markedUsers.contains(username)){
-            getPrefs().unmarkUser(username);
-        }else{
-            getPrefs().markUser(username);
-        }
-	}
-
-
-	/**
-	 * Toggle between displaying a single user's posts, or all posts
-	 * @param aPostId	The ID of the post to display, if toggling filtering off
-	 * @param aUserId	The ID of the user whose posts we're showing, if toggling on
-	 * @param aUsername	The username of the user, if toggling on
-     */
-	// TODO: refactor this and the methods it calls - it's so weird
-	public void toggleUserPosts(int aPostId, int aUserId, String aUsername){
-		if(postFilterUserId != null){
-			showAllPosts(aPostId);
-		}else{
-			showUsersPosts(aUserId, aUsername);
-		}
-	}
-
-
-	/**
-	 * Display a dialog to report a post
-	 *
-	 * @param postId	The ID of the bad post
-     */
-	public void reportUser(int postId){
-		queueRequest(new ReportCheckRequest(getActivity(), postId)
-			.build(ThreadDisplayFragment.this, new AwfulRequest.AwfulResultCallback<ReportCheckResult>() {
-				@Override
-				public void success(ReportCheckResult result) {
-					if (result.getAlreadyReported()) {
-						getAlertView().setTitle("This post has already been reported recently")
-							.setIcon(R.drawable.ic_mood).show();
-					} else {
-						showReportDialog(postId, result.getWarning() != null ? result.getWarning() : "");
-					}
-				}
-
-				@Override
-				public void failure(VolleyError error) {
-					getAlertView().setTitle("Failed to check report status")
-						.setIcon(R.drawable.ic_mood).show();
-				}
-			}));
-	}
-
-	private void showReportDialog(int postId, String warning) {
-		final EditText reportReason = new EditText(this.getActivity());
-
-		String body = getString(R.string.report_post_message);
-		CharSequence message;
-		if (warning.isEmpty()) {
-			message = body;
-		} else {
-			int warningColor = getResources().getColor(R.color.popup_warning_text);
-			SpannableString warningSpan = new SpannableString(warning);
-			warningSpan.setSpan(new ForegroundColorSpan(warningColor), 0, warning.length(), 0);
-			SpannableStringBuilder sb = new SpannableStringBuilder();
-			sb.append(warningSpan);
-			sb.append("\n\n");
-			sb.append(body);
-			message = sb;
-		}
-
-		new AlertDialog.Builder(this.getActivity())
-		  .setTitle("Report inappropriate post")
-		  .setMessage(message)
-		  .setView(reportReason)
-		  .setPositiveButton("Report", (dialog, whichButton) -> {
-            String reason = reportReason.getText().toString();
-            queueRequest(new ReportRequest(getActivity(), postId, reason).build(ThreadDisplayFragment.this, new AwfulRequest.AwfulResultCallback<String>() {
-                @Override
-                public void success(String result) {
-                    getAlertView().setTitle(result).setIcon(R.drawable.ic_mood).show();
-                }
-
-                @Override
-                public void failure(VolleyError error) {
-                    getAlertView().setTitle(error.getMessage()).setIcon(R.drawable.ic_mood).show();
-
-                }
-            }));
-          })
-		  .setNegativeButton(R.string.cancel, null)
-		  .show();
-	}
-
-	/**
-	 * Toggles whether to display this user's avatar or not
-	 *
-	 * @param avatarUrl		The URL of the avatar to toggle the display of. Ignored if null or empty string.
-	 */
-	public void toggleAvatar(String avatarUrl) {
-		if (TextUtils.isEmpty(avatarUrl)) {
-			return;
-		}
-		Set<String> blocked = getPrefs().getPreference(Keys.BLOCKED_AVATAR_URLS, Collections.emptySet());
-		Set<String> newSet = new HashSet<>(blocked); // not allowed to mutate original set
-
-		if (!newSet.remove(avatarUrl)) {
-			newSet.add(avatarUrl);
-		}
-		getPrefs().setPreference(Keys.BLOCKED_AVATAR_URLS, newSet);
-	}
-
-	@Override
-	public void onSaveInstanceState(@NonNull Bundle outState){
-		super.onSaveInstanceState(outState);
-    	Timber.d("onSaveInstanceState - storing thread ID, page number and scroll position");
-        outState.putInt(THREAD_ID_KEY, getThreadId());
-        outState.putInt(THREAD_PAGE_KEY, getPageNumber());
-    	if(mThreadView != null){
-    		outState.putInt(SCROLL_POSITION_KEY, mThreadView.getScrollY());
-    	}
-    	outState.putBoolean(KEEP_SCREEN_ON_KEY, keepScreenOn);
+                                override fun failure(error: VolleyError?) {
+                                }
+                            })
+                    )
+                }).show()
     }
 
 
     /**
-	 * Reload the current thread page
-	 */
-    private void syncThread() {
-		final Activity activity = getActivity();
+     * Add a user to the ignore list.
+     * 
+     * @param userId The awful ID of the user
+     */
+    fun ignoreUser(userId: Int) {
+        val activity: Activity? = getActivity()
+        if (prefs.ignoreFormkey == null) {
+            queueRequest(RefreshUserProfileRequest(requireActivity()).build())
+        }
+        if (prefs.showIgnoreWarning) {
+            val onClickListener =
+                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
+                    if (which == AlertDialog.BUTTON_NEUTRAL) {
+                        // cancel future alerts if the user clicks the "don't warn" option
+                        prefs.setPreference(Keys.SHOW_IGNORE_WARNING, false)
+                    }
+                    doIgnoreUser(requireActivity(), userId)
+                }
+
+            AlertDialog.Builder(activity)
+                .setPositiveButton(R.string.confirm, onClickListener)
+                .setNeutralButton(R.string.dont_show_again, onClickListener)
+                .setNegativeButton(R.string.cancel, null)
+                .setTitle(R.string.ignore_title)
+                .setMessage(R.string.ignore_message)
+                .show()
+        } else {
+            doIgnoreUser(requireActivity(), userId)
+        }
+    }
+
+
+    /**
+     * Carry out the ignore user request
+     */
+    private fun doIgnoreUser(context: Context, userId: Int) {
+        //we don't care about status callbacks for this, so we use the build() that doesn't do callbacks
+        queueRequest(IgnoreRequest(context, userId).build())
+    }
+
+
+    /**
+     * Toggle a user as marked or unmarked.
+     */
+    fun toggleMarkUser(username: String?) {
+        if (prefs.markedUsers.contains(username)) {
+            prefs.unmarkUser(username)
+        } else {
+            prefs.markUser(username)
+        }
+    }
+
+
+    /**
+     * Toggle between displaying a single user's posts, or all posts
+     * @param aPostId    The ID of the post to display, if toggling filtering off
+     * @param aUserId    The ID of the user whose posts we're showing, if toggling on
+     * @param aUsername    The username of the user, if toggling on
+     */
+    // TODO: refactor this and the methods it calls - it's so weird
+    fun toggleUserPosts(aPostId: Int, aUserId: Int, aUsername: String?) {
+        if (postFilterUserId != null) {
+            showAllPosts(aPostId)
+        } else {
+            showUsersPosts(aUserId, aUsername)
+        }
+    }
+
+
+    /**
+     * Display a dialog to report a post
+     * 
+     * @param postId    The ID of the bad post
+     */
+    fun reportUser(postId: Int) {
+        queueRequest(
+            ReportCheckRequest(requireActivity(), postId)
+                .build(
+                    this@ThreadDisplayFragment,
+                    object : AwfulResultCallback<ReportCheckResult> {
+                        override fun success(result: ReportCheckResult) {
+                            if (result.alreadyReported) {
+                                alertView.setTitle("This post has already been reported recently")
+                                    .setIcon(R.drawable.ic_mood).show()
+                            } else {
+                                showReportDialog(
+                                    postId,
+                                    if (result.warning != null) result.warning else ""
+                                )
+                            }
+                        }
+
+                        override fun failure(error: VolleyError?) {
+                            alertView.setTitle("Failed to check report status")
+                                .setIcon(R.drawable.ic_mood).show()
+                        }
+                    })
+        )
+    }
+
+    private fun showReportDialog(postId: Int, warning: String) {
+        val reportReason = EditText(this.activity)
+
+        val body = getString(R.string.report_post_message)
+        val message: CharSequence?
+        if (warning.isEmpty()) {
+            message = body
+        } else {
+            val warningColor = resources.getColor(R.color.popup_warning_text)
+            val warningSpan = SpannableString(warning)
+            warningSpan.setSpan(ForegroundColorSpan(warningColor), 0, warning.length, 0)
+            val sb = SpannableStringBuilder()
+            sb.append(warningSpan)
+            sb.append("\n\n")
+            sb.append(body)
+            message = sb
+        }
+
+        AlertDialog.Builder(this.activity)
+            .setTitle("Report inappropriate post")
+            .setMessage(message)
+            .setView(reportReason)
+            .setPositiveButton(
+                "Report",
+                DialogInterface.OnClickListener { dialog: DialogInterface?, whichButton: Int ->
+                    val reason = reportReason.text.toString()
+                    queueRequest(
+                        ReportRequest(
+                            requireActivity(),
+                            postId,
+                            reason
+                        ).build(this@ThreadDisplayFragment, object : AwfulResultCallback<String> {
+                            override fun success(result: String) {
+                                alertView.setTitle(result).setIcon(R.drawable.ic_mood).show()
+                            }
+
+                            override fun failure(error: VolleyError?) {
+                                alertView.setTitle(error?.message).setIcon(R.drawable.ic_mood).show()
+                            }
+                        })
+                    )
+                })
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Toggles whether to display this user's avatar or not
+     * 
+     * @param avatarUrl        The URL of the avatar to toggle the display of. Ignored if null or empty string.
+     */
+    fun toggleAvatar(avatarUrl: String?) {
+        if (TextUtils.isEmpty(avatarUrl)) {
+            return
+        }
+        val blocked = prefs.getPreference(Keys.BLOCKED_AVATAR_URLS, mutableSetOf<String?>())
+        val newSet: MutableSet<String?> =
+            HashSet(blocked) // not allowed to mutate original set
+
+        if (!newSet.remove(avatarUrl)) {
+            newSet.add(avatarUrl)
+        }
+        prefs.setPreference(Keys.BLOCKED_AVATAR_URLS, newSet)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        d("onSaveInstanceState - storing thread ID, page number and scroll position")
+        outState.putInt(THREAD_ID_KEY, this.threadId)
+        outState.putInt(THREAD_PAGE_KEY, this.pageNumber)
+        if(mThreadView != null) {
+            outState.putInt(SCROLL_POSITION_KEY, mThreadView!!.scrollY)
+        }
+        outState.putBoolean(KEEP_SCREEN_ON_KEY, keepScreenOn)
+    }
+
+
+    /**
+     * Reload the current thread page
+     */
+    private fun syncThread() {
+        val activity: Activity? = getActivity()
         if (activity != null) {
-			Timber.i("Syncing - reloading from site (thread %d, page %d) to update DB", getThreadId(), getPageNumber());
-			// cancel pending post loading requests
-			NetworkUtils.cancelRequests(ThreadPageRequest.Companion.getREQUEST_TAG());
-			// call this with cancelOnDestroy=false to retain the request's specific type tag
-			final int pageNumber = getPageNumber();
-			int userId = postFilterUserId == null ? BLANK_USER_ID : postFilterUserId;
-			queueRequest(new ThreadPageRequest(activity, getThreadId(), pageNumber, userId)
-					.build(this, new AwfulRequest.AwfulResultCallback<Void>() {
-				@Override
-				public void success(Void result) {
-					refreshInfo();
-					setProgress(75);
-					refreshPosts();
-				}
+            i(
+                "Syncing - reloading from site (thread %d, page %d) to update DB",
+                this.threadId,
+                this.pageNumber
+            )
+            // cancel pending post loading requests
+            NetworkUtils.cancelRequests(REQUEST_TAG)
+            // call this with cancelOnDestroy=false to retain the request's specific type tag
+            val pageNumber = this.pageNumber
+            val userId = postFilterUserId ?: BLANK_USER_ID
+            queueRequest(
+                ThreadPageRequest(activity, this.threadId, pageNumber, userId)
+                    .build(this, object : AwfulResultCallback<Void?> {
+                        override fun success(result: Void?) {
+                            refreshInfo()
+                            setProgress(75)
+                            refreshPosts()
+                        }
 
-				@Override
-				public void failure(VolleyError error) {
-					CaptchaActivity.handleCaptchaChallenge(activity, error);
-					Timber.w("Failed to sync thread! Error: %s", error.getMessage());
-					refreshInfo();
-					refreshPosts();
-				}
-			}), false);
+                        override fun failure(error: VolleyError?) {
+                            error?.let {handleCaptchaChallenge(activity, it)}
+                            w("Failed to sync thread! Error: %s", error?.message)
+                            refreshInfo()
+                            refreshPosts()
+                        }
+                    }), false
+            )
         }
     }
 
 
-	/**
-	 * Mark a post as the last read in this thread.
-	 * <p/>
-	 * This takes an attribute in the HTML called <code>data-idx</code>, which is basically
-	 * an enumeration of the posts in the thread.
-	 *
-	 * @param index The <code>data-idx</code> value of the post.
-	 */
-	public void markLastRead(int index) {
-		getAlertView().setTitle(R.string.mark_last_read_progress)
-				.setSubtitle(R.string.please_wait_subtext)
-				.setIcon(R.drawable.ic_visibility)
-				.show();
+    /**
+     * Mark a post as the last read in this thread.
+     * 
+     * 
+     * This takes an attribute in the HTML called `data-idx`, which is basically
+     * an enumeration of the posts in the thread.
+     * 
+     * @param index The `data-idx` value of the post.
+     */
+    fun markLastRead(index: Int) {
+        alertView.setTitle(R.string.mark_last_read_progress)
+            .setSubtitle(R.string.please_wait_subtext)
+            .setIcon(R.drawable.ic_visibility)
+            .show()
 
-		queueRequest(new MarkLastReadRequest(getActivity(), getThreadId(), index)
-				.build(null, new AwfulRequest.AwfulResultCallback<Void>() {
-			@Override
-			public void success(Void result) {
-				if(getActivity() != null){
-					getAlertView().setTitle(R.string.mark_last_read_success)
-							.setIcon(R.drawable.ic_visibility)
-							.show();
-					refreshInfo();
-					refreshPosts();
-				}
-			}
-
-
-			@Override
-			public void failure(VolleyError error) {
-
-			}
-		}));
-	}
+        queueRequest(
+            MarkLastReadRequest(requireActivity(), this.threadId, index)
+                .build(null, object : AwfulResultCallback<Void?> {
+                    override fun success(result: Void?) {
+                        if (activity != null) {
+                            alertView.setTitle(R.string.mark_last_read_success)
+                                .setIcon(R.drawable.ic_visibility)
+                                .show()
+                            refreshInfo()
+                            refreshPosts()
+                        }
+                    }
 
 
-	/**
-	 * Toggle this thread's bookmarked status.
-	 */
-	private void toggleThreadBookmark() {
-		Activity activity = getActivity();
-		if(activity != null){
-			queueRequest(new BookmarkRequest(activity, getThreadId(), !threadBookmarked)
-					.build(this, new AwfulRequest.AwfulResultCallback<Void>() {
-				@Override
-				public void success(Void result) {
-					refreshInfo();
-				}
-
-				@Override
-				public void failure(VolleyError error) {
-					refreshInfo();
-				}
-			}));
-		}
-	}
-
-
-	/**
-	 * Toggle between amberPOS and greenPOS, refreshing the display.
-	 */
-	private void toggleYospos() {
-		getPrefs().amberDefaultPos = !getPrefs().amberDefaultPos;
-		getPrefs().setPreference(Keys.AMBER_DEFAULT_POS, getPrefs().amberDefaultPos);
-		if (mThreadView != null) {
-			mThreadView.runJavascript(String.format("changeCSS('%s')", AwfulTheme.forForum(mParentForumId).getCssPath()));
-		}
-	}
+                    override fun failure(error: VolleyError?) {
+                    }
+                })
+        )
+    }
 
 
     /**
-	 * Reload with a new URL
-	 * @param postUrl	The URL of the post we should land on
+     * Toggle this thread's bookmarked status.
      */
-	private void startPostRedirect(final String postUrl) {
-		final AwfulActivity activity = getAwfulActivity();
-		if (activity == null) {
-			return;
-		}
-		if (redirect != null) {
-            redirect.cancel(false);
+    private fun toggleThreadBookmark() {
+        val activity: Activity? = getActivity()
+        if (activity != null) {
+            queueRequest(
+                BookmarkRequest(activity, this.threadId, !threadBookmarked)
+                    .build(this, object : AwfulResultCallback<Void?> {
+                        override fun success(result: Void?) {
+                            refreshInfo()
+                        }
+
+                        override fun failure(error: VolleyError?) {
+                            refreshInfo()
+                        }
+                    })
+            )
         }
-		setProgress(50);
-		redirect = new RedirectTask(postUrl) {
-            @Override
-            protected void onPostExecute(String url) {
-                if (isCancelled()) {
-                    return;
+    }
+
+
+    /**
+     * Toggle between amberPOS and greenPOS, refreshing the display.
+     */
+    private fun toggleYospos() {
+        prefs.amberDefaultPos = !prefs.amberDefaultPos
+        prefs.setPreference(Keys.AMBER_DEFAULT_POS, prefs.amberDefaultPos)
+        mThreadView?.runJavascript(
+            String.format(
+                "changeCSS('%s')", AwfulTheme.forForum(
+                    this.parentForumId
+                ).getCssPath()
+            )
+        )
+    }
+
+
+    /**
+     * Reload with a new URL
+     * @param postUrl    The URL of the post we should land on
+     */
+    private fun startPostRedirect(postUrl: String) {
+        val activity = awfulActivity ?: return
+        redirect?.cancel(false)
+        setProgress(50)
+        redirect = object : RedirectTask(postUrl) {
+            override fun onPostExecute(url: String?) {
+                if (isCancelled) {
+                    return
                 } else if (url == null) {
-                    getAlertView().setDisplayLength(Toast.LENGTH_LONG).show(new AwfulError());
-                    return;
+                    alertView.setDisplayLength(Toast.LENGTH_LONG).show(AwfulError())
+                    return
                 }
 
-                AwfulURL result = AwfulURL.parse(url);
+                val result = AwfulURL.parse(url)
                 if (postUrl.contains(Constants.VALUE_LASTPOST)) {
                     //This is a workaround for how the forums handle the perPage value with goto=lastpost.
                     //The redirected url is lacking the perpage=XX value.
                     //We just override the assumed (40) with the number we requested when starting the redirect.
                     //I gotta ask chooch to fix this at some point.
-                    result.setPerPage(getPrefs().postPerPage);
+                    result.setPerPage(prefs.postPerPage)
                 }
-                if (result.getType() == TYPE.THREAD) {
-					int threadId = (int) result.getId();
-					int threadPage = (int) result.getPage(getPrefs().postPerPage);
-					String postJump = result.getFragment();
-					if (bypassBackStack) {
-                        openThread(threadId, threadPage, postJump);
+                if (result.type == TYPE.THREAD) {
+                    val threadId = result.id.toInt()
+                    val threadPage = result.getPage(prefs.postPerPage).toInt()
+                    val postJump = result.fragment
+                    if (bypassBackStack) {
+                        openThread(threadId, threadPage, postJump)
                     } else {
-                        pushThread(threadId, threadPage, postJump);
+                        pushThread(threadId, threadPage, postJump)
                     }
-                } else if (result.getType() == TYPE.INDEX) {
-                    activity.navigate(NavigationEvent.ForumIndex.INSTANCE);
+                } else if (result.type == TYPE.INDEX) {
+                    activity.navigate(NavigationEvent.ForumIndex)
                 }
-                redirect = null;
-                bypassBackStack = false;
-                setProgress(100);
+                redirect = null
+                bypassBackStack = false
+                setProgress(100)
             }
-        }.execute();
-	}
+        }.execute()
+    }
 
 
-	/**
-	 * Show the page picker dialog, and handle user input and navigation.
-	 */
-	private void displayPagePicker() {
-		Activity activity = getActivity();
-		if (activity == null) {
-			return;
-		}
+    /**
+     * Show the page picker dialog, and handle user input and navigation.
+     */
+    private fun displayPagePicker() {
+        val activity: Activity? = getActivity()
+        if (activity == null) {
+            return
+        }
 
-		new PagePicker(activity, getLastPage(), getPageNumber(), (button, resultValue) -> {
-            if (button == DialogInterface.BUTTON_POSITIVE) {
-                goToPage(resultValue);
-            }
-        }).show();
-	}
+        PagePicker(
+            activity,
+            this.lastPage,
+            this.pageNumber, MinMaxNumberPicker.ResultListener { button: Int, resultValue: Int ->
+                if (button == DialogInterface.BUTTON_POSITIVE) {
+                    goToPage(resultValue)
+                }
+            }).show()
+    }
 
 
-	@Override
-    public void onActivityResult(int aRequestCode, int aResultCode, Intent aData) {
-    	Timber.d("onActivityResult - request code: %d, result: %d", aRequestCode, aResultCode);
+    override fun onActivityResult(aRequestCode: Int, aResultCode: Int, aData: Intent?) {
+        d("onActivityResult - request code: %d, result: %d", aRequestCode, aResultCode)
         // If we're here because of a post result, refresh the thread
-        switch (aRequestCode) {
-            case PostReplyFragment.REQUEST_POST:
-            		bypassBackStack = true;
-            	if(aResultCode == PostReplyFragment.RESULT_POSTED){
-            		startPostRedirect(AwfulURL.threadLastPage(getThreadId(), getPrefs().postPerPage).getURL(getPrefs().postPerPage));
-            	}else if(aResultCode > 100){//any result >100 it is a post id we edited
-					// TODO: >100 is a bit too magical
-            		startPostRedirect(AwfulURL.post(aResultCode, getPrefs().postPerPage).getURL(getPrefs().postPerPage));
-            	}
-                break;
-        }
-    }
-
-
-	/**
-	 * Refresh the page
-	 */
-    private void refresh() {
-		showBlankPage();
-        syncThread();
-    }
-
-
-	/**
-	 * Load the next or previous page.
-	 *
-	 * The current page will reload if there is no next/previous page to move to.
-	 */
-    private void turnPage(boolean forwards) {
-		int currentPage = getPageNumber();
-		int limit = forwards ? getLastPage() : FIRST_PAGE;
-		if (currentPage == limit) {
-            refresh();
-        } else {
-            goToPage(currentPage + (forwards ? 1 : -1));
-        }
-    }
-
-
-	/**
-	 * General click listener for thread view widgets
-	 */
-    private final View.OnClickListener onButtonClick = aView -> {
-        switch (aView.getId()) {
-            case R.id.just_post:
-                displayPostReplyDialog();
-                break;
-        }
-    };
-
-    private void displayPostReplyDialog() {
-        displayPostReplyDialog(getThreadId(), -1, AwfulMessage.TYPE_NEW_REPLY);
-    }
-
-
-	/**
-	 * Show a dialog that allows the user to lock or unlock the current thread, as appropriate.
-	 */
-	private void showThreadLockUnlockDialog() {
-    	new AlertDialog.Builder(getActivity())
-				.setTitle(getString(threadLocked ? R.string.thread_unlock : R.string.thread_lock) + "?")
-				.setPositiveButton(R.string.alert_ok, (dialogInterface, i) -> toggleThreadLock())
-				.setNegativeButton(R.string.cancel, null)
-				.show();
-	}
-
-
-	/**
-	 * Trigger a request to toggle the current thread's locked/unlocked state.
-	 */
-	private void toggleThreadLock(){
-		queueRequest(new ThreadLockUnlockRequest(getActivity(), getThreadId()).build(mSelf, new AwfulRequest.AwfulResultCallback<Void>() {
-			@Override
-			public void success(Void result) {
-			    // TODO: maybe this should trigger a thread data refresh instead, update everything from the source
-				threadLocked = !threadLocked;
-			}
-
-			@Override
-			public void failure(VolleyError error) {
-				Timber.e(String.format("Couldn\'t %s this thread", threadLocked ? "unlock" : "lock"));
-			}
-		}));
-	}
-
-	private void populateThreadView(ArrayList<AwfulPost> aPosts) {
-		if (mThreadView == null) {
-			Timber.w("populateThreadView called with null WebView");
-			return;
-		}
-		updateUiElements();
-
-        try {
-            Timber.d("populateThreadView: displaying %d posts", aPosts.size());
-            String html = AwfulHtmlPage.getThreadHtml(aPosts, AwfulPreferences.getInstance(getActivity()), getPageNumber(), mLastPage);
-            refreshSessionCookie();
-			mThreadView.setBodyHtml(html);
-			displayingFullPage = aPosts.size() >= getPrefs().postPerPage; // shouldn't ever be > but just to be safe
-            setProgress(100);
-        } catch (Exception e) {
-            // If we've already left the activity the webview may still be working to populate,
-            // just log it
-            Timber.e(e, "populateThreadView: display failed");
-        }
-
-    }
-    
-	@Override
-	public void onRefresh(SwipyRefreshLayoutDirection swipyRefreshLayoutDirection) {
-		if (swipyRefreshLayoutDirection == SwipyRefreshLayoutDirection.TOP) {
-			// no page turn when swiping at the top of the page
-			refresh();
-		} else if (!displayingFullPage) {
-			// always refresh if there could be more posts
-			refresh();
-		} else {
-			turnPage(true);
-		}
-	}
-
-	private final ClickInterface clickInterface = new ClickInterface();
-
-	public String getPostJump() {
-		return postJump;
-	}
-
-	private void setPostJump(@NonNull String postJump) {
-		// TODO: this strips out any prefix (so it handles prefixed fragments AND bare IDs) and adds the required prefix to all. Might be better to handle this in AwfulURL?
-		this.postJump = "post" + postJump.replaceAll("\\D", "");
-	}
-
-	private class ClickInterface extends WebViewJsInterface {
-
-        @JavascriptInterface
-        public void onMoreClick(
-        		final String aPostId,
-				final String aUsername,
-				final String aUserId,
-				final String lastReadUrl,
-				final boolean editable,
-				final String posterRole,
-				final boolean isPlat,
-				final String avatarUrl) {
-
-			PostContextMenu postActions = PostContextMenu.newInstance(getThreadId(),
-					Integer.parseInt(aPostId),
-					Integer.parseInt(lastReadUrl),
-					editable, aUsername,
-					Integer.parseInt(aUserId),
-					isPlat,
-					posterRole,
-					postFilterUserId,
-					avatarUrl);
-
-			postActions.setTargetFragment(ThreadDisplayFragment.this, -1);
-			postActions.setOnActionClickedListener(action -> {
-				if (mThreadView != null) {
-					if (action == PostContextMenu.PostMenuAction.HIDE_AVATAR) {
-						mThreadView.evaluateJavascript(String.format("hideAvatar('%s')", avatarUrl), null);
-					} else if (action == PostContextMenu.PostMenuAction.SHOW_AVATAR) {
-						mThreadView.evaluateJavascript(String.format("showAvatar('%s')", avatarUrl), null);
-					}
-				}
-			});
-			postActions.show(mSelf.getFragmentManager(), "Post Actions");
-		}
-
-
-		@Override
-		protected void setCustomPreferences(Map<String, String> preferences) {
-			// TODO: 23/01/2017 add methods so you can't mess with the map directly
-			preferences.put("postjumpid", postJump);
-			preferences.put("scrollPosition", Integer.toString(savedScrollPosition));
-		}
-
-		@JavascriptInterface
-		public String getIgnorePostHtml(String id){
-			return ignorePostsHtml.get(id);
-		}
-
-        @JavascriptInterface
-        public String getPostJump(){
-            return postJump;
-        }
-
-        @JavascriptInterface
-        public String getCSS(){
-            return AwfulTheme.forForum(mParentForumId).getCssPath();
-        }
-
-
-		@JavascriptInterface
-		public void loadIgnoredPost(final String ignorePost){
-			if(getActivity() != null){
-				queueRequest(new SinglePostRequest(getActivity(), ignorePost).build(mSelf, new AwfulRequest.AwfulResultCallback<String>() {
-					@Override
-					public void success(String result) {
-						ignorePostsHtml.put(ignorePost,result);
-						if (mThreadView != null) {
-							mThreadView.runJavascript(String.format("insertIgnoredPost('%s')", ignorePost));
-						}
-					}
-
-					@Override
-					public void failure(VolleyError error) {
-						Timber.w("Failed to load ignored post #" + ignorePost);
-					}
-				}));
-			}
-		}
-
-		@JavascriptInterface
-		public void haltSwipe() {
-			((ForumsIndexActivity)mSelf.getAwfulActivity()).preventSwipe();
-		}
-		@JavascriptInterface
-		public void resumeSwipe() {
-			((ForumsIndexActivity)mSelf.getAwfulActivity()).allowSwipe();
-		}
-
-		@JavascriptInterface
-		public void popupText(String text) {
-			Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT).show();
-		}
-
-		@JavascriptInterface
-		public void openUrlMenu(String url) {
-			showUrlMenu(url);
-		}
-
-		@JavascriptInterface
-		public void displayImageZoom(String url) {
-			displayImage(url);
-		}
-    }
-
-	
-	private void showUrlMenu(final String url) {
-		if (url == null) {
-			Timber.w("Passed null URL to #showUrlMenu!");
-			return;
-		}
-		FragmentManager fragmentManager = getFragmentManager();
-		if (fragmentManager == null) {
-			Timber.w("showUrlMenu called but can't get FragmentManager!");
-			return;
-		}
-		if (fragmentManager.isStateSaved()) {
-			// probably got a javascript callback after the fragment was stopped,
-			// easiest to just let them tap for the menu again when they come back
-			return;
-		}
-
-		boolean isImage = false;
-		boolean isGif = false;
-		// TODO: parsing fails on magic webdev urls like http://tpm2016.zoffix.com/#/40
-		// it thinks the # is the start of the ref section of the url, so the Path for that url is '/'
-		Uri path = Uri.parse(url);
-		String lastSegment = path.getLastPathSegment();
-		// null-safe path checking (there may be no path segments, e.g. a link to a domain name)
-		if (lastSegment != null) {
-			lastSegment = lastSegment.toLowerCase();
-			// using 'contains' instead of 'ends with' in case of any url suffix shenanigans, like twitter's ".jpg:large"
-            // TODO: 08/08/2019 make general functions for identifying images etc since we need to do this in multiple places
-			isImage = (StringUtils.indexOfAny(lastSegment, ".jpg", ".jpeg", ".png", ".gif", ".webp") != -1
-					&& !StringUtils.contains(lastSegment, ".gifv"))
-					|| (lastSegment.equals("attachment.php") && path.getHost().equals("forums.somethingawful.com"));
-			isGif = StringUtils.contains(lastSegment, ".gif")
-					&& !StringUtils.contains(lastSegment, ".gifv");
-		}
-		String linkUrl = url;
-		Matcher youtube = Pattern.compile("youtube\\.com/watch\\?v=([a-zA-Z0-9-_]+).*").matcher(linkUrl);
-		if (youtube.find()) {
-			linkUrl = path.getScheme() + "://" + path.getAuthority() + path.getPath() + "?v="+youtube.group(1);
-		} else if(Strings.CS.contains(path.getHost(), "twitter.com") || Strings.CS.contains(path.getHost(), "x.com") || Strings.CS.contains(path.getHost(), "bsky.app")) {
-			linkUrl = path.getScheme() + "://" + path.getAuthority() + path.getPath();
-		}
-
-		UrlContextMenu linkActions = UrlContextMenu.newInstance(linkUrl, isImage, isGif, isGif ? "Getting file size" : null);
-
-		if (isGif || !AwfulPreferences.getInstance().canLoadImages()) {
-			queueRequest(new ImageSizeRequest(linkUrl, result -> {
-				if (linkActions == null) {
-					return;
-				}
-				String size = result == null ? "unknown" : Formatter.formatShortFileSize(getContext(), result);
-				linkActions.setSubheading(String.format("Size: %s", size));
-			}));
-		}
-		linkActions.setTargetFragment(ThreadDisplayFragment.this, -1);
-		linkActions.show(fragmentManager, "Link Actions");
-	}
-
-	public void showImageInline(String url){
-		if(mThreadView != null){
-			mThreadView.runJavascript(String.format("showInlineImage('%s')", url));
-		}
-	}
-
-	public void enqueueDownload(Uri link) {
-		if(!AwfulUtils.isTiramisu33()){
-			int permissionCheck = ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-			if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-				downloadLink = link;
-				requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Constants.AWFUL_PERMISSION_WRITE_EXTERNAL_STORAGE);
-				return;
-			}
-		}
-		Request request = new Request(link);
-		request.setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-		if(link.getLastPathSegment().equals("attachment.php") && link.getHost().equals("forums.somethingawful.com")){
-			request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "attachment.png");
-			request.addRequestHeader("Cookie", CookieManager.getInstance().getCookie(Constants.COOKIE_DOMAIN));
-		}else{
-			request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, link.getLastPathSegment());
-		}
-		request.allowScanningByMediaScanner();
-		request.setTitle(link.getLastPathSegment());
-
-		DownloadManager dlManager = (DownloadManager) getAwfulActivity().getSystemService(AwfulActivity.DOWNLOAD_SERVICE);
-		dlManager.enqueue(request);
-	}
-
-	public void copyToClipboard(String text){
-		safeCopyToClipboard("Copied URL", text, null);
-		getAlertView()
-				.setTitle(R.string.copy_url_success)
-				.setIcon(R.drawable.ic_insert_link)
-				.show();
-	}
-
-	public void startUrlIntent(String url){
-		Uri intentUri = Uri.parse(url);
-		try {
-			Intent browserIntent = new Intent(Intent.ACTION_VIEW, intentUri);
-			browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			getActivity().startActivity(browserIntent);
-		} catch (ActivityNotFoundException error) {
-			getAlertView().setTitle("Cannot open link:")
-					.setDisplayLength(Toast.LENGTH_LONG)
-					.setSubtitle("None of your apps want to open this " + intentUri.getScheme() + ":\\\\ link. Try installing an app that is less picky")
-					.show();
-		}
-	}
-
-	public void displayImage(String url){
-		Intent intent = BasicActivity.Companion.intentFor(ZoomViewFragment.class, getActivity(), "");
-		intent.putExtra(ZoomViewFragment.EXTRA_IMAGE_URL, url);
-		startActivity(intent);
-	}
-	
-	@Override
-	public void onPreferenceChange(AwfulPreferences mPrefs, String key) {
-		super.onPreferenceChange(mPrefs, key);
-		Timber.i("onPreferenceChange" + ((key != null) ? ":"  +key  :""));
-        if(null != getAwfulActivity() && pageBar != null){
-		    getAwfulActivity().setPreferredFont(pageBar.getTextView());
-			pageBar.setTextColour(ColorProvider.ACTION_BAR_TEXT.getColor());
-		}
-
-		if(mThreadView != null){
-			mThreadView.setBackgroundColor(Color.TRANSPARENT);
-            mThreadView.runJavascript(String.format("changeFontFace('%s')", mPrefs.preferredFont));
-            mThreadView.getSettings().setDefaultFontSize(mPrefs.postFontSizeSp);
-            mThreadView.getSettings().setDefaultFixedFontSize(mPrefs.postFixedFontSizeSp);
-
-			if("marked_users".equals(key)){
-				mThreadView.runJavascript(String.format("updateMarkedUsers('%s')", TextUtils.join(",", mPrefs.markedUsers)));
-			}
-		}
-		clickInterface.updatePreferences();
-		if(mFAB != null) {
-			if (mPrefs.noFAB) {
-				mFAB.hide();
-			} else {
-				mFAB.show();
-			}
-		}
-	}
-
-
-	/**
-	 * Update any UI elements that need to be refreshed.
-	 */
-	private void updateUiElements() {
-		// TODO: probably more things can be put in here, there's a lot to unravel
-		updatePageBar();
-		refreshProbationBar();
-	}
-
-
-	/**
-	 * Load a specific page in the current thread.
-	 *
-	 * This method does nothing if the page number is not valid (i.e. between {@link #FIRST_PAGE} and the last page).
-	 * @param aPage	a page number for this thread
-     */
-	private void goToPage(int aPage){
-		if (aPage <= 0 || aPage > getLastPage()) {
-			return;
-		}
-		setPageNumber(aPage);
-		updateUiElements();
-		setPostJump("");
-		showBlankPage();
-		syncThread();
-	}
-
-
-	/**
-	 * Get an empty page structure, themed according to the thread's parent forum
-	 * @return	The basic page HTML, with no post content
-     */
-	private String getBlankPage(){
-		return AwfulHtmlPage.getContainerHtml(getPrefs(), getParentForumId(), true);
-	}
-
-    private int getLastPage() {
-        return mLastPage;
-    }
-
-    public int getThreadId() {
-        return currentThreadId;
-    }
-	
-	public int getPageNumber() {
-		return currentPage;
-	}
-	private void setPageNumber(int aPage){
-		currentPage = aPage;
-	}
-	private void setThreadId(int aThreadId){
-		currentThreadId = aThreadId;
-		if (getActivity() != null) {
-			((ForumsIndexActivity) getActivity()).onPageContentChanged();
-		}
-	}
-
-
-	/**
-	 * Show posts filtered to a specific user
-	 * @param id	the user's ID
-	 * @param name	the user's username
-     */
-	private void showUsersPosts(int id, String name){
-		// TODO: legend has it this doesn't work and shows other people's posts if the page isn't full
-		pageBeforeFiltering = getPageNumber();
-		setPostFiltering(id, name);
-		setPageNumber(FIRST_PAGE);
-		mLastPage = FIRST_PAGE;
-		setPostJump("");
-        refresh();
-	}
-
-
-	/**
-	 * Clear filtering added by {@link #showUsersPosts(int, String)} and return to a specific post
-	 * @param postId	The ID of the post to navigate to
-     */
-	private void showAllPosts(@Nullable Integer postId){
-		if (postId != null) {
-			showBlankPage();
-	        openThread(AwfulURL.parse(generatePostUrl(postId)));
-		} else {
-			setPostFiltering(null, null);
-			setPageNumber(pageBeforeFiltering);
-			mLastPage = 0;
-			setPostJump("");
-			refresh();
-		}
-	}
-
-
-	/**
-	 * Set or unset the "show user's posts" filtering state.
-	 * @param userId	The ID of the user to filter to, or null for no filtering
-	 * @param username	The username of the user. If ID is null, this is ignored
-     */
-	private void setPostFiltering(@Nullable Integer userId, @Nullable String username) {
-		postFilterUserId = userId;
-		postFilterUsername = (userId == null) ? null : username;
-	}
-
-
-	/**
-	 * Clear the thread display, e.g. to show a blank page before loading new content
-	 */
-	private void showBlankPage() {
-		if(mThreadView != null){
-			mThreadView.setBodyHtml(null);
-		}
-	}
-
-
-    private class PostLoaderManager implements LoaderManager.LoaderCallbacks<Cursor> {
-        private final static String sortOrder = AwfulPost.POST_INDEX + " ASC";
-        private final static String selection = AwfulPost.THREAD_ID + "=? AND " + AwfulPost.POST_INDEX + ">=? AND " + AwfulPost.POST_INDEX + "<?";
-        public Loader<Cursor> onCreateLoader(int aId, Bundle aArgs) {
-            int index = AwfulPagedItem.pageToIndex(getPageNumber(), getPrefs().postPerPage, 0);
-            Timber.i("Loading page %d of thread %d from database\nStart index is %d with %d posts per page",
-                    getPageNumber(), getThreadId(), index, getPrefs().postPerPage);
-            return new CursorLoader(getActivity(),
-            						AwfulPost.CONTENT_URI,
-            						AwfulProvider.PostProjection,
-            						selection,
-            						AwfulProvider.int2StrArray(getThreadId(), index, index+ getPrefs().postPerPage),
-            						sortOrder);
-        }
-
-        public void onLoadFinished(Loader<Cursor> aLoader, Cursor aData) {
-        	setProgress(90);
-        	if(aData.isClosed()){
-        		return;
-        	}
-        	if(mThreadView != null){
-        		populateThreadView(AwfulPost.fromCursor(getActivity(), aData));
-        	}
-			// TODO: 04/05/2017 sometimes you don't want this resetting, e.g. restoring fragment state
-			savedScrollPosition = 0;
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> aLoader) {
-        }
-    }
-
-
-    private class ThreadDataCallback implements LoaderManager.LoaderCallbacks<Cursor> {
-
-        public Loader<Cursor> onCreateLoader(int aId, Bundle aArgs) {
-            return new CursorLoader(getActivity(), ContentUris.withAppendedId(AwfulThread.CONTENT_URI, getThreadId()), 
-            		AwfulProvider.ThreadProjection, null, null, null);
-        }
-
-        public void onLoadFinished(Loader<Cursor> aLoader, Cursor aData) {
-        	Timber.i("Loaded thread metadata, updating fragment state and UI");
-        	if(aData.getCount() >0 && aData.moveToFirst()){
-        		mLastPage = AwfulPagedItem.indexToPage(aData.getInt(aData.getColumnIndex(AwfulThread.POSTCOUNT)), getPrefs().postPerPage);
-				threadLocked = aData.getInt(aData.getColumnIndex(AwfulThread.LOCKED))>0;
-				threadLockableUnlockable = aData.getInt(aData.getColumnIndex(AwfulThread.CAN_OPEN_CLOSE))>0;
-        		threadBookmarked = aData.getInt(aData.getColumnIndex(AwfulThread.BOOKMARKED))>0;
-				threadArchived = aData.getInt(aData.getColumnIndex(AwfulThread.ARCHIVED))>0;
-				mTitle = aData.getString(aData.getColumnIndex(AwfulThread.TITLE));
-        		mParentForumId = aData.getInt(aData.getColumnIndex(AwfulThread.FORUM_ID));
-				if(mParentForumId != 0 && mThreadView != null){
-					mThreadView.runJavascript(String.format("changeCSS('%s')", AwfulTheme.forForum(mParentForumId).getCssPath()));
-				}
-
-				parentActivity.onPageContentChanged();
-
-				updateUiElements();
-				if (mUserPostNotice != null) {
-					if (postFilterUserId != null) {
-						mUserPostNotice.setVisibility(View.VISIBLE);
-						mUserPostNotice.setText(String.format("Viewing posts by %s in this thread,\nPress the back button to return.", postFilterUsername));
-						mUserPostNotice.setTextColor(ColorProvider.PRIMARY_TEXT.getColor());
-						mUserPostNotice.setBackgroundColor(ColorProvider.BACKGROUND.getColor());
-					} else {
-						mUserPostNotice.setVisibility(View.GONE);
-					}
-				}
-        		if(shareProvider != null){
-        			shareProvider.setShareIntent(createShareIntent(null));
-        		}
-                invalidateOptionsMenu();
-				if (mFAB != null) {
-					if (getPrefs().noFAB || threadLocked || threadArchived) {
-						mFAB.hide();
-					} else {
-						mFAB.show();
-					}
-				}
-        	}
-        }
-        
-        @Override
-        public void onLoaderReset(Loader<Cursor> aLoader) {
-        }
-    }
-    private class ThreadContentObserver extends ContentObserver {
-        public ThreadContentObserver(Handler aHandler) {
-            super(aHandler);
-        }
-        @Override
-        public void onChange (boolean selfChange){
-        	Timber.i("Thread metadata has been updated - forcing refresh");
-        	refreshInfo();
+        when (aRequestCode) {
+            PostReplyFragment.REQUEST_POST -> {
+                bypassBackStack = true
+                if (aResultCode == PostReplyFragment.RESULT_POSTED) {
+                    startPostRedirect(
+                        AwfulURL.threadLastPage(
+                            this.threadId.toLong(),
+                            prefs.postPerPage
+                        ).getURL(prefs.postPerPage)
+                    )
+                } else if (aResultCode > 100) { //any result >100 it is a post id we edited
+                    // TODO: >100 is a bit too magical
+                    startPostRedirect(
+                        AwfulURL.post(aResultCode.toLong(), prefs.postPerPage)
+                            .getURL(prefs.postPerPage)
+                    )
+                }
+            }
         }
     }
 
 
     /**
-	 * Refresh the displayed thread's data (bookmarked, locked etc.)
-	 *
-	 * This loads from the database, and reflects the last cached status of the thread.
-	 * To actually download current data from the site call {@link #syncThread()} instead.
-	 * @see ThreadDataCallback
-	 */
-	private void refreshInfo() {
-		restartLoader(Constants.THREAD_INFO_LOADER_ID, null, mThreadLoaderCallback);
-	}
-
-
-	/**
-	 * Refresh the posts displayed, according to current setting (thread ID, page etc.)
-	 *
-	 * This loads from the database, and reflects the last cached view of the thread.
-	 * To actually download updated data (including changes in posts' viewed status) call
-	 * {@link #syncThread()} instead.
-	 * @see PostLoaderManager
-	 */
-	private void refreshPosts(){
-		restartLoader(Constants.POST_LOADER_ID, null, mPostLoaderCallback);
-	}
-
-
-	public void setTitle(@NonNull String title){
-		mTitle = title;
-		parentActivity.onPageContentChanged();
-	}
-
-
-	@Override
-	public String getTitle(){
-		return mTitle;
-	}
-
-
-	/**
-	 * Get the current thread's parent forum's ID.
-	 *
-	 * @return the parent forum's ID, or 0 if something went wrong
+     * Refresh the page
      */
-	public int getParentForumId() {
-		return mParentForumId;
-	}
+    private fun refresh() {
+        showBlankPage()
+        syncThread()
+    }
 
 
-	@Override
-	public boolean handleNavigation(@NotNull NavigationEvent event) {
-		// need to check if the fragment is attached to the activity - if not, defer any handled events until it is attached
-		if (event instanceof NavigationEvent.Thread) {
-			if (!isAdded()) {
-				deferNavigation(event);
-			} else {
-				NavigationEvent.Thread thread = (NavigationEvent.Thread) event;
-				// if we're currently displaying this thread, and no page was specified (i.e. it's
-				// a "show this thread" navigation) then we don't need to do anything
-				if (thread.getId() != currentThreadId || thread.getPage() != null) {
-					openThread(thread.getId(), thread.getPage(), thread.getPostJump());
-				}
-			}
-			return true;
-		} else if (event instanceof NavigationEvent.Url) {
-			if (!isAdded()) {
-				deferNavigation(event);
-			} else {
-				NavigationEvent.Url url = (NavigationEvent.Url) event;
-				openThread(url.getUrl());
-			}
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Store a navigation event for handling when this fragment is attached to the activity
-	 */
-	private void deferNavigation(@NonNull NavigationEvent event) {
-		Timber.d("Deferring navigation event(%s) - isAdded = %b", event, isAdded());
-		pendingNavigation = event;
-	}
-
-
-	/**
-	 * Open a thread, jumping to a specific page and post if required.
-	 * @param id          The thread's ID
-	 * @param page        An optional page to display, otherwise it defaults to the first page
-	 * @param postJump    An optional URL fragment representing the post ID to jump to
-	 */
-	private void openThread(int id, @Nullable Integer page, @Nullable String postJump){
-		Timber.i("Opening thread (old/new) ID:%d/%d, PAGE:%s/%s, JUMP:%s/%s",
-				getThreadId(), id, getPageNumber(), page, getPostJump(), postJump);
-		clearBackStack();
-		int threadPage = (page == null) ? FIRST_PAGE : page;
-    	loadThread(id, threadPage, postJump, true);
-	}
-
-
-	/**
-	 * Open a specific thread represented in an AwfulURL
+    /**
+     * Load the next or previous page.
+     * 
+     * The current page will reload if there is no next/previous page to move to.
      */
-	private void openThread(AwfulURL url) {
-		// TODO: fix this prefs stuff, get it initialised somewhere consistent in the lifecycle, preferably in AwfulFragment
-		// TODO: validate the AwfulURL, e.g. make sure it's the correct type
-		if(url == null){
-			Toast.makeText(this.getActivity(), "Error occurred: URL was empty", Toast.LENGTH_LONG).show();
-			return;
-		}
-    	clearBackStack();
-    	if(url.isRedirect()){
-    		startPostRedirect(url.getURL(getPrefs().postPerPage));
-    	}else{
-    		loadThread((int) url.getId(), (int) url.getPage(getPrefs().postPerPage), url.getFragment(), true);
-    	}
-	}
+    private fun turnPage(forwards: Boolean) {
+        val currentPage = this.pageNumber
+        val limit = if (forwards) this.lastPage else FIRST_PAGE
+        if (currentPage == limit) {
+            refresh()
+        } else {
+            goToPage(currentPage + (if (forwards) 1 else -1))
+        }
+    }
 
 
-	/**
-	 * Load the thread represented in an AwfulStackEntry
-	 */
-	private void loadThread(@NonNull AwfulStackEntry thread) {
-		loadThread(thread.id, thread.page, null, false);
-	}
-
-
-	/**
-	 * Actually load the new thread
-	 * @param id		The thread's ID
-	 * @param page		The number of the page to display
-	 * @param postJump	An optional URL fragment representing the post ID to jump to
+    /**
+     * General click listener for thread view widgets
      */
-	private void loadThread(int id, int page, @Nullable String postJump, boolean fullSync) {
-		setThreadId(id);
-		setPageNumber(page);
-		this.setPostJump(postJump != null ? postJump : "");
-		setPostFiltering(null, null);
-		mLastPage = FIRST_PAGE;
-		updateUiElements();
-		showBlankPage();
-		if(getActivity() != null){
-			getLoaderManager().destroyLoader(Constants.THREAD_INFO_LOADER_ID);
-			getLoaderManager().destroyLoader(Constants.POST_LOADER_ID);
-			refreshInfo();
-			// TODO: shouldn't every load do a sync?
-			if (fullSync) {
-				syncThread();
-			} else {
-				refreshPosts();
-			}
-    	}
-	}
+    private val onButtonClick = View.OnClickListener { aView: View? ->
+        if (aView?.id == R.id.just_post) {
+            displayPostReplyDialog()
+        }
+    }
 
-	private static class AwfulStackEntry{
-		public final int id;
-		public final int page;
-		public final int scrollPos;
-		public AwfulStackEntry(int threadId, int pageNum, int scrollPosition){
-			id = threadId; page = pageNum; scrollPos = scrollPosition;
-		}
-	}
-	
-	private void pushThread(int id, int page, String postJump){
-		if(mThreadView != null && getThreadId() != 0){
-			backStack.addFirst(new AwfulStackEntry(getThreadId(), getPageNumber(), mThreadView.getScrollY()));
-		}
-		loadThread(id, page, postJump, true);
-	}
-	
-	private void popThread(){
-		loadThread(backStack.removeFirst());
-	}
-	
-	private void clearBackStack(){
-		backStack.clear();
-	}
-	
-	private int backStackCount(){
-		return backStack.size();
-	}
-	
-	@Override
-	public boolean onBackPressed() {
-		if(backStackCount() > 0){
-			popThread();
-			return true;
-		}else if(postFilterUserId != null){
-            showAllPosts(null);
-            return true;
-        }else{
-			return false;
-		}
-	}
+    private fun displayPostReplyDialog() {
+        displayPostReplyDialog(this.threadId, -1, AwfulMessage.TYPE_NEW_REPLY)
+    }
 
 
-	@Override
-	protected boolean doScroll(boolean down) {
-		if (mThreadView == null) {
-			return false;
-		} else if (down) {
-			mThreadView.pageDown(false);
-		} else {
-			mThreadView.pageUp(false);
-		}
-		return true;
-	}
+    /**
+     * Show a dialog that allows the user to lock or unlock the current thread, as appropriate.
+     */
+    private fun showThreadLockUnlockDialog() {
+        AlertDialog.Builder(activity)
+            .setTitle(getString(if (threadLocked) R.string.thread_unlock else R.string.thread_lock) + "?")
+            .setPositiveButton(
+                R.string.alert_ok,
+                DialogInterface.OnClickListener { dialogInterface: DialogInterface?, i: Int -> toggleThreadLock() })
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
 
 
-	private void toggleScreenOn() {
-    	keepScreenOn = !keepScreenOn;
-		if (mThreadView != null) {
-			mThreadView.setKeepScreenOn(keepScreenOn);
-		}
+    /**
+     * Trigger a request to toggle the current thread's locked/unlocked state.
+     */
+    private fun toggleThreadLock() {
+        queueRequest(
+            ThreadLockUnlockRequest(requireActivity(), this.threadId).build(
+                mSelf,
+                object : AwfulResultCallback<Void?> {
+                    override fun success(result: Void?) {
+                        // TODO: maybe this should trigger a thread data refresh instead, update everything from the source
+                        threadLocked = !threadLocked
+                    }
 
-		//TODO icon
-		getAlertView().setTitle(keepScreenOn? "Screen stays on" :"Screen turns itself off").show();
-	}
+                    override fun failure(error: VolleyError?) {
+                        e(
+                            String.format(
+                                "Couldn\'t %s this thread",
+                                if (threadLocked) "unlock" else "lock"
+                            )
+                        )
+                    }
+                })
+        )
+    }
 
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-		switch (requestCode) {
-			case Constants.AWFUL_PERMISSION_WRITE_EXTERNAL_STORAGE: {
-				// If request is cancelled, the result arrays are empty.
-				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					if(downloadLink != null)
-					enqueueDownload(downloadLink);
-				} else {
-					Toast.makeText(getActivity(), R.string.no_file_permission_download, Toast.LENGTH_LONG).show();
-				}
-				downloadLink = null;
-				break;
-			}
-			default:
-				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		}
-	}
+    private fun populateThreadView(aPosts: ArrayList<AwfulPost?>) {
+        if (mThreadView == null) {
+            w("populateThreadView called with null WebView")
+            return
+        }
+        updateUiElements()
+
+        try {
+            d("populateThreadView: displaying %d posts", aPosts.size)
+            val html = AwfulHtmlPage.getThreadHtml(
+                aPosts, AwfulPreferences.getInstance(activity),
+                this.pageNumber,
+                this.lastPage
+            )
+            refreshSessionCookie()
+            mThreadView?.setBodyHtml(html)
+            displayingFullPage =
+                aPosts.size >= prefs.postPerPage // shouldn't ever be > but just to be safe
+            setProgress(100)
+        } catch (e: Exception) {
+            // If we've already left the activity the webview may still be working to populate,
+            // just log it
+            e(e, "populateThreadView: display failed")
+        }
+    }
+
+    override fun onRefresh(swipyRefreshLayoutDirection: SwipyRefreshLayoutDirection?) {
+        if (swipyRefreshLayoutDirection == SwipyRefreshLayoutDirection.TOP) {
+            // no page turn when swiping at the top of the page
+            refresh()
+        } else if (!displayingFullPage) {
+            // always refresh if there could be more posts
+            refresh()
+        } else {
+            turnPage(true)
+        }
+    }
+
+    private val clickInterface = ClickInterface()
+
+    fun getPostJump(): String {
+        return postJump
+    }
+
+    private fun setPostJump(postJump: String) {
+        // TODO: this strips out any prefix (so it handles prefixed fragments AND bare IDs) and adds the required prefix to all. Might be better to handle this in AwfulURL?
+        this.postJump = "post" + postJump.replace("\\D".toRegex(), "")
+    }
+
+    private inner class ClickInterface : WebViewJsInterface() {
+        @JavascriptInterface
+        fun onMoreClick(
+            aPostId: String,
+            aUsername: String,
+            aUserId: String,
+            lastReadUrl: String,
+            editable: Boolean,
+            posterRole: String?,
+            isPlat: Boolean,
+            avatarUrl: String
+        ) {
+            val postActions = PostContextMenu.newInstance(
+                this@ThreadDisplayFragment.threadId,
+                aPostId.toInt(),
+                lastReadUrl.toInt(),
+                editable, aUsername,
+                aUserId.toInt(),
+                isPlat,
+                posterRole,
+                postFilterUserId,
+                avatarUrl
+            )
+
+            postActions.setTargetFragment(this@ThreadDisplayFragment, -1)
+            postActions.setOnActionClickedListener(OnActionClickedListener { action: PostMenuAction? ->
+                if (mThreadView != null) {
+                    if (action == PostMenuAction.HIDE_AVATAR) {
+                        mThreadView?.evaluateJavascript(
+                            String.format(
+                                "hideAvatar('%s')",
+                                avatarUrl
+                            ), null
+                        )
+                    } else if (action == PostMenuAction.SHOW_AVATAR) {
+                        mThreadView?.evaluateJavascript(
+                            String.format(
+                                "showAvatar('%s')",
+                                avatarUrl
+                            ), null
+                        )
+                    }
+                }
+            })
+            postActions.show(mSelf.requireFragmentManager(), "Post Actions")
+        }
+
+
+        override fun setCustomPreferences(preferences: MutableMap<String?, String?>) {
+            // TODO: 23/01/2017 add methods so you can't mess with the map directly
+            preferences.put("postjumpid", postJump)
+            preferences.put("scrollPosition", savedScrollPosition.toString())
+        }
+
+        @JavascriptInterface
+        fun getIgnorePostHtml(id: String?): String? {
+            return ignorePostsHtml.get(id)
+        }
+
+        @JavascriptInterface
+        fun getPostJump(): String {
+            return postJump
+        }
+
+        @get:JavascriptInterface
+        val cSS: String
+            get() = AwfulTheme.forForum(this@ThreadDisplayFragment.parentForumId).getCssPath()
+
+
+        @JavascriptInterface
+        fun loadIgnoredPost(ignorePost: String) {
+            queueRequest(
+                SinglePostRequest(requireActivity(), ignorePost).build(
+                    mSelf,
+                    object : AwfulResultCallback<String> {
+                        override fun success(result: String) {
+                            ignorePostsHtml[ignorePost] = result
+                            mThreadView?.runJavascript(
+                                String.format(
+                                    "insertIgnoredPost('%s')",
+                                    ignorePost
+                                )
+                            )
+                        }
+
+                        override fun failure(error: VolleyError?) {
+                            w("Failed to load ignored post #" + ignorePost)
+                        }
+                    })
+            )
+
+        }
+
+        @JavascriptInterface
+        fun haltSwipe() {
+            (mSelf.awfulActivity as ForumsIndexActivity).preventSwipe()
+        }
+
+        @JavascriptInterface
+        fun resumeSwipe() {
+            (mSelf.awfulActivity as ForumsIndexActivity).allowSwipe()
+        }
+
+        @JavascriptInterface
+        fun popupText(text: String?) {
+            Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
+        }
+
+        @JavascriptInterface
+        fun openUrlMenu(url: String?) {
+            showUrlMenu(url)
+        }
+
+        @JavascriptInterface
+        fun displayImageZoom(url: String?) {
+            displayImage(url)
+        }
+    }
+
+
+    private fun showUrlMenu(url: String?) {
+        if (url == null) {
+            w("Passed null URL to #showUrlMenu!")
+            return
+        }
+        val fragmentManager = getFragmentManager()
+        if (fragmentManager == null) {
+            w("showUrlMenu called but can't get FragmentManager!")
+            return
+        }
+        if (fragmentManager.isStateSaved) {
+            // probably got a javascript callback after the fragment was stopped,
+            // easiest to just let them tap for the menu again when they come back
+            return
+        }
+
+        var isImage = false
+        var isGif = false
+        // TODO: parsing fails on magic webdev urls like http://tpm2016.zoffix.com/#/40
+        // it thinks the # is the start of the ref section of the url, so the Path for that url is '/'
+        val path = Uri.parse(url)
+        var lastSegment = path.lastPathSegment
+        // null-safe path checking (there may be no path segments, e.g. a link to a domain name)
+        if (lastSegment != null) {
+            lastSegment = lastSegment.lowercase(Locale.getDefault())
+            // using 'contains' instead of 'ends with' in case of any url suffix shenanigans, like twitter's ".jpg:large"
+            // TODO: 08/08/2019 make general functions for identifying images etc since we need to do this in multiple places
+            isImage =
+                (StringUtils.indexOfAny(lastSegment, ".jpg", ".jpeg", ".png", ".gif", ".webp") != -1
+                        && !StringUtils.contains(lastSegment, ".gifv"))
+                        || (lastSegment == "attachment.php" && path.host == "forums.somethingawful.com")
+            isGif = StringUtils.contains(lastSegment, ".gif")
+                    && !StringUtils.contains(lastSegment, ".gifv")
+        }
+        var linkUrl: String? = url
+        val youtube = Pattern.compile("youtube\\.com/watch\\?v=([a-zA-Z0-9-_]+).*").matcher(linkUrl)
+        if (youtube.find()) {
+            linkUrl =
+                path.scheme + "://" + path.authority + path.path + "?v=" + youtube.group(
+                    1
+                )
+        } else if (Strings.CS.contains(
+                path.host,
+                "twitter.com"
+            ) || Strings.CS.contains(path.host, "x.com") || Strings.CS.contains(
+                path.host,
+                "bsky.app"
+            )
+        ) {
+            linkUrl = path.scheme + "://" + path.authority + path.path
+        }
+
+        val linkActions = UrlContextMenu.newInstance(
+            linkUrl,
+            isImage,
+            isGif,
+            if (isGif) "Getting file size" else null
+        )
+
+        if (isGif || !AwfulPreferences.getInstance().canLoadImages()) {
+            queueRequest(ImageSizeRequest(linkUrl, Response.Listener { result: Int? ->
+                if (linkActions == null) {
+                    return@Listener
+                }
+                val size = if (result == null) "unknown" else Formatter.formatShortFileSize(
+                    context,
+                    result.toLong()
+                )
+                linkActions.setSubheading(String.format("Size: %s", size))
+            }))
+        }
+        linkActions.setTargetFragment(this@ThreadDisplayFragment, -1)
+        linkActions.show(fragmentManager, "Link Actions")
+    }
+
+    fun showImageInline(url: String) {
+        mThreadView?.runJavascript(String.format("showInlineImage('%s')", url))
+    }
+
+    fun enqueueDownload(link: Uri) {
+        if (!AwfulUtils.isTiramisu33()) {
+            val permissionCheck = ContextCompat.checkSelfPermission(
+                this.requireContext(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                downloadLink = link
+                requestPermissions(
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    Constants.AWFUL_PERMISSION_WRITE_EXTERNAL_STORAGE
+                )
+                return
+            }
+        }
+        val request = DownloadManager.Request(link)
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        if (link.lastPathSegment == "attachment.php" && link.host == "forums.somethingawful.com") {
+            request.setDestinationInExternalPublicDir(
+                Environment.DIRECTORY_DOWNLOADS,
+                "attachment.png"
+            )
+            request.addRequestHeader(
+                "Cookie",
+                CookieManager.getInstance().getCookie(Constants.COOKIE_DOMAIN)
+            )
+        } else {
+            request.setDestinationInExternalPublicDir(
+                Environment.DIRECTORY_DOWNLOADS,
+                link.lastPathSegment
+            )
+        }
+        request.allowScanningByMediaScanner()
+        request.setTitle(link.lastPathSegment)
+
+        val dlManager =
+            awfulActivity?.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        dlManager.enqueue(request)
+    }
+
+    fun copyToClipboard(text: String) {
+        safeCopyToClipboard("Copied URL", text, null)
+        alertView
+            .setTitle(R.string.copy_url_success)
+            .setIcon(R.drawable.ic_insert_link)
+            .show()
+    }
+
+    fun startUrlIntent(url: String?) {
+        val intentUri = Uri.parse(url)
+        try {
+            val browserIntent = Intent(Intent.ACTION_VIEW, intentUri)
+            browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            requireActivity().startActivity(browserIntent)
+        } catch (error: ActivityNotFoundException) {
+            alertView.setTitle("Cannot open link:")
+                .setDisplayLength(Toast.LENGTH_LONG)
+                .setSubtitle("None of your apps want to open this " + intentUri.scheme + ":\\\\ link. Try installing an app that is less picky")
+                .show()
+        }
+    }
+
+    fun displayImage(url: String?) {
+        val intent =
+            BasicActivity.Companion.intentFor(ZoomViewFragment::class.java, requireActivity(), "")
+        intent.putExtra(ZoomViewFragment.EXTRA_IMAGE_URL, url)
+        startActivity(intent)
+    }
+
+    public override fun onPreferenceChange(mPrefs: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(mPrefs, key)
+        i("onPreferenceChange" + (if (key != null) ":" + key else ""))
+        if (null != awfulActivity && pageBar != null) {
+            awfulActivity?.setPreferredFont(pageBar?.textView)
+            pageBar?.setTextColour(ColorProvider.ACTION_BAR_TEXT.color)
+        }
+
+        mThreadView?.let {
+
+            it.setBackgroundColor(Color.TRANSPARENT)
+            it.runJavascript(String.format("changeFontFace('%s')", mPrefs.preferredFont))
+            it.settings.defaultFontSize = mPrefs.postFontSizeSp
+            it.settings.defaultFixedFontSize = mPrefs.postFixedFontSizeSp
+
+            if ("marked_users" == key) {
+                it.runJavascript(
+                    String.format(
+                        "updateMarkedUsers('%s')",
+                        TextUtils.join(",", mPrefs.markedUsers)
+                    )
+                )
+            }
+        }
+        clickInterface.updatePreferences()
+        if (mFAB != null) {
+            if (mPrefs.noFAB) {
+                mFAB?.hide()
+            } else {
+                mFAB?.show()
+            }
+        }
+    }
+
+
+    /**
+     * Update any UI elements that need to be refreshed.
+     */
+    private fun updateUiElements() {
+        // TODO: probably more things can be put in here, there's a lot to unravel
+        updatePageBar()
+        refreshProbationBar()
+    }
+
+
+    /**
+     * Load a specific page in the current thread.
+     * 
+     * This method does nothing if the page number is not valid (i.e. between [.FIRST_PAGE] and the last page).
+     * @param aPage    a page number for this thread
+     */
+    private fun goToPage(aPage: Int) {
+        if (aPage <= 0 || aPage > this.lastPage) {
+            return
+        }
+        this.pageNumber = aPage
+        updateUiElements()
+        setPostJump("")
+        showBlankPage()
+        syncThread()
+    }
+
+
+    private val blankPage: String
+        /**
+         * Get an empty page structure, themed according to the thread's parent forum
+         * @return    The basic page HTML, with no post content
+         */
+        get() = AwfulHtmlPage.getContainerHtml(prefs, this.parentForumId, true)
+
+    var threadId: Int
+        get() = currentThreadId
+        private set(aThreadId) {
+            currentThreadId = aThreadId
+            if (activity != null) {
+                (activity as ForumsIndexActivity).onPageContentChanged()
+            }
+        }
+
+
+    /**
+     * Show posts filtered to a specific user
+     * @param id    the user's ID
+     * @param name    the user's username
+     */
+    private fun showUsersPosts(id: Int, name: String?) {
+        // TODO: legend has it this doesn't work and shows other people's posts if the page isn't full
+        pageBeforeFiltering = this.pageNumber
+        setPostFiltering(id, name)
+        this.pageNumber = FIRST_PAGE
+        this.lastPage = FIRST_PAGE
+        setPostJump("")
+        refresh()
+    }
+
+
+    /**
+     * Clear filtering added by [.showUsersPosts] and return to a specific post
+     * @param postId    The ID of the post to navigate to
+     */
+    private fun showAllPosts(postId: Int?) {
+        if (postId != null) {
+            showBlankPage()
+            openThread(AwfulURL.parse(generatePostUrl(postId)))
+        } else {
+            setPostFiltering(null, null)
+            this.pageNumber = pageBeforeFiltering
+            this.lastPage = 0
+            setPostJump("")
+            refresh()
+        }
+    }
+
+
+    /**
+     * Set or unset the "show user's posts" filtering state.
+     * @param userId    The ID of the user to filter to, or null for no filtering
+     * @param username    The username of the user. If ID is null, this is ignored
+     */
+    private fun setPostFiltering(userId: Int?, username: String?) {
+        postFilterUserId = userId
+        postFilterUsername = if (userId == null) null else username
+    }
+
+
+    /**
+     * Clear the thread display, e.g. to show a blank page before loading new content
+     */
+    private fun showBlankPage() {
+        mThreadView?.setBodyHtml(null)
+    }
+
+
+    private inner class PostLoaderManager : LoaderManager.LoaderCallbacks<Cursor> {
+        private val sortOrder = AwfulPost.POST_INDEX + " ASC"
+        private val selection = AwfulPost.THREAD_ID + "=? AND " + AwfulPost.POST_INDEX + ">=? AND " + AwfulPost.POST_INDEX + "<?"
+        override fun onCreateLoader(aId: Int, aArgs: Bundle?): Loader<Cursor> {
+            val index = AwfulPagedItem.pageToIndex(this@ThreadDisplayFragment.pageNumber, prefs.postPerPage, 0)
+            i(
+                "Loading page %d of thread %d from database\nStart index is %d with %d posts per page",
+                this@ThreadDisplayFragment.pageNumber, this@ThreadDisplayFragment.threadId, index, prefs.postPerPage
+            )
+            return CursorLoader(
+                requireActivity(),
+                AwfulPost.CONTENT_URI,
+                AwfulProvider.PostProjection,
+                selection,
+                AwfulProvider.int2StrArray(this@ThreadDisplayFragment.threadId, index, index + prefs.postPerPage),
+                sortOrder
+            )
+        }
+
+        override fun onLoadFinished(aLoader: Loader<Cursor?>, aData: Cursor) {
+            setProgress(90)
+            if (aData.isClosed) {
+                return
+            }
+            if (mThreadView != null) {
+                populateThreadView(AwfulPost.fromCursor(activity, aData))
+            }
+            // TODO: 04/05/2017 sometimes you don't want this resetting, e.g. restoring fragment state
+            savedScrollPosition = 0
+        }
+
+        override fun onLoaderReset(aLoader: Loader<Cursor?>) {
+        }
+    }
+
+
+    private inner class ThreadDataCallback : LoaderManager.LoaderCallbacks<Cursor> {
+        override fun onCreateLoader(aId: Int, aArgs: Bundle?): Loader<Cursor> {
+            return CursorLoader(
+                requireActivity(),
+                ContentUris.withAppendedId(AwfulThread.CONTENT_URI, this@ThreadDisplayFragment.threadId.toLong()),
+                AwfulProvider.ThreadProjection,
+                null,
+                null,
+                null
+            )
+        }
+
+        override fun onLoadFinished(aLoader: Loader<Cursor>, aData: Cursor) {
+            i("Loaded thread metadata, updating fragment state and UI")
+            if (aData.count > 0 && aData.moveToFirst()) {
+                this@ThreadDisplayFragment.lastPage = AwfulPagedItem.indexToPage(
+                    aData.getInt(aData.getColumnIndex(AwfulThread.POSTCOUNT)),
+                    prefs.postPerPage
+                )
+                threadLocked = aData.getInt(aData.getColumnIndex(AwfulThread.LOCKED)) > 0
+                threadLockableUnlockable =
+                    aData.getInt(aData.getColumnIndex(AwfulThread.CAN_OPEN_CLOSE)) > 0
+                threadBookmarked = aData.getInt(aData.getColumnIndex(AwfulThread.BOOKMARKED)) > 0
+                threadArchived = aData.getInt(aData.getColumnIndex(AwfulThread.ARCHIVED)) > 0
+                mTitle = aData.getString(aData.getColumnIndex(AwfulThread.TITLE))
+                this@ThreadDisplayFragment.parentForumId = aData.getInt(aData.getColumnIndex(AwfulThread.FORUM_ID))
+                if (this@ThreadDisplayFragment.parentForumId != 0) {
+                    mThreadView?.runJavascript(
+                        String.format(
+                            "changeCSS('%s')", AwfulTheme.forForum(
+                                this@ThreadDisplayFragment.parentForumId
+                            ).getCssPath()
+                        )
+                    )
+                }
+
+                parentActivity?.onPageContentChanged()
+
+                updateUiElements()
+                if (mUserPostNotice != null) {
+                    if (postFilterUserId != null) {
+                        mUserPostNotice?.visibility = View.VISIBLE
+                        mUserPostNotice?.text = String.format(
+                            "Viewing posts by %s in this thread,\nPress the back button to return.",
+                            postFilterUsername
+                        )
+                        mUserPostNotice?.setTextColor(ColorProvider.PRIMARY_TEXT.color)
+                        mUserPostNotice?.setBackgroundColor(ColorProvider.BACKGROUND.color)
+                    } else {
+                        mUserPostNotice?.visibility = View.GONE
+                    }
+                }
+                shareProvider?.setShareIntent(createShareIntent(null))
+                invalidateOptionsMenu()
+                if (mFAB != null) {
+                    if (prefs.noFAB || threadLocked || threadArchived) {
+                        mFAB?.hide()
+                    } else {
+                        mFAB?.show()
+                    }
+                }
+            }
+        }
+
+        override fun onLoaderReset(aLoader: Loader<Cursor?>) {
+        }
+    }
+
+    private inner class ThreadContentObserver(aHandler: Handler?) : ContentObserver(aHandler) {
+        override fun onChange(selfChange: Boolean) {
+            i("Thread metadata has been updated - forcing refresh")
+            refreshInfo()
+        }
+    }
+
+
+    /**
+     * Refresh the displayed thread's data (bookmarked, locked etc.)
+     * 
+     * This loads from the database, and reflects the last cached status of the thread.
+     * To actually download current data from the site call [.syncThread] instead.
+     * @see ThreadDataCallback
+     */
+    private fun refreshInfo() {
+        restartLoader(Constants.THREAD_INFO_LOADER_ID, null, mThreadLoaderCallback ?: return)
+    }
+
+
+    /**
+     * Refresh the posts displayed, according to current setting (thread ID, page etc.)
+     * 
+     * This loads from the database, and reflects the last cached view of the thread.
+     * To actually download updated data (including changes in posts' viewed status) call
+     * [.syncThread] instead.
+     * @see PostLoaderManager
+     */
+    private fun refreshPosts() {
+        restartLoader(Constants.POST_LOADER_ID, null, mPostLoaderCallback ?: return)
+    }
+
+
+    fun setTitle(title: String) {
+        mTitle = title
+        parentActivity?.onPageContentChanged()
+    }
+
+
+    public override fun getTitle(): String? {
+        return mTitle
+    }
+
+
+    override fun handleNavigation(event: NavigationEvent): Boolean {
+        // need to check if the fragment is attached to the activity - if not, defer any handled events until it is attached
+        if (event is NavigationEvent.Thread) {
+            if (!isAdded) {
+                deferNavigation(event)
+            } else {
+                val thread = event
+                // if we're currently displaying this thread, and no page was specified (i.e. it's
+                // a "show this thread" navigation) then we don't need to do anything
+                if (thread.id != currentThreadId || thread.page != null) {
+                    openThread(thread.id, thread.page, thread.postJump)
+                }
+            }
+            return true
+        } else if (event is Url) {
+            if (!isAdded) {
+                deferNavigation(event)
+            } else {
+                val url = event
+                openThread(url.url)
+            }
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Store a navigation event for handling when this fragment is attached to the activity
+     */
+    private fun deferNavigation(event: NavigationEvent) {
+        d("Deferring navigation event(%s) - isAdded = %b", event, isAdded)
+        pendingNavigation = event
+    }
+
+
+    /**
+     * Open a thread, jumping to a specific page and post if required.
+     * @param id          The thread's ID
+     * @param page        An optional page to display, otherwise it defaults to the first page
+     * @param postJump    An optional URL fragment representing the post ID to jump to
+     */
+    private fun openThread(id: Int, page: Int?, postJump: String?) {
+        i(
+            "Opening thread (old/new) ID:%d/%d, PAGE:%s/%s, JUMP:%s/%s",
+            this.threadId, id, this.pageNumber, page, getPostJump(), postJump
+        )
+        clearBackStack()
+        val threadPage = if (page == null) FIRST_PAGE else page
+        loadThread(id, threadPage, postJump, true)
+    }
+
+
+    /**
+     * Open a specific thread represented in an AwfulURL
+     */
+    private fun openThread(url: AwfulURL?) {
+        // TODO: fix this prefs stuff, get it initialised somewhere consistent in the lifecycle, preferably in AwfulFragment
+        // TODO: validate the AwfulURL, e.g. make sure it's the correct type
+        if (url == null) {
+            Toast.makeText(this.activity, "Error occurred: URL was empty", Toast.LENGTH_LONG)
+                .show()
+            return
+        }
+        clearBackStack()
+        if (url.isRedirect) {
+            startPostRedirect(url.getURL(prefs.postPerPage))
+        } else {
+            loadThread(
+                url.id.toInt(),
+                url.getPage(prefs.postPerPage).toInt(),
+                url.fragment,
+                true
+            )
+        }
+    }
+
+
+    /**
+     * Load the thread represented in an AwfulStackEntry
+     */
+    private fun loadThread(thread: AwfulStackEntry) {
+        loadThread(thread.id, thread.page, null, false)
+    }
+
+
+    /**
+     * Actually load the new thread
+     * @param id        The thread's ID
+     * @param page        The number of the page to display
+     * @param postJump    An optional URL fragment representing the post ID to jump to
+     */
+    private fun loadThread(id: Int, page: Int, postJump: String?, fullSync: Boolean) {
+        this.threadId = id
+        this.pageNumber = page
+        this.setPostJump(if (postJump != null) postJump else "")
+        setPostFiltering(null, null)
+        this.lastPage = FIRST_PAGE
+        updateUiElements()
+        showBlankPage()
+        if (activity != null) {
+            loaderManager.destroyLoader(Constants.THREAD_INFO_LOADER_ID)
+            loaderManager.destroyLoader(Constants.POST_LOADER_ID)
+            refreshInfo()
+            // TODO: shouldn't every load do a sync?
+            if (fullSync) {
+                syncThread()
+            } else {
+                refreshPosts()
+            }
+        }
+    }
+
+    private class AwfulStackEntry(val id: Int, val page: Int, val scrollPos: Int)
+
+    private fun pushThread(id: Int, page: Int, postJump: String?) {
+        if (mThreadView != null && this.threadId != 0) {
+            backStack.addFirst(
+                AwfulStackEntry(
+                    this.threadId,
+                    this.pageNumber,
+                    mThreadView!!.scrollY
+                )
+            )
+        }
+        loadThread(id, page, postJump, true)
+    }
+
+    private fun popThread() {
+        loadThread(backStack.removeFirst()!!)
+    }
+
+    private fun clearBackStack() {
+        backStack.clear()
+    }
+
+    private fun backStackCount(): Int {
+        return backStack.size
+    }
+
+    public override fun onBackPressed(): Boolean {
+        if (backStackCount() > 0) {
+            popThread()
+            return true
+        } else if (postFilterUserId != null) {
+            showAllPosts(null)
+            return true
+        } else {
+            return false
+        }
+    }
+
+
+    override fun doScroll(down: Boolean): Boolean {
+        val threadView = mThreadView ?: return false
+
+        if (down) {
+            threadView.pageDown(false)
+        } else {
+            threadView.pageUp(false)
+        }
+
+        return true
+    }
+
+
+    private fun toggleScreenOn() {
+        keepScreenOn = !keepScreenOn
+        mThreadView?.keepScreenOn = keepScreenOn
+
+        //TODO icon
+        alertView.setTitle(if (keepScreenOn) "Screen stays on" else "Screen turns itself off")
+            .show()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String?>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            Constants.AWFUL_PERMISSION_WRITE_EXTERNAL_STORAGE -> {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (downloadLink != null) enqueueDownload(downloadLink!!)
+                } else {
+                    Toast.makeText(
+                        activity,
+                        R.string.no_file_permission_download,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                downloadLink = null
+            }
+
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
 }

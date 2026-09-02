@@ -344,7 +344,7 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
 
         @Throws(AuthFailureError::class)
         override fun getHeaders(): Map<String, String> {
-            return mutableMapOf<String, String>("User-Agent" to AwfulApplication.getAwfulUserAgent())
+            return mutableMapOf<String, String>("User-Agent" to AwfulApplication.awfulUserAgent)
                 .apply(CookieController::setCookieHeaders)
                 .also { Timber.i("getHeaders: %s", this) };
         }

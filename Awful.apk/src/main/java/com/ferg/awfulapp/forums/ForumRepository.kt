@@ -387,7 +387,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
 
         // get all the parsed forums in an ordered list, so we can store them in this order using the INDEX field
         allForums.addAll(
-            parsedStructure.asList.includeSections(true).formatAs(ForumStructure.FLAT).build()
+            parsedStructure.asList.includeSections(true).formatAs(ForumStructure.ListFormat.FLAT).build()
         )
 
         val contentResolver = context.contentResolver

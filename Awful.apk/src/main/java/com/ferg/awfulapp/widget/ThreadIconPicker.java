@@ -241,7 +241,7 @@ public class ThreadIconPicker extends Fragment {
     public boolean secretForumCycler() {
         if (allTheForums == null || !allTheForums.hasNext()) {
             ForumRepository repo = ForumRepository.getInstance(getContext());
-            allTheForums = repo.getAllForums().getAsList().formatAs(ForumStructure.FLAT).includeSections(false).build().iterator();
+            allTheForums = repo.getAllForums().getAsList().formatAs(ForumStructure.ListFormat.FLAT).includeSections(false).build().iterator();
         }
         if (allTheForums.hasNext()) {
             Forum forum = allTheForums.next();

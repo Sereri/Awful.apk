@@ -24,6 +24,7 @@ import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.widget.StatusFrog
 import com.google.android.material.snackbar.Snackbar
 import androidx.core.content.edit
+import com.ferg.awfulapp.forums.ForumStructure.ListFormat
 
 
 /**
@@ -198,14 +199,14 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
         get() = forumRepo.allForums
             .asList
             .includeSections(prefs.forumIndexShowSections)
-            .formatAs(if (prefs.forumIndexHideSubforums) ForumStructure.TWO_LEVEL else ForumStructure.FLAT)
+            .formatAs(if (prefs.forumIndexHideSubforums) ListFormat.TWO_LEVEL else ListFormat.FLAT)
             .build()
 
 
     private val favouriteForums: MutableList<Forum>
         get() = forumRepo.favouriteForums
             .asList
-            .formatAs(ForumStructure.FLAT)
+            .formatAs(ListFormat.FLAT)
             .build()
 
 

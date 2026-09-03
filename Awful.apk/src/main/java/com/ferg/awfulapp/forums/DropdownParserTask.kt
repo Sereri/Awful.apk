@@ -28,7 +28,7 @@ import java.util.*
 internal class DropdownParserTask(context: Context) : UpdateTask(context) {
 
     override val initialTask: ForumParseTask = DropdownParseRequest()
-    private val parsedForums = ArrayList<Forum>()
+    private val parsedForums = mutableListOf<Forum?>()
 
 
     private inner class DropdownParseRequest : UpdateTask.ForumParseTask(FUNCTION_FORUM) {

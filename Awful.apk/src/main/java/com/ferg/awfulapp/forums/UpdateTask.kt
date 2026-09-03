@@ -126,7 +126,7 @@ abstract class UpdateTask(protected val context: Context, private val taskDelayM
 
         // print some debug infos about what was produced
         if (DEBUG && forumStructure != null) {
-            val allForums = forumStructure.asList.formatAs(ForumStructure.FLAT).build()
+            val allForums = forumStructure.asList.formatAs(ForumStructure.ListFormat.FLAT).build()
             Timber.w("Forums parsed! ${allForums.size} sections found:\n\n")
             for (line in printForums(forumStructure).split("\\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
                 Timber.w(line)
@@ -254,7 +254,7 @@ abstract class UpdateTask(protected val context: Context, private val taskDelayM
 
 
     private fun printForums(forums: ForumStructure): String {
-        val topLevelForums = forums.asList.formatAs(ForumStructure.FULL_TREE).build()
+        val topLevelForums = forums.asList.formatAs(ForumStructure.ListFormat.FULL_TREE).build()
         return buildString {
             topLevelForums.forEach { printForum(it, 0) }
         }

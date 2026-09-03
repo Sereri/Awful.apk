@@ -101,7 +101,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
         val context: Context = requireActivity()
         forumRepo = ForumRepository.getInstance(context)
 
-        forumListAdapter = ForumListAdapter.getInstance(context, ArrayList<Forum?>(), this, prefs)
+        forumListAdapter = ForumListAdapter.getInstance(context, mutableListOf(), this, prefs)
         forumRecyclerView?.setAdapter(forumListAdapter)
         forumRecyclerView?.setLayoutManager(LinearLayoutManager(context))
     }
@@ -193,7 +193,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
     }
 
 
-    private val allForums: MutableList<Forum?>
+    private val allForums: MutableList<Forum>
         // list formatting for the forums
         get() = forumRepo.allForums
             .asList
@@ -202,7 +202,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
             .build()
 
 
-    private val favouriteForums: MutableList<Forum?>
+    private val favouriteForums: MutableList<Forum>
         get() = forumRepo.getFavouriteForums()
             .asList
             .formatAs(ForumStructure.FLAT)

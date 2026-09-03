@@ -1,367 +1,331 @@
-package com.ferg.awfulapp.forums;
+package com.ferg.awfulapp.forums
 
-import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.Interpolator;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import com.bignerdranch.expandablerecyclerview.Adapter.ExpandableRecyclerAdapter;
-import com.bignerdranch.expandablerecyclerview.Model.ParentListItem;
-import com.bignerdranch.expandablerecyclerview.ViewHolder.ChildViewHolder;
-import com.bignerdranch.expandablerecyclerview.ViewHolder.ParentViewHolder;
-import com.ferg.awfulapp.AwfulActivity;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.databinding.ForumIndexItemBinding;
-import com.ferg.awfulapp.databinding.ForumIndexSubforumItemBinding;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.provider.ColorProvider;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
-import static android.view.View.VISIBLE;
-import static com.ferg.awfulapp.forums.ForumType.SECTION;
+import android.content.Context
+import android.view.ContextMenu
+import android.view.ContextMenu.ContextMenuInfo
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.View
+import android.view.View.OnCreateContextMenuListener
+import android.view.ViewGroup
+import android.view.animation.Interpolator
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.bignerdranch.expandablerecyclerview.Adapter.ExpandableRecyclerAdapter
+import com.bignerdranch.expandablerecyclerview.Model.ParentListItem
+import com.bignerdranch.expandablerecyclerview.ViewHolder.ChildViewHolder
+import com.bignerdranch.expandablerecyclerview.ViewHolder.ParentViewHolder
+import com.ferg.awfulapp.AwfulActivity
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.databinding.ForumIndexItemBinding
+import com.ferg.awfulapp.databinding.ForumIndexSubforumItemBinding
+import com.ferg.awfulapp.forums.ForumListAdapter.SubforumHolder
+import com.ferg.awfulapp.forums.ForumListAdapter.TopLevelForumHolder
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.provider.ColorProvider
 
 /**
  * Created by baka kaba on 13/04/2016.
- * <p/>
+ * 
+ * 
  * A RecyclerView adapter for displaying expandable two-level lists of forums.
  */
-public class ForumListAdapter extends ExpandableRecyclerAdapter<ForumListAdapter.TopLevelForumHolder, ForumListAdapter.SubforumHolder> {
+class ForumListAdapter private constructor(
+    context: Context,
+    topLevelForums: MutableList<TopLevelForum?>,
+    private val eventListener: EventListener,
+    private val awfulPrefs: AwfulPreferences?
+) : ExpandableRecyclerAdapter<TopLevelForumHolder, SubforumHolder>(topLevelForums) {
+    private val parent: AwfulActivity = context as AwfulActivity
+    private val inflater: LayoutInflater = LayoutInflater.from(context)
 
-    private final AwfulActivity parent;
-    private final AwfulPreferences awfulPrefs;
-    @NonNull
-    private final EventListener eventListener;
-    @NonNull
-    private final LayoutInflater inflater;
     /**
      * interpolator for any animations a view holder wants to do
      */
-    @NonNull
-    private final Interpolator interpolator;
-
-
-    private ForumListAdapter(@NonNull Context context,
-                             @NonNull List<TopLevelForum> topLevelForums,
-                             @NonNull EventListener listener,
-                             @Nullable AwfulPreferences awfulPreferences) {
-        super(topLevelForums);
-        parent = (AwfulActivity) context;
-        eventListener = listener;
-        awfulPrefs = awfulPreferences;
-        inflater = LayoutInflater.from(context);
-        interpolator = new FastOutSlowInInterpolator();
-    }
-
-    /**
-     * Returns a configured adapter.
-     * <p/>
-     * Takes a list of Forums which will form the main list.
-     * Any of those which has items in {@link Forum#subforums} will be expandable,
-     * and the subforums will be shown as an inner list. Any subforums of those items
-     * will be ignored. Use {@link com.ferg.awfulapp.forums.ForumStructure.ListBuilder} etc.
-     * to flatten the forums hierarchy into two levels.
-     *
-     * @param context          Used for layout inflation
-     * @param forums           A list of Forums to display
-     * @param listener         Gets callbacks for clicks etc
-     * @param awfulPreferences used to check for user options
-     * @return an adapter containing the provided forums
-     */
-    public static ForumListAdapter getInstance(@NonNull Context context,
-                                               @NonNull List<Forum> forums,
-                                               @NonNull EventListener listener,
-                                               @Nullable AwfulPreferences awfulPreferences) {
-        List<TopLevelForum> topLevelForums = new ArrayList<>();
-        ForumListAdapter adapter = new ForumListAdapter(context, topLevelForums, listener, awfulPreferences);
-        // this is a stupid hack so we can supply the constructor with a list of objects we
-        // can't even create without an instance... it's better than pulling TopLevelForum out
-        // into a separate file at least
-        adapter.addToTopLevelForums(forums, topLevelForums);
-        adapter.notifyParentItemRangeInserted(0, topLevelForums.size());
-        return adapter;
-    }
+    private val interpolator: Interpolator = FastOutSlowInInterpolator()
 
     /**
      * Create TopLevelForums from a list of Forums, adding them to a supplied list.
-     *
+     * 
      * @param forums         The forums to add
      * @param topLevelForums The list to add to
      */
-    private void addToTopLevelForums(@NonNull List<Forum> forums,
-                                     @NonNull List<TopLevelForum> topLevelForums) {
-        for (Forum forum : forums) {
-            topLevelForums.add(new TopLevelForum(forum));
+    private fun addToTopLevelForums(
+        forums: MutableList<Forum>,
+        topLevelForums: MutableList<TopLevelForum?>
+    ) {
+        for (forum in forums) {
+            topLevelForums.add(TopLevelForum(forum))
         }
     }
 
     /**
      * Update the contents of the data set with a new list of forums.
-     *
+     * 
      * @param forums The new list to display
-     *               (see {@link #getInstance(Context, List, EventListener, AwfulPreferences)} for the list format)
+     * (see [.getInstance] for the list format)
      */
-    public void updateForumList(@NonNull List<Forum> forums) {
-        @SuppressWarnings("unchecked")
-        List<TopLevelForum> itemList = (List<TopLevelForum>) getParentItemList();
+    fun updateForumList(forums: MutableList<Forum>) {
+        val itemList: MutableList<TopLevelForum?> = parentItemList as MutableList<TopLevelForum?>
 
         // we can't just reassign the dataset variable, we have to mess with the contents instead
-        int oldSize = itemList.size();
+        val oldSize = itemList.size
         if (oldSize > 0) {
-            notifyParentItemRangeRemoved(0, oldSize);
+            notifyParentItemRangeRemoved(0, oldSize)
         }
-        itemList.clear();
-        addToTopLevelForums(forums, itemList);
-        int newSize = forums.size();
+        itemList.clear()
+        addToTopLevelForums(forums, itemList)
+        val newSize = forums.size
         if (newSize > 0) {
-            notifyParentItemRangeInserted(0, newSize);
+            notifyParentItemRangeInserted(0, newSize)
         }
     }
 
-    private void setText(@NonNull Forum forum,
-                         @NonNull TextView title,
-                         @NonNull TextView subtitle,
-                         @Nullable TextView sectionTitle) {
-        title.setText(forum.getTitle());
-        subtitle.setText(forum.getSubtitle());
+    private fun setText(
+        forum: Forum,
+        title: TextView,
+        subtitle: TextView,
+        sectionTitle: TextView?
+    ) {
+        title.text = forum.title
+        subtitle.text = forum.subtitle
         if (sectionTitle != null) {
-            sectionTitle.setText(forum.getTitle());
+            sectionTitle.text = forum.title
         }
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////
-    // List items!
-    ///////////////////////////////////////////////////////////////////////////
-
-    private void handleSubtitles(@NonNull Forum forum, @NonNull TextView subtitleView) {
+    /**//////////////////////////////////////////////////////////////////////// */ // List items!
+    /**//////////////////////////////////////////////////////////////////////// */
+    private fun handleSubtitles(forum: Forum, subtitleView: TextView) {
         // we remove the subtitle if it's not there (or it's disabled) so that the title gets vertically centred
-        boolean subtitlesEnabled = false;
+        var subtitlesEnabled = false
         if (awfulPrefs != null) {
-            subtitlesEnabled = awfulPrefs.forumIndexShowSubtitles;
+            subtitlesEnabled = awfulPrefs.forumIndexShowSubtitles
         }
-        subtitleView.setVisibility(!forum.getSubtitle().isEmpty() && subtitlesEnabled ? VISIBLE : GONE);
+        subtitleView.visibility = if (!forum.subtitle!!.isEmpty() && subtitlesEnabled) View.VISIBLE else View.GONE
     }
 
     /**
      * Rotate the dropdown button to the up or down position.
-     *
+     * 
      * @param dropdown  The view to rotate
      * @param down      True to rotate to the down state (default rotation)
      * @param immediate Set rotation immediately, false will animate
      */
-    private void rotateDropdown(@NonNull ImageView dropdown, boolean down, boolean immediate) {
-        final int DOWN_ROTATION = 0;
-        final int UP_ROTATION = -540;
+    private fun rotateDropdown(dropdown: ImageView, down: Boolean, immediate: Boolean) {
+        val DOWN_ROTATION = 0
+        val UP_ROTATION = -540
         dropdown.animate()
-                .setDuration(immediate ? 0 : 400)
-                .rotation(down ? DOWN_ROTATION : UP_ROTATION)
-                .setInterpolator(interpolator);
+            .setDuration((if (immediate) 0 else 400).toLong())
+            .rotation((if (down) DOWN_ROTATION else UP_ROTATION).toFloat()).interpolator =
+            interpolator
     }
 
     /**
      * Apply colour theming
-     *
+     * 
      * @param mainView The main item layout, has its background set
      */
-    private void setThemeColours(View mainView, TextView title, TextView subtitle) {
-        mainView.setBackgroundColor(ColorProvider.BACKGROUND.getColor());
-        title.setTextColor(ColorProvider.PRIMARY_TEXT.getColor());
-        subtitle.setTextColor(ColorProvider.ALT_TEXT.getColor());
+    private fun setThemeColours(mainView: View, title: TextView, subtitle: TextView) {
+        mainView.setBackgroundColor(ColorProvider.BACKGROUND.color)
+        title.setTextColor(ColorProvider.PRIMARY_TEXT.color)
+        subtitle.setTextColor(ColorProvider.ALT_TEXT.color)
     }
 
-    @Override
-    public TopLevelForumHolder onCreateParentViewHolder(ViewGroup parentViewGroup) {
-        View view = inflater.inflate(R.layout.forum_index_item, parentViewGroup, false);
-        return new TopLevelForumHolder(view);
+    override fun onCreateParentViewHolder(parentViewGroup: ViewGroup?): TopLevelForumHolder {
+        val view = inflater.inflate(R.layout.forum_index_item, parentViewGroup, false)
+        return TopLevelForumHolder(view)
     }
 
-    @Override
-    public SubforumHolder onCreateChildViewHolder(ViewGroup childViewGroup) {
-        View view = inflater.inflate(R.layout.forum_index_subforum_item, childViewGroup, false);
-        return new SubforumHolder(view);
+    override fun onCreateChildViewHolder(childViewGroup: ViewGroup?): SubforumHolder {
+        val view = inflater.inflate(R.layout.forum_index_subforum_item, childViewGroup, false)
+        return SubforumHolder(view)
     }
 
-    @Override
-    public void onBindParentViewHolder(TopLevelForumHolder parentViewHolder, int position, ParentListItem parentListItem) {
-        parentViewHolder.bind((TopLevelForum) parentListItem);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Internal adapter wiring
-    ///////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onBindChildViewHolder(SubforumHolder childViewHolder, int position, Object childListItem) {
-        childViewHolder.bind((Forum) childListItem);
+    override fun onBindParentViewHolder(
+        parentViewHolder: TopLevelForumHolder,
+        position: Int,
+        parentListItem: ParentListItem?
+    ) {
+        parentViewHolder.bind((parentListItem as TopLevelForum?)!!)
     }
 
 
-    public interface EventListener {
-        void onForumClicked(@NonNull Forum forum);
-
-        void onContextMenuCreated(@NonNull Forum forum, @NonNull Menu contextMenu);
+    /**//////////////////////////////////////////////////////////////////////// */ // Internal adapter wiring
+    /**//////////////////////////////////////////////////////////////////////// */
+    override fun onBindChildViewHolder(
+        childViewHolder: SubforumHolder,
+        position: Int,
+        childListItem: Any?
+    ) {
+        childViewHolder.bind((childListItem as com.ferg.awfulapp.forums.Forum?)!!)
     }
 
-    private static class TopLevelForum implements ParentListItem {
 
-        final Forum forum;
+    interface EventListener {
+        fun onForumClicked(forum: Forum)
 
+        fun onContextMenuCreated(forum: Forum, contextMenu: Menu)
+    }
 
-        TopLevelForum(Forum forum) {
-            this.forum = forum;
+    class TopLevelForum(val forum: Forum) : ParentListItem {
+        override fun getChildItemList(): MutableList<*> {
+            return forum.subforums
         }
 
 
-        @Override
-        public List<?> getChildItemList() {
-            return forum.getSubforums();
-        }
-
-
-        @Override
-        public boolean isInitiallyExpanded() {
-            return false;
+        override fun isInitiallyExpanded(): Boolean {
+            return false
         }
     }
 
-    class TopLevelForumHolder extends ParentViewHolder {
-
-        // list item sections - overall view, left column (tags etc), right column (details)
-        private final View itemView;
-        private ForumIndexItemBinding binding;
-
-
-        private Forum forum;
-        private boolean hasSubforums;
+    inner class TopLevelForumHolder(// list item sections - overall view, left column (tags etc), right column (details)
+        private val itemView: View
+    ) : ParentViewHolder(itemView) {
+        private val binding: ForumIndexItemBinding = ForumIndexItemBinding.bind(itemView)
 
 
-        TopLevelForumHolder(View itemView) {
-            super(itemView);
-            this.itemView = itemView;
-            binding = ForumIndexItemBinding.bind(itemView);
+        private var forum: Forum? = null
+        private var hasSubforums = false
 
-            binding.forumDetails.setOnCreateContextMenuListener((contextMenu, view, contextMenuInfo) -> eventListener.onContextMenuCreated(forum, contextMenu));
+
+        init {
+            binding.forumDetails.setOnCreateContextMenuListener(OnCreateContextMenuListener { contextMenu: ContextMenu?, view: View?, contextMenuInfo: ContextMenuInfo? ->
+                eventListener.onContextMenuCreated(
+                    forum!!,
+                    contextMenu!!
+                )
+            })
         }
 
 
-        void bind(final TopLevelForum forumItem) {
-            forum = forumItem.forum;
-            hasSubforums = !forumItem.getChildItemList().isEmpty();
+        fun bind(forumItem: TopLevelForum) {
+            forum = forumItem.forum
+            hasSubforums = !forumItem.childItemList.isEmpty()
 
             /* section items hide everything but the section title,
                other forum types hide the section title and show the other components.
                Think of of them as two alternative layouts in the same Layout file */
-            binding.tagAndDropdownArrow.setVisibility(forum.isType(SECTION) ? GONE : VISIBLE);
-            binding.forumDetails.setVisibility(forum.isType(SECTION) ? GONE : VISIBLE);
-            binding.sectionTitle.setVisibility(forum.isType(SECTION) ? VISIBLE : GONE);
+            binding.tagAndDropdownArrow.visibility = if (forum!!.isType(ForumType.SECTION)) View.GONE else View.VISIBLE
+            binding.forumDetails.visibility = if (forum!!.isType(ForumType.SECTION)) View.GONE else View.VISIBLE
+            binding.sectionTitle.visibility = if (forum!!.isType(ForumType.SECTION)) View.VISIBLE else View.GONE
 
             // hide the list divider for section titles and expanded parent forums
-            boolean hideDivider = forum.isType(SECTION) || forumItem.isInitiallyExpanded();
-            binding.listDivider.setVisibility(hideDivider ? INVISIBLE : VISIBLE);
+            val hideDivider = forum!!.isType(ForumType.SECTION) || forumItem.isInitiallyExpanded
+            binding.listDivider.visibility = if (hideDivider) View.INVISIBLE else View.VISIBLE
 
             // sectionTitle is basically a differently formatted version of the title
-            setText(forum, binding.forumTitle, binding.forumSubtitle, binding.sectionTitle);
-            setThemeColours(itemView, binding.forumTitle, binding.forumSubtitle);
-            handleSubtitles(forum, binding.forumSubtitle);
+            setText(forum!!, binding.forumTitle, binding.forumSubtitle, binding.sectionTitle)
+            setThemeColours(itemView, binding.forumTitle, binding.forumSubtitle)
+            handleSubtitles(forum!!, binding.forumSubtitle)
 
-            parent.setPreferredFont(itemView);
+            parent.setPreferredFont(itemView)
 
-            binding.forumFavouriteMarker.setVisibility(forum.isFavourite() ? VISIBLE : GONE);
+            binding.forumFavouriteMarker.visibility = if (forum!!.isFavourite) View.VISIBLE else View.GONE
 
             /* the left section (potentially) has a tag and a dropdown button, anything missing
                is set to GONE so whatever's there gets vertically centred, and the space remains */
 
             // if there's a forum tag then display it, otherwise remove it
-            boolean hasForumTag = forum.getTagUrl() != null;
+            val hasForumTag = forum!!.tagUrl != null
             if (hasForumTag) {
-                TagProvider.setSquareForumTag(binding.forumTag, forum);
-                binding.forumTag.setVisibility(View.VISIBLE);
+                TagProvider.setSquareForumTag(binding.forumTag, forum!!)
+                binding.forumTag.visibility = View.VISIBLE
             } else {
-                binding.forumTag.setVisibility(View.GONE);
+                binding.forumTag.visibility = View.GONE
             }
 
             // if this item has subforums, show the dropdown and make it work, otherwise remove it
             if (hasSubforums) {
-                rotateDropdown(binding.subforumsExpandArrow, !isExpanded(), true);
-                binding.subforumsExpandArrow.setVisibility(VISIBLE);
+                rotateDropdown(binding.subforumsExpandArrow, !isExpanded, true)
+                binding.subforumsExpandArrow.visibility = View.VISIBLE
             } else {
-                binding.subforumsExpandArrow.setVisibility(GONE);
+                binding.subforumsExpandArrow.visibility = View.GONE
             }
-            binding.tagAndDropdownArrow.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (hasSubforums) {
-                        if (isExpanded()) {
-                            collapseView();
-                        } else {
-                            expandView();
-                        }
+            binding.tagAndDropdownArrow.setOnClickListener {
+                if (hasSubforums) {
+                    if (isExpanded) {
+                        collapseView()
+                    } else {
+                        expandView()
                     }
                 }
-            });
+            }
 
-            binding.forumDetails.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    eventListener.onForumClicked(forum);
-                }
-            });
+            binding.forumDetails.setOnClickListener { eventListener.onForumClicked(forum!!) }
         }
 
 
-        @Override
-        public boolean shouldItemViewClickToggleExpansion() {
-            return false;
+        override fun shouldItemViewClickToggleExpansion(): Boolean {
+            return false
         }
 
 
-        @Override
-        public void onExpansionToggled(boolean closing) {
-            super.onExpansionToggled(closing);
-            rotateDropdown(binding.subforumsExpandArrow, closing, false);
-            binding.listDivider.setVisibility(closing ? VISIBLE : INVISIBLE);
+        override fun onExpansionToggled(closing: Boolean) {
+            super.onExpansionToggled(closing)
+            rotateDropdown(binding.subforumsExpandArrow, closing, false)
+            binding.listDivider.visibility = if (closing) View.VISIBLE else View.INVISIBLE
         }
     }
 
-    class SubforumHolder extends ChildViewHolder {
-
-        Forum forum;
-        ForumIndexSubforumItemBinding binding;
-
+    inner class SubforumHolder(itemView: View) : ChildViewHolder(itemView) {
+        var forum: Forum? = null
+        var binding: ForumIndexSubforumItemBinding = ForumIndexSubforumItemBinding.bind(itemView)
 
 
-        SubforumHolder(View itemView) {
-            super(itemView);
-            binding = ForumIndexSubforumItemBinding.bind(itemView);
-            binding.forumDetails.setOnCreateContextMenuListener((contextMenu, view, contextMenuInfo) -> eventListener.onContextMenuCreated(forum, contextMenu));
+        init {
+            binding.forumDetails.setOnCreateContextMenuListener(OnCreateContextMenuListener { contextMenu: ContextMenu?, view: View?, contextMenuInfo: ContextMenuInfo? ->
+                eventListener.onContextMenuCreated(
+                    forum!!,
+                    contextMenu!!
+                )
+            })
         }
 
 
-        void bind(final Forum forumItem) {
-            forum = forumItem;
-            setText(forum, binding.forumTitle, binding.forumSubtitle, null);
-            setThemeColours(binding.getRoot(), binding.forumTitle, binding.forumSubtitle);
-            handleSubtitles(forum, binding.forumSubtitle);
-            binding.forumFavouriteMarker.setVisibility(forum.isFavourite() ? VISIBLE : GONE);
-            binding.forumDetails.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    eventListener.onForumClicked(forum);
-                }
-            });
+        fun bind(forumItem: Forum) {
+            forum = forumItem
+            setText(forum!!, binding.forumTitle, binding.forumSubtitle, null)
+            setThemeColours(binding.getRoot(), binding.forumTitle, binding.forumSubtitle)
+            handleSubtitles(forum!!, binding.forumSubtitle)
+            binding.forumFavouriteMarker.visibility = if (forum!!.isFavourite) View.VISIBLE else View.GONE
+            binding.forumDetails.setOnClickListener { eventListener.onForumClicked(forum!!) }
         }
     }
 
+    companion object {
+        /**
+         * Returns a configured adapter.
+         * 
+         * 
+         * Takes a list of Forums which will form the main list.
+         * Any of those which has items in [Forum.subforums] will be expandable,
+         * and the subforums will be shown as an inner list. Any subforums of those items
+         * will be ignored. Use [ForumStructure.ListBuilder] etc.
+         * to flatten the forums hierarchy into two levels.
+         * 
+         * @param context          Used for layout inflation
+         * @param forums           A list of Forums to display
+         * @param listener         Gets callbacks for clicks etc
+         * @param awfulPreferences used to check for user options
+         * @return an adapter containing the provided forums
+         */
+        fun getInstance(
+            context: Context,
+            forums: MutableList<Forum>,
+            listener: EventListener,
+            awfulPreferences: AwfulPreferences?
+        ): ForumListAdapter {
+            val topLevelForums: MutableList<TopLevelForum?> = ArrayList<TopLevelForum?>()
+            val adapter = ForumListAdapter(context, topLevelForums, listener, awfulPreferences)
+            // this is a stupid hack so we can supply the constructor with a list of objects we
+            // can't even create without an instance... it's better than pulling TopLevelForum out
+            // into a separate file at least
+            adapter.addToTopLevelForums(forums, topLevelForums)
+            adapter.notifyParentItemRangeInserted(0, topLevelForums.size)
+            return adapter
+        }
+    }
 }

@@ -100,7 +100,7 @@ class NavigationDrawer(val activity: AwfulActivity, toolbar: Toolbar, val prefs:
 
 
     private fun loadAvatar(userTitle: String, avatar: ImageView) {
-        NetworkUtils.getImageLoader().get(userTitle, object : ImageLoader.ImageListener {
+        NetworkUtils.imageLoader?.get(userTitle, object : ImageLoader.ImageListener {
             override fun onResponse(response: ImageLoader.ImageContainer, isImmediate: Boolean) {
                 response.bitmap?.let(avatar::setImageBitmap)
                 return

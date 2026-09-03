@@ -1,18 +1,18 @@
 /********************************************************************************
  * Copyright (c) 2011, Scott Ferguson
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,202 +23,210 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp.network
 
-package com.ferg.awfulapp.network;
+import android.content.Context
+import android.net.http.HttpResponseCache
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.toolbox.ImageLoader
+import com.android.volley.toolbox.Volley
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.util.LRUImageCache
+import org.apache.commons.text.StringEscapeUtils
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import timber.log.Timber.Forest.e
+import timber.log.Timber.Forest.i
+import timber.log.Timber.Forest.w
+import java.io.File
+import java.io.UnsupportedEncodingException
+import java.net.HttpURLConnection
+import java.net.URI
+import java.net.URLEncoder
+import java.util.regex.Pattern
 
-import android.content.Context;
-import android.net.http.HttpResponseCache;
+object NetworkUtils {
+    private const val CHARSET = "windows-1252"
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.Volley;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.util.LRUImageCache;
+    private val unencodeCharactersPattern: Pattern = Pattern.compile("&#(\\d+);")
+    private val encodeCharactersPattern: Pattern = Pattern.compile("([^\\x00-\\x7F])")
 
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
-import java.io.File;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import timber.log.Timber;
-
-@SuppressWarnings({"unchecked", "unsafe"})
-public class NetworkUtils {
-    private static final String CHARSET = "windows-1252";
-
-    private static final Pattern unencodeCharactersPattern = Pattern.compile("&#(\\d+);");
-    private static final Pattern encodeCharactersPattern = Pattern.compile("([^\\x00-\\x7F])");
-
-    private static RequestQueue mNetworkQueue;
-    private static LRUImageCache mImageCache;
-    private static AwfulImageLoader mImageLoader;
+    private var mNetworkQueue: RequestQueue? = null
+    private var mImageCache: LRUImageCache? = null
+    private var mImageLoader: AwfulImageLoader? = null
 
     /**
      * Initialise request handling and caching - call this early!
-     *
+     * 
      * @param context A context used to create a cache dir
      */
-    public static void init(Context context) {
+    fun init(context: Context) {
         // update the security provider first, to ensure we fix SSL errors before setting anything else up
-        SecurityProvider.update(context);
-        mNetworkQueue = Volley.newRequestQueue(context);
+        SecurityProvider.update(context)
+        mNetworkQueue = Volley.newRequestQueue(context)
         // TODO: find out if this is even being used anywhere
-        mImageCache = new LRUImageCache();
-        mImageLoader = new AwfulImageLoader(mNetworkQueue, mImageCache);
+        mImageCache = LRUImageCache()
+        mImageLoader = AwfulImageLoader(mNetworkQueue, mImageCache)
 
         try {
-            HttpResponseCache.install(new File(context.getCacheDir(), "httpcache"), 5242880);
-        } catch (Exception e) {
-            e.printStackTrace();
+            HttpResponseCache.install(File(context.getCacheDir(), "httpcache"), 5242880)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    public static ImageLoader getImageLoader() {
-        return mImageLoader;
-    }
+    @JvmStatic
+    val imageLoader: ImageLoader?
+        get() = mImageLoader
 
-    public static void clearImageCache() {
+    fun clearImageCache() {
         if (mImageCache != null) {
-            mImageCache.clear();
+            mImageCache!!.clear()
         }
     }
 
-    public static void queueRequest(Request request) {
+    @JvmStatic
+    fun queueRequest(request: Request<*>) {
         if (mNetworkQueue != null) {
-            mNetworkQueue.add(request);
+            mNetworkQueue!!.add(request)
         } else {
-            Timber.w("Can't queue request - NetworkQueue is null, has NetworkUtils been initialised?");
+            w("Can't queue request - NetworkQueue is null, has NetworkUtils been initialised?")
         }
     }
 
-    public static void cancelRequests(Object tag) {
+    fun cancelRequests(tag: Any?) {
         if (mNetworkQueue != null) {
-            mNetworkQueue.cancelAll(tag);
+            mNetworkQueue!!.cancelAll(tag)
         } else {
-            Timber.w("Can't cancel requests - NetworkQueue is null, has NetworkUtils been initialised?");
+            w("Can't cancel requests - NetworkQueue is null, has NetworkUtils been initialised?")
         }
     }
 
-    public static Document get(String aUrl) throws Exception {
-        return get(new URI(aUrl));
+    @JvmStatic
+    @Throws(Exception::class)
+    fun get(aUrl: String?): Document? {
+        return get(URI(aUrl))
     }
 
-    public static Document get(URI location) throws Exception {
-        Timber.i("Fetching %s", location);
+    @Throws(Exception::class)
+    fun get(location: URI): Document? {
+        i("Fetching %s", location)
 
-        HttpURLConnection urlConnection = (HttpURLConnection) location.toURL().openConnection();
+        val urlConnection = location.toURL().openConnection() as HttpURLConnection?
 
         if (urlConnection == null) {
-            Timber.e("Couldn't open connection");
-            return null;
+            e("Couldn't open connection")
+            return null
         }
 
-        Document response;
+        var response: Document?
 
         try {
-            InputStream inputStream = urlConnection.getInputStream();
-            response = Jsoup.parse(inputStream, CHARSET, Constants.BASE_URL);
+            val inputStream = urlConnection.getInputStream()
+            response = Jsoup.parse(inputStream, CHARSET, Constants.BASE_URL)
         } finally {
-            urlConnection.disconnect();
+            urlConnection.disconnect()
         }
 
-        Timber.i("Fetched %s", location);
-        return response;
+        i("Fetched %s", location)
+        return response
     }
 
-    public static String getRedirect(String aUrl, Map<String, String> aParams) throws Exception {
-        URI location = new URI(aUrl + getQueryStringParameters(aParams));
+    @Throws(Exception::class)
+    @JvmStatic
+    fun getRedirect(aUrl: String?, aParams: MutableMap<String?, String?>?): String {
+        val location = URI(aUrl + getQueryStringParameters(aParams))
 
-        String redirectLocation;
-        HttpURLConnection urlConnection = (HttpURLConnection) location.toURL().openConnection();
+        var redirectLocation: String?
+        val urlConnection = location.toURL().openConnection() as HttpURLConnection
         try {
-            redirectLocation = urlConnection.getHeaderField("Location");
+            redirectLocation = urlConnection.getHeaderField("Location")
             if (redirectLocation == null) {
                 // HttpURLConnection redirects internally, so get the end result instead
-                redirectLocation = urlConnection.getURL().toString();
+                redirectLocation = urlConnection.getURL().toString()
             }
         } finally {
-            urlConnection.disconnect();
+            urlConnection.disconnect()
         }
-        return redirectLocation;
+        return redirectLocation
     }
 
     /**
      * Build a html query string from a map.
-     * <p>
-     * Returns an empty string if <code>parameters</code> is null
-     *
+     * 
+     * 
+     * Returns an empty string if `parameters` is null
+     * 
      * @param parameters Map of query string pairs
      * @return A valid query string
      */
-    public static String getQueryStringParameters(Map<String, String> parameters) {
-        if (parameters == null)
-            return "";
+    fun getQueryStringParameters(parameters: MutableMap<String?, String?>?): String {
+        if (parameters == null) return ""
 
-        StringBuilder result = new StringBuilder("?");
+        val result = StringBuilder("?")
 
         try {
-            String separator = "";
+            var separator = ""
 
-            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            for (entry in parameters.entries) {
                 result.append(separator)
-                        .append(entry.getKey())
-                        .append("=")
-                        .append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+                    .append(entry.key)
+                    .append("=")
+                    .append(URLEncoder.encode(entry.value, "UTF-8"))
 
-                separator = "&";
+                separator = "&"
             }
-        } catch (UnsupportedEncodingException e) {
-            Timber.i(e.toString());
+        } catch (e: UnsupportedEncodingException) {
+            i(e.toString())
         }
 
-        return result.toString();
+        return result.toString()
     }
 
     /**
      * Parses all html-escaped characters to a regular Java string. Does not handle html tags.
-     *
+     * 
      * @param html
      * @return unencoded text.
      */
-    public static String unencodeHtml(String html) {
+    @JvmStatic
+    fun unencodeHtml(html: String?): String {
         if (html == null) {
-            return "";
+            return ""
         }
-        String processed = StringEscapeUtils.unescapeHtml4(html);
-        StringBuffer unencodedContent = new StringBuffer(processed.length());
-        Matcher fixCharMatch = unencodeCharactersPattern.matcher(processed);
+        val processed = StringEscapeUtils.unescapeHtml4(html)
+
+        val unencodedContent = StringBuffer(processed.length)
+        val fixCharMatch = unencodeCharactersPattern.matcher(processed)
         while (fixCharMatch.find()) {
-            fixCharMatch.appendReplacement(unencodedContent, Character.toString((char) Integer.parseInt(fixCharMatch.group(1))));
+            val found = fixCharMatch.group(1) ?: continue
+            fixCharMatch.appendReplacement(
+                unencodedContent,
+                found.toInt().toChar().toString()
+            )
         }
-        fixCharMatch.appendTail(unencodedContent);
-        return unencodedContent.toString();
+        fixCharMatch.appendTail(unencodedContent)
+        return unencodedContent.toString()
     }
 
     /**
      * Parses a Java string into html-escaped characters. Does not handle html tags.
-     *
+     * 
      * @param str String to process
      * @return unencoded text.
      */
-    public static String encodeHtml(String str) {
-        StringBuffer unencodedContent = new StringBuffer(str.length());
-        Matcher fixCharMatch = encodeCharactersPattern.matcher(str);
+    fun encodeHtml(str: String): String {
+        val unencodedContent = StringBuffer(str.length)
+        val fixCharMatch = encodeCharactersPattern.matcher(str)
         while (fixCharMatch.find()) {
-            fixCharMatch.appendReplacement(unencodedContent, "&#" + fixCharMatch.group(1).codePointAt(0) + ";");
+            fixCharMatch.appendReplacement(
+                unencodedContent,
+                "&#" + fixCharMatch.group(1)?.codePointAt(0) + ";"
+            )
         }
-        fixCharMatch.appendTail(unencodedContent);
-        return unencodedContent.toString();
+        fixCharMatch.appendTail(unencodedContent)
+        return unencodedContent.toString()
     }
 }

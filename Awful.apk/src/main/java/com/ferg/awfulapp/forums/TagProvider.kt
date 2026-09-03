@@ -29,7 +29,7 @@ object TagProvider {
         if (StringUtils.isEmpty(forum.tagUrl)) {
             return
         }
-        NetworkUtils.getImageLoader().get(forum.tagUrl, object : ImageListener {
+        NetworkUtils.imageLoader?.get(forum.tagUrl, object : ImageListener {
             override fun onResponse(response: ImageContainer, isImmediate: Boolean) {
                 val threadTag = response.bitmap
                 if (threadTag != null) {

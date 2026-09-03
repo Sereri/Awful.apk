@@ -1,174 +1,158 @@
-package com.ferg.awfulapp.popupmenu;
+package com.ferg.awfulapp.popupmenu
 
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import android.text.method.ScrollingMovementMethod;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import com.ferg.awfulapp.AwfulDialogFragment;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.databinding.ActionItemBinding;
-import com.ferg.awfulapp.provider.ColorProvider;
-
-import java.util.List;
-
+import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.ferg.awfulapp.AwfulDialogFragment
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.databinding.ActionItemBinding
+import com.ferg.awfulapp.provider.ColorProvider
 
 /**
  * Created by baka kaba on 22/05/2017.
- * <p>
+ * 
+ * 
  * A menu dialog that displays a list of actions.
- * <p>
+ * 
+ * 
  * Subclass this and implement the methods that provide a list of actions, and handle when the user
- * clicks one of them. I recommend following the approach in {@link UrlContextMenu}, where you define
+ * clicks one of them. I recommend following the approach in [UrlContextMenu], where you define
  * the menu items as an enum, add whichever items you need, and switch on the enum cases to handle
  * the user's selection. Just pass the enum as the type parameter for the class.
  */
-public abstract class BasePopupMenu<T extends AwfulAction> extends AwfulDialogFragment {
-
+abstract class BasePopupMenu<T : AwfulAction?> internal constructor() : AwfulDialogFragment() {
     /**
      * Can be used to set a callback that is called when an action is clicked.
      */
-    public interface OnActionClickedListener<T extends AwfulAction> {
+    interface OnActionClickedListener<T : AwfulAction?> {
         /**
          * Called when an action is clicked.
-         * This method is called after {@link BasePopupMenu#onActionClicked} has been called.
+         * This method is called after [BasePopupMenu.onActionClicked] has been called.
          * @param action    the action that was clicked
          */
-        void onActionClicked(T action);
+        fun onActionClicked(action: T?)
     }
 
-    int layoutResId = R.layout.select_url_action_dialog;
+    @JvmField
+    var layoutResId: Int = R.layout.select_url_action_dialog
 
-    private List<T> menuItems = null;
+    private var menuItems: MutableList<T?>? = null
 
-    private OnActionClickedListener<T> onActionClickedListener = null;
+    private var onActionClickedListener: OnActionClickedListener<T?>? = null
 
-    public void setOnActionClickedListener(OnActionClickedListener<T> listener) {
-        this.onActionClickedListener = listener;
+    fun setOnActionClickedListener(listener: OnActionClickedListener<T?>?) {
+        this.onActionClickedListener = listener
     }
 
-    BasePopupMenu() {
-        this.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
+    init {
+        this.setStyle(STYLE_NO_TITLE, 0)
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            init(getArguments());
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (arguments != null) {
+            init(requireArguments())
         }
-        menuItems = generateMenuItems();
+        menuItems = generateMenuItems()
     }
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View result = inflater.inflate(layoutResId, container, false);
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val result = inflater.inflate(layoutResId, container, false)
 
-        TextView actionTitle = result.findViewById(R.id.actionTitle);
-        actionTitle.setMovementMethod(new ScrollingMovementMethod());
-        actionTitle.setText(getTitle());
+        val actionTitle = result.findViewById<TextView>(R.id.actionTitle)
+        actionTitle.movementMethod = ScrollingMovementMethod()
+        actionTitle.text = getTitle()
 
-        RecyclerView actionsView = result.findViewById(R.id.post_actions);
-        actionsView.setAdapter(new ActionHolderAdapter());
-        actionsView.setLayoutManager(new LinearLayoutManager(getContext()));
+        val actionsView = result.findViewById<RecyclerView>(R.id.post_actions)
+        actionsView.setAdapter(ActionHolderAdapter())
+        actionsView.setLayoutManager(LinearLayoutManager(context))
 
-        getDialog().setCanceledOnTouchOutside(true);
-        getAwfulActivity().setPreferredFont(result);
-        return result;
+        dialog?.setCanceledOnTouchOutside(true)
+        awfulActivity?.setPreferredFont(result)
+        return result
     }
 
 
     /**
-     * Called during onCreate, passing in the arguments set with {@link Fragment#setArguments(Bundle)}.
-     * <p>
+     * Called during onCreate, passing in the arguments set with [Fragment.setArguments].
+     * 
+     * 
      * Fragments can be recreated, losing all their state, so set the arguments when creating a new
      * fragment instance, and unpack them and build your state here.
      */
-    abstract void init(@NonNull Bundle args);
+    abstract fun init(args: Bundle)
 
 
     /**
      * Generate the list of menu items to display.
-     * <p>
+     * 
+     * 
      * This is where you should define the items you need to include, in the order they should be displayed.
-     *
+     * 
      * @return the list of menu items, in order
      */
-    @NonNull
-    abstract List<T> generateMenuItems();
+    abstract fun generateMenuItems(): MutableList<T?>
 
     /**
      * Called when the user selects one of your menu items.
-     *
+     * 
      * The dialog is dismissed after this method is called - don't dismiss it yourself!
      */
-    abstract void onActionClicked(@NonNull T action);
+    abstract fun onActionClicked(action: T)
 
     /**
      * Get the text to display for a given action.
-     * <p>
-     * The default implementation just defers to the action's own {@link AwfulAction#getMenuLabel()} method.
+     * 
+     * 
+     * The default implementation just defers to the action's own [AwfulAction.getMenuLabel] method.
      * You can override this if you need to manipulate the text, e.g. if you've defined a format string
      * for a particular item, and you need to pass in the specific parameters for this menu instance.
-     *
+     * 
      * @param action the action item being displayed
      */
-    @NonNull
-    String getMenuLabel(@NonNull T action) {
-        return action.getMenuLabel();
+    open fun getMenuLabel(action: T): String {
+        return action?.menuLabel ?: ""
     }
 
 
-    class ActionHolder extends RecyclerView.ViewHolder {
-
-        ActionItemBinding binding;
-        ActionHolder(View view) {
-            super(view);
-            binding = ActionItemBinding.bind(view);
-        }
+    internal class ActionHolder(view: View) : RecyclerView.ViewHolder(view) {
+        var binding: ActionItemBinding = ActionItemBinding.bind(view)
     }
 
-    private class ActionHolderAdapter extends RecyclerView.Adapter<ActionHolder> {
-
-        @NonNull
-        @Override
-        public ActionHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.action_item, parent, false);
-            getAwfulActivity().setPreferredFont(view);
-            return new ActionHolder(view);
+    private inner class ActionHolderAdapter : RecyclerView.Adapter<ActionHolder?>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActionHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.action_item, parent, false)
+            awfulActivity?.setPreferredFont(view)
+            return ActionHolder(view)
         }
 
-        @Override
-        public void onBindViewHolder(@NonNull ActionHolder holder, final int position) {
-            final T action = menuItems.get(position);
-            holder.binding.actionTitle.setText(getMenuLabel(action));
-            holder.binding.actionTitle.setTextColor(ColorProvider.PRIMARY_TEXT.getColor());
-            holder.binding.actionTag.setImageResource(action.getIconId());
-            holder.itemView.setOnClickListener(v -> {
-                onActionClicked(action);
-                if (onActionClickedListener != null) {
-                    onActionClickedListener.onActionClicked(action);
+        override fun onBindViewHolder(holder: ActionHolder, position: Int) {
+            val action = menuItems!![position]
+            action?.let {
+                holder.binding.actionTitle.text = getMenuLabel(action)
+                holder.binding.actionTitle.setTextColor(ColorProvider.PRIMARY_TEXT.color)
+                holder.binding.actionTag.setImageResource(action.iconId)
+                holder.itemView.setOnClickListener { _: View? ->
+                    onActionClicked(action)
+                    onActionClickedListener?.onActionClicked(action)
+                    // Sometimes this happens after onSaveInstanceState is called, which throws an Exception if we don't allow state loss
+                    dismissAllowingStateLoss()
                 }
-                // Sometimes this happens after onSaveInstanceState is called, which throws an Exception if we don't allow state loss
-                dismissAllowingStateLoss();
-            });
+            }
         }
 
-        @Override
-        public int getItemCount() {
-            return menuItems == null ? 0 : menuItems.size();
+        override fun getItemCount(): Int {
+            return menuItems?.size ?: 0
         }
-
     }
-
-
 }

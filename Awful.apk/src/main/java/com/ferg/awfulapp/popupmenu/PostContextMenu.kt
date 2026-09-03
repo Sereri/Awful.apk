@@ -1,235 +1,148 @@
-package com.ferg.awfulapp.popupmenu;
+package com.ferg.awfulapp.popupmenu
 
-import android.os.Bundle;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import android.util.Log;
-
-import com.ferg.awfulapp.AwfulActivity;
-import com.ferg.awfulapp.NavigationEvent;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.ThreadDisplayFragment;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.thread.AwfulMessage;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.COPY_URL;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.EDIT;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.HIDE_AVATAR;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.IGNORE_USER;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.MARK_LAST_SEEN;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.MARK_USER;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.RAP_SHEET;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.REPORT_POST;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.SEND_PM;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.SHOW_AVATAR;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.UNMARK_USER;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.USER_POSTS;
-import static com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction.YOUR_POSTS;
+import android.os.Bundle
+import android.util.Log
+import androidx.annotation.DrawableRes
+import com.ferg.awfulapp.AwfulActivity
+import com.ferg.awfulapp.NavigationEvent.ComposePrivateMessage
+import com.ferg.awfulapp.NavigationEvent.LepersColony
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.ThreadDisplayFragment
+import com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.thread.AwfulMessage
 
 /**
  * Created by baka kaba on 23/05/2017.
- * <p>
+ * 
+ * 
  * A popup menu for a post in a thread.
  */
-public class PostContextMenu extends BasePopupMenu<PostContextMenu.PostMenuAction> {
-
-    public static final String TAG = PostContextMenu.class.getSimpleName();
-
-    private static final String ARG_POSTER_USER_ID = "posterUserId";
-    private static final String ARG_EDITABLE = "editable";
-    private static final String ARG_POSTER_HAS_PLAT = "posterHasPlat";
-    private static final String ARG_POSTER_ROLE = "posterRole";
-    private static final String ARG_THREAD_ID = "threadId";
-    private static final String ARG_POST_ID = "postId";
-    private static final String ARG_LAST_READ_CODE = "lastReadCode";
-    private static final String ARG_POSTER_USERNAME = "posterUsername";
-    private static final String ARG_POST_FILTER_USER_ID = "postFilterUserId";
-    private static final String ARG_POSTER_AVATAR_URL = "posterAvatarUrl";
-
-    private int posterUserId;
-    private boolean editable;
-    private boolean posterHasPlat;
-    private boolean posterHasRole;
-    private boolean posterIsUnreportable;
-    private int threadId;
-    private int postId;
-    private int lastReadCode;
-    private int postFilterUserId;
-    private String posterUsername = null;
-    private @Nullable String posterAvatarUrl = null;
+class PostContextMenu : BasePopupMenu<PostMenuAction>() {
+    private var posterUserId = 0
+    private var editable = false
+    private var posterHasPlat = false
+    private var posterHasRole = false
+    private var posterIsUnreportable = false
+    private var threadId = 0
+    private var postId = 0
+    private var lastReadCode = 0
+    private var postFilterUserId = 0
+    private var posterUsername: String? = null
+    private var posterAvatarUrl: String? = null
 
 
-    /**
-     * Get a menu for a given post.
-     *
-     * @param threadId           the ID of the thread the post belongs to
-     * @param postId             the ID of the post the menu is for
-     * @param lastReadCode       the ID code used when marking a post as the last-read (see {@link ThreadDisplayFragment#markLastRead(int)})
-     * @param editable           true if the post can be edited by you
-     * @param posterUsername     the username of the post creator
-     * @param posterUserId       the user ID of the post creator
-     * @param posterHasPlat      true if the post creator has a platinum account
-     * @param posterRole         the role of the post creator (e.g. "admin", "mod"), or null if none
-     * @param posterAvatarUrl    the URL of the post creator's avatar
-     * @return the configured menu, ready to show
-     */
-    public static PostContextMenu newInstance(int threadId,
-                                              int postId,
-                                              int lastReadCode,
-                                              boolean editable,
-                                              @NonNull String posterUsername,
-                                              int posterUserId,
-                                              boolean posterHasPlat,
-                                              String posterRole,
-                                              Integer postFilterUserId,
-                                              String posterAvatarUrl) {
-        Bundle args = new Bundle();
-        PostContextMenu fragment = new PostContextMenu();
-
-        args.putInt(ARG_POSTER_USER_ID, posterUserId);
-        args.putBoolean(ARG_EDITABLE, editable);
-        args.putBoolean(ARG_POSTER_HAS_PLAT, posterHasPlat);
-        args.putString(ARG_POSTER_ROLE, posterRole);
-        args.putInt(ARG_THREAD_ID, threadId);
-        args.putInt(ARG_POST_ID, postId);
-        args.putInt(ARG_LAST_READ_CODE, lastReadCode);
-        args.putString(ARG_POSTER_USERNAME, posterUsername);
-        args.putString(ARG_POSTER_AVATAR_URL, posterAvatarUrl);
-        if (postFilterUserId != null) {
-            args.putInt(ARG_POST_FILTER_USER_ID, postFilterUserId);
-        }
-        fragment.setArguments(args);
-        return fragment;
+    override fun init(args: Bundle) {
+        posterUserId = args.getInt(ARG_POSTER_USER_ID)
+        editable = args.getBoolean(ARG_EDITABLE)
+        posterHasPlat = args.getBoolean(ARG_POSTER_HAS_PLAT)
+        val posterRole = args.getString(ARG_POSTER_ROLE, "")
+        posterHasRole = !posterRole.isEmpty()
+        posterIsUnreportable = "admin" == posterRole || "coder" == posterRole
+        threadId = args.getInt(ARG_THREAD_ID)
+        postId = args.getInt(ARG_POST_ID)
+        lastReadCode = args.getInt(ARG_LAST_READ_CODE)
+        posterUsername = args.getString(ARG_POSTER_USERNAME)
+        postFilterUserId = args.getInt(ARG_POST_FILTER_USER_ID)
+        posterAvatarUrl = args.getString(ARG_POSTER_AVATAR_URL)
     }
 
 
-    @Override
-    void init(@NonNull Bundle args) {
-        posterUserId = args.getInt(ARG_POSTER_USER_ID);
-        editable = args.getBoolean(ARG_EDITABLE);
-        posterHasPlat = args.getBoolean(ARG_POSTER_HAS_PLAT);
-        String posterRole = args.getString(ARG_POSTER_ROLE, "");
-        posterHasRole = !posterRole.isEmpty();
-        posterIsUnreportable = "admin".equals(posterRole) || "coder".equals(posterRole);
-        threadId = args.getInt(ARG_THREAD_ID);
-        postId = args.getInt(ARG_POST_ID);
-        lastReadCode = args.getInt(ARG_LAST_READ_CODE);
-        posterUsername = args.getString(ARG_POSTER_USERNAME);
-        postFilterUserId = args.getInt(ARG_POST_FILTER_USER_ID);
-        posterAvatarUrl = args.getString(ARG_POSTER_AVATAR_URL);
-    }
+    override fun generateMenuItems(): MutableList<PostMenuAction?> {
+        val prefs = AwfulPreferences.getInstance()
+        val youHavePlat = prefs.hasPlatinum
+        val ownPost = prefs.username == posterUsername
 
+        val awfulActions: MutableList<PostMenuAction?> = ArrayList<PostMenuAction?>()
 
-    @NonNull
-    @Override
-    List<PostMenuAction> generateMenuItems() {
-        AwfulPreferences prefs = AwfulPreferences.getInstance();
-        boolean youHavePlat = prefs.hasPlatinum;
-        boolean ownPost = prefs.username.equals(posterUsername);
-
-        List<PostMenuAction> awfulActions = new ArrayList<>();
-
-        awfulActions.add(PostMenuAction.QUOTE);
+        awfulActions.add(PostMenuAction.QUOTE)
         if (editable) {
-            awfulActions.add(EDIT);
+            awfulActions.add(PostMenuAction.EDIT)
         }
-        awfulActions.add(MARK_LAST_SEEN);
+        awfulActions.add(PostMenuAction.MARK_LAST_SEEN)
         if (!ownPost && youHavePlat && (posterHasPlat || posterHasRole)) {
-            awfulActions.add(SEND_PM);
+            awfulActions.add(PostMenuAction.SEND_PM)
         }
-        awfulActions.add(ownPost ? YOUR_POSTS : USER_POSTS);
+        awfulActions.add(if (ownPost) PostMenuAction.YOUR_POSTS else PostMenuAction.USER_POSTS)
         if (!ownPost) {
-            awfulActions.add(prefs.markedUsers.contains(posterUsername) ? UNMARK_USER : MARK_USER);
+            awfulActions.add(if (prefs.markedUsers.contains(posterUsername)) PostMenuAction.UNMARK_USER else PostMenuAction.MARK_USER)
         }
         if (!ownPost && !posterIsUnreportable) {
-            awfulActions.add(REPORT_POST);
+            awfulActions.add(PostMenuAction.REPORT_POST)
         }
-        awfulActions.add(COPY_URL);
-        awfulActions.add(RAP_SHEET);
+        awfulActions.add(PostMenuAction.COPY_URL)
+        awfulActions.add(PostMenuAction.RAP_SHEET)
         if (!ownPost && !posterHasRole) {
-            awfulActions.add(IGNORE_USER);
+            awfulActions.add(PostMenuAction.IGNORE_USER)
         }
         if (prefs.avatarsEnabled && posterAvatarUrl != null) {
-            awfulActions.add(prefs.blockedAvatarUrls.contains(posterAvatarUrl) ?
-                    SHOW_AVATAR : HIDE_AVATAR);
+            awfulActions.add(if (prefs.blockedAvatarUrls.contains(posterAvatarUrl)) PostMenuAction.SHOW_AVATAR else PostMenuAction.HIDE_AVATAR)
         }
-        return awfulActions;
+        return awfulActions
     }
 
 
-    @Override
-    void onActionClicked(@NonNull PostMenuAction action) {
-        ThreadDisplayFragment parent = (ThreadDisplayFragment) getTargetFragment();
+    override fun onActionClicked(action: PostMenuAction) {
+        val parent = targetFragment as ThreadDisplayFragment?
         if (parent == null) {
-            Log.w(TAG, "onActionClicked: can't get target ThreadDisplayFragment");
-            return;
+            Log.w(TAG, "onActionClicked: can't get target ThreadDisplayFragment")
+            return
         }
-        AwfulActivity activity = (AwfulActivity) getActivity();
-        switch (action) {
-            case SEND_PM:
-                if (activity != null) {
-                    activity.navigate(new NavigationEvent.ComposePrivateMessage(posterUsername));
-                }
-                break;
-            case QUOTE:
-                parent.displayPostReplyDialog(threadId, postId, AwfulMessage.TYPE_QUOTE);
-                break;
-            case EDIT:
-                parent.displayPostReplyDialog(threadId, postId, AwfulMessage.TYPE_EDIT);
-                break;
-            case MARK_LAST_SEEN:
-                parent.markLastRead(lastReadCode);
-                break;
-            case COPY_URL:
-                parent.copyThreadURL(postId, postFilterUserId);
-                break;
-            case YOUR_POSTS:
-            case USER_POSTS:
-                parent.toggleUserPosts(postId, posterUserId, posterUsername);
-                break;
-            case RAP_SHEET:
-                if (activity != null) {
-                    // TODO: when/if this is refactored to Kotlin, pls remove the JvmOverloads constructor stuff from NavigationEvent.LepersColony that's providing a default page here
-                    activity.navigate(new NavigationEvent.LepersColony(posterUserId));
-                }
-                break;
-            case UNMARK_USER:
-            case MARK_USER:
-                parent.toggleMarkUser(posterUsername);
-                break;
-            case IGNORE_USER:
-                parent.ignoreUser(posterUserId);
-                break;
-            case REPORT_POST:
-                parent.reportUser(postId);
-                break;
-            case SHOW_AVATAR:
-            case HIDE_AVATAR:
-                parent.toggleAvatar(posterAvatarUrl);
-                break;
+        val activity = activity as AwfulActivity?
+        when (action) {
+            PostMenuAction.SEND_PM -> if (activity != null) {
+                activity.navigate(ComposePrivateMessage(posterUsername))
+            }
+
+            PostMenuAction.QUOTE -> parent.displayPostReplyDialog(
+                threadId,
+                postId,
+                AwfulMessage.TYPE_QUOTE
+            )
+
+            PostMenuAction.EDIT -> parent.displayPostReplyDialog(
+                threadId,
+                postId,
+                AwfulMessage.TYPE_EDIT
+            )
+
+            PostMenuAction.MARK_LAST_SEEN -> parent.markLastRead(lastReadCode)
+            PostMenuAction.COPY_URL -> parent.copyThreadURL(postId, postFilterUserId)
+            PostMenuAction.YOUR_POSTS, PostMenuAction.USER_POSTS -> parent.toggleUserPosts(
+                postId,
+                posterUserId,
+                posterUsername
+            )
+
+            PostMenuAction.RAP_SHEET -> if (activity != null) {
+                // TODO: when/if this is refactored to Kotlin, pls remove the JvmOverloads constructor stuff from NavigationEvent.LepersColony that's providing a default page here
+                activity.navigate(LepersColony(posterUserId))
+            }
+
+            PostMenuAction.UNMARK_USER, PostMenuAction.MARK_USER -> parent.toggleMarkUser(
+                posterUsername
+            )
+
+            PostMenuAction.IGNORE_USER -> parent.ignoreUser(posterUserId)
+            PostMenuAction.REPORT_POST -> parent.reportUser(postId)
+            PostMenuAction.SHOW_AVATAR, PostMenuAction.HIDE_AVATAR -> parent.toggleAvatar(
+                posterAvatarUrl
+            )
         }
     }
 
 
-    @NonNull
-    @Override
-    String getMenuLabel(@NonNull PostMenuAction action) {
+    override fun getMenuLabel(action: PostMenuAction): String {
         // need to add the post's username to some of these
-        return String.format(action.getMenuLabel(), posterUsername);
+        return String.format(action.menuLabel, posterUsername)
     }
 
-    @NonNull
-    @Override
-    public String getTitle() {
-        return "Select an action";
+    public override fun getTitle(): String {
+        return "Select an action"
     }
 
-    public enum PostMenuAction implements AwfulAction {
+    enum class PostMenuAction(@param:DrawableRes override val iconId: Int, override val menuLabel: String) :
+        AwfulAction {
         // the parameters here are for the post owner's username
         QUOTE(R.drawable.ic_format_quote_dark, "Quote Post"),
         EDIT(R.drawable.ic_create_dark, "Edit Post"),
@@ -244,26 +157,66 @@ public class PostContextMenu extends BasePopupMenu<PostContextMenu.PostMenuActio
         RAP_SHEET(R.drawable.ic_gavel_dark_24dp, "%s's rap sheet"),
         IGNORE_USER(R.drawable.ic_ignore_dark, "Ignore %s"),
         SHOW_AVATAR(R.drawable.ic_visibility_dark, "Show avatar of %s"),
-        HIDE_AVATAR(R.drawable.ic_ignore_dark, "Hide avatar of %s");
+        HIDE_AVATAR(R.drawable.ic_ignore_dark, "Hide avatar of %s")
+    }
 
-        final int iconId;
-        @NonNull
-        private final String menuText;
+    companion object {
+        val TAG: String = PostContextMenu::class.java.simpleName
 
-        PostMenuAction(@DrawableRes int iconId, @NonNull String menuText) {
-            this.iconId = iconId;
-            this.menuText = menuText;
-        }
+        private const val ARG_POSTER_USER_ID = "posterUserId"
+        private const val ARG_EDITABLE = "editable"
+        private const val ARG_POSTER_HAS_PLAT = "posterHasPlat"
+        private const val ARG_POSTER_ROLE = "posterRole"
+        private const val ARG_THREAD_ID = "threadId"
+        private const val ARG_POST_ID = "postId"
+        private const val ARG_LAST_READ_CODE = "lastReadCode"
+        private const val ARG_POSTER_USERNAME = "posterUsername"
+        private const val ARG_POST_FILTER_USER_ID = "postFilterUserId"
+        private const val ARG_POSTER_AVATAR_URL = "posterAvatarUrl"
 
-        @Override
-        public int getIconId() {
-            return iconId;
-        }
-
-        @Override
-        @NonNull
-        public String getMenuLabel() {
-            return menuText;
+        /**
+         * Get a menu for a given post.
+         * 
+         * @param threadId           the ID of the thread the post belongs to
+         * @param postId             the ID of the post the menu is for
+         * @param lastReadCode       the ID code used when marking a post as the last-read (see [ThreadDisplayFragment.markLastRead])
+         * @param editable           true if the post can be edited by you
+         * @param posterUsername     the username of the post creator
+         * @param posterUserId       the user ID of the post creator
+         * @param posterHasPlat      true if the post creator has a platinum account
+         * @param posterRole         the role of the post creator (e.g. "admin", "mod"), or null if none
+         * @param posterAvatarUrl    the URL of the post creator's avatar
+         * @return the configured menu, ready to show
+         */
+        fun newInstance(
+            threadId: Int,
+            postId: Int,
+            lastReadCode: Int,
+            editable: Boolean,
+            posterUsername: String,
+            posterUserId: Int,
+            posterHasPlat: Boolean,
+            posterRole: String?,
+            postFilterUserId: Int?,
+            posterAvatarUrl: String?
+        ): PostContextMenu {
+            val fragment = PostContextMenu()
+            val args = Bundle().apply {
+                putInt(ARG_POSTER_USER_ID, posterUserId)
+                putBoolean(ARG_EDITABLE, editable)
+                putBoolean(ARG_POSTER_HAS_PLAT, posterHasPlat)
+                putString(ARG_POSTER_ROLE, posterRole)
+                putInt(ARG_THREAD_ID, threadId)
+                putInt(ARG_POST_ID, postId)
+                putInt(ARG_LAST_READ_CODE, lastReadCode)
+                putString(ARG_POSTER_USERNAME, posterUsername)
+                putString(ARG_POSTER_AVATAR_URL, posterAvatarUrl)
+                if (postFilterUserId != null) {
+                    putInt(ARG_POST_FILTER_USER_ID, postFilterUserId)
+                }
+            }
+            fragment.setArguments(args)
+            return fragment
         }
     }
 }

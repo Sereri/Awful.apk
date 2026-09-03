@@ -62,7 +62,7 @@ class PunishmentContextMenu : BasePopupMenu<PunishmentContextMenu.PunishmentMenu
     }
 
     override fun generateMenuItems() =
-            mutableListOf<PunishmentMenuAction>()
+            mutableListOf<PunishmentMenuAction?>()
                     .apply { badPostUrl?.let { add(GO_TO_BAD_POST) } }
                     .apply { if (!isRapSheet) add(USER_RAP_SHEET) }
 //                    .apply { add(MORE_BY_ADMIN) }
@@ -92,7 +92,7 @@ class PunishmentContextMenu : BasePopupMenu<PunishmentContextMenu.PunishmentMenu
 
     enum class PunishmentMenuAction(
             @DrawableRes private val iconResId: Int,
-            private val menuText: String
+            menuText: String
     ) : AwfulAction {
 
         GO_TO_BAD_POST(R.drawable.ic_insert_comment_dark_24dp, "View this bad post"),
@@ -100,8 +100,8 @@ class PunishmentContextMenu : BasePopupMenu<PunishmentContextMenu.PunishmentMenu
         MORE_BY_ADMIN(R.drawable.ic_error_dark, "More approved by this admin");
 
         // TODO: if these menus are all reworked in Kotlin, make these overridable vals instead of functions so we don't have to add getters like this
-        override fun getIconId() = iconResId
-        override fun getMenuLabel() = menuText
+        override val iconId = iconResId
+        override val menuLabel = menuText
     }
 
 }

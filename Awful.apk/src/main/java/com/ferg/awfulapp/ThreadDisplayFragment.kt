@@ -137,6 +137,7 @@ import androidx.core.net.toUri
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.core.view.isEmpty
+import com.ferg.awfulapp.popupmenu.AwfulAction
 
 /**
  * Uses intent extras:
@@ -1237,28 +1238,28 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             )
 
             postActions.setTargetFragment(this@ThreadDisplayFragment, -1)
-            postActions.setOnActionClickedListener(OnActionClickedListener { action: PostMenuAction? ->
-                if (mThreadView != null) {
-                    if (action == PostMenuAction.HIDE_AVATAR) {
-                        mThreadView?.evaluateJavascript(
+            postActions.setOnActionClickedListener(object : OnActionClickedListener<PostContextMenu.PostMenuAction?> {
+                override fun onActionClicked(action: PostMenuAction?) {
+                    when(action) {
+                        PostMenuAction.HIDE_AVATAR -> mThreadView?.evaluateJavascript(
                             String.format(
                                 "hideAvatar('%s')",
                                 avatarUrl
                             ), null
                         )
-                    } else if (action == PostMenuAction.SHOW_AVATAR) {
-                        mThreadView?.evaluateJavascript(
+                        PostMenuAction.SHOW_AVATAR -> mThreadView?.evaluateJavascript(
                             String.format(
                                 "showAvatar('%s')",
                                 avatarUrl
                             ), null
                         )
+
+                        else -> return
                     }
                 }
             })
             postActions.show(mSelf.requireFragmentManager(), "Post Actions")
         }
-
 
         override fun setCustomPreferences(preferences: MutableMap<String?, String?>) {
             // TODO: 23/01/2017 add methods so you can't mess with the map directly

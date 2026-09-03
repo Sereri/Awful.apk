@@ -76,7 +76,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
             Log.w(TAG, "Cancelling an update in progress")
             val cancelledTask = currentUpdateTask
             currentUpdateTask = null
-            cancelledTask!!.cancel()
+            cancelledTask?.cancel()
             NetworkUtils.cancelRequests(REQUEST_TAG)
         }
         for (listener in listeners) {
@@ -99,7 +99,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
                 return
             }
             currentUpdateTask = updateTask
-            currentUpdateTask!!.execute(this)
+            currentUpdateTask?.execute(this)
         }
         for (listener in listeners) {
             listener.onForumsUpdateStarted()

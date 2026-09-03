@@ -1,190 +1,187 @@
-package com.ferg.awfulapp.forums;
+package com.ferg.awfulapp.forums
 
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.os.Build;
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import android.util.AttributeSet;
-import android.widget.ImageView;
-
-import com.ferg.awfulapp.R;
+import android.annotation.TargetApi
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.Rect
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
+import android.os.Build
+import android.util.AttributeSet
+import android.widget.ImageView
+import androidx.annotation.ColorInt
+import androidx.core.content.ContextCompat
+import com.ferg.awfulapp.R
+import kotlin.math.min
+import androidx.core.graphics.toColorInt
 
 /**
  * Created by baka kaba on 14/05/2016.
- * <p/>
+ * 
+ * 
  * An image view with a default forum tag drawable, which can be overlaid with some text.
  */
-public class SquareForumTag extends ImageView {
-
-    private static final int STROKE_COLOR = Color.parseColor("#6E000000");
-    // the amount of space between the top of the view and the text, in dp (I think)
-    private static final int TEXT_TOP_PADDING = 6;
-    // these are both percentages of the view's dimensions
-    private static final float DESIRED_TEXT_WIDTH = 0.8f;
-    private static final float MAX_TEXT_HEIGHT = 0.3f;
-    // tint adjustment for the provided tag colours
-    private static final float SATURATION_MULTIPLIER = 0.8f;
-
+class SquareForumTag : androidx.appcompat.widget.AppCompatImageView {
     // reusable objects, to reduce allocations while scrolling and recycling the views
-    float[] hsv = new float[3];
+    var hsv: FloatArray = FloatArray(3)
+
+
     // TODO: the colour-setting methods create new ColorFilters each time, might be able to work that in here
-
-
     // used to adjust values based on screen density
-    private final float scaler = getResources().getDisplayMetrics().density;
+    private val scaler = resources.displayMetrics.density
+
     // density-adjusted padding between the text and the top of the view
-    private final int textTopOffset = (int) (TEXT_TOP_PADDING * scaler);
-    private final float strokeWidth = 1.5f * scaler;
+    private val strokeWidth = 1.5f * scaler
 
-    private Paint textPaint;
-    private Paint strokePaint;
-    private final Rect textBounds = new Rect();
-    private String tagText = "";
+    private var textPaint: Paint? = null
+    private var strokePaint: Paint? = null
+    private val textBounds = Rect()
+    private var tagText = ""
 
-    Drawable tagBackground;
-    Drawable tagFrog;
+    var tagBackground: Drawable? = null
+    var tagFrog: Drawable? = null
 
 
-    public SquareForumTag(Context context) {
-        super(context);
-        init();
+    constructor(context: Context) : super(context) {
+        init()
     }
 
 
-    public SquareForumTag(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+        init()
     }
 
 
-    public SquareForumTag(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    ) {
+        init()
     }
 
 
-    @SuppressWarnings("unused")
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public SquareForumTag(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init();
-    }
-
-
-    private void init() {
-        LayerDrawable counter = (LayerDrawable) ContextCompat.getDrawable(getContext(), R.drawable.forum_tag_frog);
-        tagBackground = counter.findDrawableByLayerId(R.id.square_forum_tag_background);
-        tagFrog = counter.findDrawableByLayerId(R.id.square_forum_tag_frog).mutate();
-        setImageDrawable(counter);
-        textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        textPaint.setColor(Color.WHITE);
+    private fun init() {
+        val counter = ContextCompat.getDrawable(context, R.drawable.forum_tag_frog) as LayerDrawable?
+        tagBackground = counter?.findDrawableByLayerId(R.id.square_forum_tag_background)
+        tagFrog = counter?.findDrawableByLayerId(R.id.square_forum_tag_frog)?.mutate()
+        setImageDrawable(counter)
+        textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        textPaint?.color = Color.WHITE
 
         // text shadow
 //        textPaint.setShadowLayer(10f, 0f, 1f, Color.BLACK);
         // text outline
-        strokePaint = new Paint(textPaint);
-        strokePaint.setStyle(Paint.Style.STROKE);
-        strokePaint.setColor(STROKE_COLOR);
-        strokePaint.setStrokeWidth(strokeWidth);
-        strokePaint.setStrokeJoin(Paint.Join.ROUND);
+        strokePaint = Paint(textPaint)
+        strokePaint?.let {
+            it.style = Paint.Style.STROKE
+            it.color = STROKE_COLOR
+            it.strokeWidth = strokeWidth
+            it.strokeJoin = Paint.Join.ROUND
+        }
     }
 
 
     /**
      * Set the overlaid text for this tag.
-     * <p/>
+     * 
+     * 
      * Use an empty string if you want to display nothing
      */
-    public void setTagText(@NonNull String text) {
-        tagText = text;
+    fun setTagText(text: String) {
+        tagText = text
     }
 
 
     /**
      * Set the tag's main (background) colour
-     *
+     * 
      * @param colour An ARGB colour, or null for no colour
      */
-    public void setMainColour(@Nullable @ColorInt Integer colour) {
+    fun setMainColour(@ColorInt colour: Int?) {
         if (colour == null) {
-            tagBackground.setColorFilter(null);
+            tagBackground?.colorFilter = null
         } else {
-            tagBackground.setColorFilter(tweakColour(colour), PorterDuff.Mode.SRC);
+            tagBackground?.setColorFilter(tweakColour(colour), PorterDuff.Mode.SRC)
         }
     }
 
 
     /**
      * Set the tag's secondary accent colour
-     *
+     * 
      * @param colour An ARGB colour, or null for no colour
      */
-    public void setAccentColour(@Nullable @ColorInt Integer colour) {
+    fun setAccentColour(@ColorInt colour: Int?) {
         if (colour == null) {
-            tagFrog.setColorFilter(null);
+            tagFrog?.colorFilter = null
         } else {
-            tagFrog.setColorFilter(tweakColour(colour), PorterDuff.Mode.SRC_IN);
+            tagFrog?.setColorFilter(tweakColour(colour), PorterDuff.Mode.SRC_IN)
         }
     }
 
 
     /**
      * Adjust a colour, used to tweak provided tag colours
-     *
+     * 
      * @param colour an ARGB colour
      * @return the adjusted colour
      */
-    private int tweakColour(@ColorInt int colour) {
-        Color.colorToHSV(colour, hsv);
-        hsv[1] = hsv[1] * SATURATION_MULTIPLIER;
-        return Color.HSVToColor(Color.alpha(colour), hsv);
+    private fun tweakColour(@ColorInt colour: Int): Int {
+        Color.colorToHSV(colour, hsv)
+        hsv[1] = hsv[1] * SATURATION_MULTIPLIER
+        return Color.HSVToColor(Color.alpha(colour), hsv)
     }
 
 
     /**
      * Calculate and set the dynamic text size on the paints.
-     * <p/>
+     * 
+     * 
      * This needs to be called while the view is visible, since it uses the view dimensions.
      */
-    private void setTextSize() {
+    private fun setTextSize() {
         // get the current bounds of the stroked text (which will be bigger than the normal text)
-        strokePaint.getTextBounds(tagText, 0, tagText.length(), textBounds);
+        strokePaint?.getTextBounds(tagText, 0, tagText.length, textBounds)
         // work out the bounds size as a proportion of the actual view
-        float currentWidth = textBounds.width() / (float) getWidth();
-        float currentHeight = textBounds.height() / (float) getHeight();
+        val currentWidth = textBounds.width() / width.toFloat()
+        val currentHeight = textBounds.height() / height.toFloat()
         // get multipliers to scale the bounds to hit each required size
-        float widthMaximiser = DESIRED_TEXT_WIDTH / currentWidth;
-        float heightMaximiser = MAX_TEXT_HEIGHT / currentHeight;
-        // the height maximiser is a hard limit, so don't exceed that
-        float newTextSize = Math.min(widthMaximiser, heightMaximiser) * strokePaint.getTextSize();
-        strokePaint.setTextSize(newTextSize);
-        textPaint.setTextSize(newTextSize);
+        val widthMaximiser: Float = DESIRED_TEXT_WIDTH / currentWidth
+        val heightMaximiser: Float = MAX_TEXT_HEIGHT / currentHeight
+        // the height maximizer is a hard limit, so don't exceed that
+        val newTextSize = min(widthMaximiser, heightMaximiser) * strokePaint!!.textSize
+        strokePaint?.textSize = newTextSize
+        textPaint?.textSize = newTextSize
     }
 
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        if (tagText.equals("")) {
-            return;
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        if (tagText == "") {
+            return
         }
         // work out the size of the text box and where it should go
-        setTextSize();
-        textPaint.getTextBounds(tagText, 0, tagText.length(), textBounds);
-        int x = (getWidth() - textBounds.width()) / 2;
-        int y = (getHeight() + textBounds.height()) / 2;
+        setTextSize()
+        textPaint?.getTextBounds(tagText, 0, tagText.length, textBounds)
+        val x = (width - textBounds.width()) / 2
+        val y = (height + textBounds.height()) / 2
 
-        canvas.drawText(tagText, x, y, strokePaint);
-        canvas.drawText(tagText, x, y, textPaint);
+        canvas.drawText(tagText, x.toFloat(), y.toFloat(), strokePaint!!)
+        canvas.drawText(tagText, x.toFloat(), y.toFloat(), textPaint!!)
+    }
+
+    companion object {
+        private val STROKE_COLOR = "#6E000000".toColorInt()
+
+        // these are both percentages of the view's dimensions
+        private const val DESIRED_TEXT_WIDTH = 0.8f
+        private const val MAX_TEXT_HEIGHT = 0.3f
+
+        // tint adjustment for the provided tag colors
+        private const val SATURATION_MULTIPLIER = 0.8f
     }
 }

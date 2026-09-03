@@ -1,126 +1,86 @@
-package com.ferg.awfulapp.forums;
+package com.ferg.awfulapp.forums
 
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.Log;
-
-import com.android.volley.VolleyError;
-import com.ferg.awfulapp.AwfulApplication;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.network.NetworkUtils;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.preferences.Keys;
-import com.ferg.awfulapp.provider.AwfulProvider;
-import com.ferg.awfulapp.provider.DatabaseHelper;
-import com.ferg.awfulapp.task.AwfulRequest;
-import com.ferg.awfulapp.task.IndexIconRequest;
-import com.ferg.awfulapp.thread.AwfulForum;
-
-import org.apache.commons.lang3.StringUtils;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
-import static com.ferg.awfulapp.forums.ForumType.*;
-import static com.ferg.awfulapp.forums.ForumStructure.FLAT;
+import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.util.Log
+import com.android.volley.VolleyError
+import com.ferg.awfulapp.AwfulApplication.Companion.appStatePrefs
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.network.NetworkUtils
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.provider.AwfulProvider
+import com.ferg.awfulapp.provider.DatabaseHelper
+import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
+import com.ferg.awfulapp.task.IndexIconRequest
+import com.ferg.awfulapp.task.IndexIconRequest.Companion.REQUEST_TAG
+import com.ferg.awfulapp.thread.AwfulForum
+import org.apache.commons.lang3.StringUtils
+import java.sql.Timestamp
+import java.util.Arrays
+import java.util.concurrent.CopyOnWriteArraySet
+import kotlin.concurrent.Volatile
+import androidx.core.content.edit
 
 /**
  * Created by baka kaba on 04/04/2016.
- * <p/>
+ * 
+ * 
  * Provides access to current forum state, forcing updates etc.
  */
-public class ForumRepository implements UpdateTask.ResultListener {
-
-    /**
-     * The ID of the 'root' of the forums hierarchy - anything with this parent ID will be top-level
-     */
-    static final int TOP_LEVEL_PARENT_ID = 0;
-    private static final String TAG = "ForumRepo";
-    private static final String PREF_KEY_FORUM_REFRESH_TIMESTAMP = "LAST_FORUM_REFRESH_TIME";
-    private static final char FAV_ID_SEPARATOR = ' ';
+class ForumRepository private constructor(context: Context) : UpdateTask.ResultListener {
     /**
      * Synchronization lock for accessing currentUpdateTask
      */
-    private final Object updateLock = new Object();
-    private static ForumRepository mThis = null;
+    private val updateLock = Any()
+
     /**
      * The current update task, if any
      */
-    private volatile UpdateTask currentUpdateTask = null;
+    @Volatile
+    private var currentUpdateTask: UpdateTask? = null
+
     // using a COW array to make listener de/registration and iteration ~fairly~ thread-safe
-    private final Set<ForumsUpdateListener> listeners = new CopyOnWriteArraySet<>();
-    private final Context context;
+    private val listeners: MutableSet<ForumsUpdateListener> =
+        CopyOnWriteArraySet<ForumsUpdateListener>()
+    private val context: Context = context.applicationContext
 
-
-    private ForumRepository(@NonNull Context context) {
-        this.context = context.getApplicationContext();
-    }
-
-    /**
-     * Get an instance of ForumsRepository.
-     * The first call <b>must</b> provide a Context to initialise the singleton!
-     * Subsequent calls can pass null.
-     *
-     * @param context A context used to initialise the repo
-     * @return A reference to the application-wide ForumRepository
-     */
-    public static ForumRepository getInstance(@Nullable Context context) {
-        if (mThis == null && context == null) {
-            throw new IllegalStateException("ForumRepository has not been initialised - requires a context, but got null");
-        }
-        if (mThis == null) {
-            mThis = new ForumRepository(context);
-        }
-        return mThis;
-    }
-
-    public void registerListener(@NonNull ForumsUpdateListener listener) {
-        listeners.add(listener);
+    fun registerListener(listener: ForumsUpdateListener) {
+        listeners.add(listener)
         // let the new listener know if there's an update in progress
-        if (isUpdating()) {
-            listener.onForumsUpdateStarted();
+        if (this.isUpdating) {
+            listener.onForumsUpdateStarted()
         }
     }
 
 
-    public void unregisterListener(@NonNull ForumsUpdateListener listener) {
-        listeners.remove(listener);
+    fun unregisterListener(listener: ForumsUpdateListener) {
+        listeners.remove(listener)
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
     // Update task lifecycle
-    ///////////////////////////////////////////////////////////////////////////
-
-
+    /////////////////////////////////////////////////////////////////////////
     /**
-     * Cancel any running forum updates.
-     */
-    public void cancelUpdate() {
-        synchronized (updateLock) {
+    * Cancel any running forum updates.
+    */
+    fun cancelUpdate() {
+        synchronized(updateLock) {
             if (currentUpdateTask == null) {
-                Log.d(TAG, "cancelUpdate: no task running");
-                return;
+                Log.d(TAG, "cancelUpdate: no task running")
+                return
             }
-            Log.w(TAG, "Cancelling an update in progress");
-            UpdateTask cancelledTask = currentUpdateTask;
-            currentUpdateTask = null;
-            cancelledTask.cancel();
-            NetworkUtils.cancelRequests(IndexIconRequest.Companion.getREQUEST_TAG());
+            Log.w(TAG, "Cancelling an update in progress")
+            val cancelledTask = currentUpdateTask
+            currentUpdateTask = null
+            cancelledTask!!.cancel()
+            NetworkUtils.cancelRequests(REQUEST_TAG)
         }
-        for (ForumsUpdateListener listener : listeners) {
-            listener.onForumsUpdateCancelled();
+        for (listener in listeners) {
+            listener.onForumsUpdateCancelled()
         }
     }
 
@@ -128,40 +88,41 @@ public class ForumRepository implements UpdateTask.ResultListener {
     /**
      * Update the current forum list in the background.
      * Does nothing if an update is already in progress
-     *
+     * 
      * @param updateTask The type of update to perform
      */
-    public void updateForums(@NonNull UpdateTask updateTask) {
+    fun updateForums(updateTask: UpdateTask) {
         // synchronize to make sure only one update can start
-        synchronized (updateLock) {
+        synchronized(updateLock) {
             if (currentUpdateTask != null) {
-                Log.w(TAG, "Tried to refresh forums while the task was already running!");
-                return;
+                Log.w(TAG, "Tried to refresh forums while the task was already running!")
+                return
             }
-            currentUpdateTask = updateTask;
-            currentUpdateTask.execute(this);
+            currentUpdateTask = updateTask
+            currentUpdateTask!!.execute(this)
         }
-        for (ForumsUpdateListener listener : listeners) {
-            listener.onForumsUpdateStarted();
+        for (listener in listeners) {
+            listener.onForumsUpdateStarted()
         }
     }
 
 
-    @Override
-    public void onRefreshCompleted(@NonNull UpdateTask updateTask,
-                                   boolean success,
-                                   @Nullable ForumStructure parsedStructure) {
-        synchronized (updateLock) {
+    override fun onRefreshCompleted(
+        task: UpdateTask,
+        success: Boolean,
+        forumStructure: ForumStructure?
+    ) {
+        synchronized(updateLock) {
             // we're only interested in the current task, so ignore anything else that might pop up
-            if (updateTask != currentUpdateTask) {
-                Log.w(TAG, "onRefreshCompleted: not the current update task, ignoring");
-                return;
+            if (task !== currentUpdateTask) {
+                Log.w(TAG, "onRefreshCompleted: not the current update task, ignoring")
+                return
             }
-            if (success && parsedStructure != null) {
-                storeForumData(parsedStructure);
-                refreshTags(updateTask);
+            if (success && forumStructure != null) {
+                storeForumData(forumStructure)
+                refreshTags(task)
             } else {
-                onUpdateComplete(updateTask, false);
+                onUpdateComplete(task, false)
             }
         }
     }
@@ -170,256 +131,237 @@ public class ForumRepository implements UpdateTask.ResultListener {
     /**
      * Refresh the forum tags.
      * This needs to be done after the forum hierarchy has been rebuilt, since it updates the new records
-     *
+     * 
      * @param updateTask The update task that triggered the tag refresh
      */
-    private void refreshTags(@NonNull final UpdateTask updateTask) {
-        NetworkUtils.queueRequest(new IndexIconRequest(context).build(null, new AwfulRequest.AwfulResultCallback<Void>() {
-            public void success(Void result) {
-                onUpdateComplete(updateTask, true);
-            }
+    private fun refreshTags(updateTask: UpdateTask) {
+        NetworkUtils.queueRequest(
+            IndexIconRequest(context).build(
+                null,
+                object : AwfulResultCallback<Void?> {
+                    override fun success(result: Void?) {
+                        onUpdateComplete(updateTask, true)
+                    }
 
 
-            public void failure(VolleyError error) {
-                onUpdateComplete(updateTask, false);
-            }
-        }));
+                    override fun failure(error: VolleyError?) {
+                        onUpdateComplete(updateTask, false)
+                    }
+                })
+        )
     }
 
 
     /**
      * Called when the task is complete (whether successful or not)
-     *
+     * 
      * @param updateTask The task that has finished
      */
-    private void onUpdateComplete(@NonNull UpdateTask updateTask, boolean updateSuccessful) {
-        synchronized (updateLock) {
-            if (updateTask != currentUpdateTask) {
-                Log.w(TAG, "onUpdateComplete: not the current task, ignoring");
-                return;
+    private fun onUpdateComplete(updateTask: UpdateTask, updateSuccessful: Boolean) {
+        synchronized(updateLock) {
+            if (updateTask !== currentUpdateTask) {
+                Log.w(TAG, "onUpdateComplete: not the current task, ignoring")
+                return
             }
-            currentUpdateTask = null;
+            currentUpdateTask = null
         }
-        for (ForumsUpdateListener listener : listeners) {
-            listener.onForumsUpdateCompleted(updateSuccessful);
+        for (listener in listeners) {
+            listener.onForumsUpdateCompleted(updateSuccessful)
         }
     }
 
 
-    /**
-     * Check if a forums data update is in progress.
-     */
-    public boolean isUpdating() {
-        return currentUpdateTask != null;
-    }
+    val isUpdating: Boolean
+        /**
+         * Check if a forums data update is in progress.
+         */
+        get() = currentUpdateTask != null
 
 
-    ///////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
     // Get forums data
-    ///////////////////////////////////////////////////////////////////////////
-
-
+    /////////////////////////////////////////////////////////////////////////
     /**
-     * Check if the repo currently has any forum data.
-     * This is a quick way of determining if an update needs to run (e.g. after data wipe)
-     */
-    public boolean hasForumData() {
-        Cursor cursor = getForumsCursor(null);
-        int numForums = (cursor == null) ? 0 : cursor.getCount();
-        if (cursor != null) {
-            cursor.close();
+    * Check if the repo currently has any forum data .
+    * This is a quick way of determining if an update needs to run (e.g. after data wipe)
+    */
+    fun hasForumData(): Boolean {
+        val cursor = getForumsCursor(null)
+        val numForums = cursor?.count ?: 0
+        cursor?.close()
+        return numForums > 0
+    }
+
+
+    var lastRefreshTime: Long
+        /**
+         * Get the timestamp of the last successful full update.
+         * 
+         * @return the timestamp in milliseconds, or 0 if there is no forum data
+         * @see System.currentTimeMillis
+         */
+        get() {
+            // forum data may be updated (with timestamps) after a full refresh, so we need to keep a separate timestamp
+            val prefs = appStatePrefs
+            return prefs!!.getLong(PREF_KEY_FORUM_REFRESH_TIMESTAMP, 0)
         }
-        return numForums > 0;
-    }
+        /**
+         * Store the last time the forums were fully refreshed
+         * 
+         * @param timestamp the time to set in millis
+         */
+        private set(timestamp) {
+            var timestamp = timestamp
+            timestamp = if (timestamp < 0) 0 else timestamp
+            val prefs = appStatePrefs
+            prefs?.edit {
+                putLong(PREF_KEY_FORUM_REFRESH_TIMESTAMP, timestamp)
+            }
+        }
 
 
-    /**
-     * Get the timestamp of the last successful full update.
-     *
-     * @return the timestamp in milliseconds, or 0 if there is no forum data
-     * @see System#currentTimeMillis()
-     */
-    public long getLastRefreshTime() {
-        // forum data may be updated (with timestamps) after a full refresh, so we need to keep a separate timestamp
-        SharedPreferences prefs = AwfulApplication.getAppStatePrefs();
-        return prefs.getLong(PREF_KEY_FORUM_REFRESH_TIMESTAMP, 0);
-    }
+    val allForums: ForumStructure
+        get() = ForumStructure.buildFromOrderedList(
+            loadForumData(getForumsCursor(null)),
+            TOP_LEVEL_PARENT_ID
+        )
 
 
-    /**
-     * Store the last time the forums were fully refreshed
-     *
-     * @param timestamp the time to set in millis
-     */
-    private void setLastRefreshTime(long timestamp) {
-        timestamp = (timestamp < 0) ? 0 : timestamp;
-        SharedPreferences prefs = AwfulApplication.getAppStatePrefs();
-        prefs.edit().putLong(PREF_KEY_FORUM_REFRESH_TIMESTAMP, timestamp).apply();
-    }
-
-
-    @NonNull
-    public ForumStructure getAllForums() {
-        return ForumStructure.buildFromOrderedList(loadForumData(getForumsCursor(null)), TOP_LEVEL_PARENT_ID);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Favourites
-    ///////////////////////////////////////////////////////////////////////////
-
-
-    /**
-     * Get the user's favourite forums, as a sequence of forum IDs.
-     */
-    private static String[] getFavouriteForumIds() {
-        String favouriteList = AwfulPreferences.getInstance().getPreference(Keys.FAVOURITE_FORUMS, "");
-        return StringUtils.split(favouriteList, FAV_ID_SEPARATOR);
-    }
-
-
-    /**
-     * Set the user's favourite forums, as a sequence of forum IDs.
-     */
-    private static void setFavouriteForumIds(@NonNull List<String> forumIds) {
-        // stored as a single string of IDs
-        String joinedIds = StringUtils.join(forumIds, FAV_ID_SEPARATOR);
-        AwfulPreferences.getInstance().setPreference(Keys.FAVOURITE_FORUMS, joinedIds);
-    }
-
-
-    /**
-     * Get the user's current favourited forums as a ForumStructure.
-     * <p>
-     * These are ordered by stored index, i.e. in order of appearance in the full forum list.
-     */
-    public ForumStructure getFavouriteForums() {
-        List<Forum> favourites = loadForumData(getForumsCursor(getFavouriteForumIds()));
-        return ForumStructure.buildFromOrderedList(favourites, null);
-    }
+    val favouriteForums: ForumStructure
+        /**
+         * Get the user's current favourited forums as a ForumStructure.
+         * 
+         * 
+         * These are ordered by stored index, i.e. in order of appearance in the full forum list.
+         */
+        get() {
+            val favourites =
+                loadForumData(getForumsCursor(favouriteForumIds))
+            return ForumStructure.buildFromOrderedList(favourites, null)
+        }
 
 
     /**
      * Toggle a forum's favourite status.
-     * <p>
-     * This relies on the internal favourites state and ignores the current {@link Forum#isFavourite()} value.
+     * 
+     * 
+     * This relies on the internal favourites state and ignores the current [Forum.isFavourite] value.
      * The Forum is updated to reflect the new state.
-     *
+     * 
      * @param forum The forum to add or remove
      */
-    public void toggleFavorite(@NonNull Forum forum) {
+    fun toggleFavorite(forum: Forum) {
         // generate a new set of favourite forum IDs by removing or adding the toggled one
-        List<String> favourites = new ArrayList<>(Arrays.asList(getFavouriteForumIds()));
-        String forumId = Integer.toString(forum.getId());
+        val favourites: MutableList<String> = mutableListOf(*favouriteForumIds)
+        val forumId = forum.id.toString()
         if (favourites.remove(forumId)) {
-            forum.setFavourite(false);
+            forum.isFavourite = false
         } else {
             // we don't handle custom ordering (see #getFavouriteForums) so we can just add anywhere
-            favourites.add(forumId);
-            forum.setFavourite(true);
+            favourites.add(forumId)
+            forum.isFavourite = true
         }
-        setFavouriteForumIds(favourites);
+        setFavouriteForumIds(favourites)
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
     // Database operations
-    ///////////////////////////////////////////////////////////////////////////
-
-
+    /////////////////////////////////////////////////////////////////////////
     /**
-     * Remove all cached forum data from the DB.
-     */
-    public void clearForumData() {
-        ContentResolver contentResolver = context.getContentResolver();
-        contentResolver.delete(AwfulForum.CONTENT_URI, null, null);
-        setLastRefreshTime(0);
+    * Remove all cached forum data from the DB.
+    */
+    fun clearForumData() {
+        val contentResolver = context.contentResolver
+        contentResolver.delete(AwfulForum.CONTENT_URI, null, null)
+        this.lastRefreshTime = 0
     }
 
 
     /**
-     * Get Forum records, ordered by {@link AwfulForum#INDEX} as stored.
-     *
+     * Get Forum records, ordered by [AwfulForum.INDEX] as stored.
+     * 
      * @param forumIds the IDs of the forums you want, or null to return all forums
-     * @see #storeForumData(ForumStructure)
+     * @see .storeForumData
      */
-    @Nullable
-    private Cursor getForumsCursor(@Nullable String[] forumIds) {
-        ContentResolver contentResolver = context.getContentResolver();
+    private fun getForumsCursor(forumIds: Array<String>?): Cursor? {
+        val contentResolver = context.contentResolver
         // if we have some IDs we need to build a WHERE query, otherwise leave both null to get everything
-        String where = null;
+        var where: String? = null
         if (forumIds != null) {
-            String placeholders = StringUtils.repeat("?", ",", forumIds.length);
-            where = AwfulForum.ID + " IN (" + placeholders + ")";
+            val placeholders = StringUtils.repeat("?", ",", forumIds.size)
+            where = AwfulForum.ID + " IN (" + placeholders + ")"
         }
 
         // get the required forums, ordered by index (the order they were added to the DB)
-        return contentResolver.query(AwfulForum.CONTENT_URI,
-                AwfulProvider.ForumProjection,
-                where,
-                forumIds,
-                AwfulForum.INDEX);
+        return contentResolver.query(
+            AwfulForum.CONTENT_URI,
+            AwfulProvider.ForumProjection,
+            where,
+            forumIds,
+            AwfulForum.INDEX
+        )
     }
 
 
     /**
      * Store the current page count for a forum
      */
-    public void setPageCount(int forumId, int pageCount) {
+    fun setPageCount(forumId: Int, pageCount: Int) {
         // TODO: 08/02/2017 need a more general way to update various bit of data, maybe passing a Forum object
-        pageCount = (pageCount < 1) ? 1 : pageCount;
-        ContentValues forumData = new ContentValues(2);
-        forumData.put(AwfulForum.PAGE_COUNT, pageCount);
-        forumData.put(DatabaseHelper.UPDATED_TIMESTAMP, getTimestamp());
+        var pageCount = pageCount
+        pageCount = if (pageCount < 1) 1 else pageCount
+        val forumData = ContentValues(2)
+        forumData.put(AwfulForum.PAGE_COUNT, pageCount)
+        forumData.put(DatabaseHelper.UPDATED_TIMESTAMP, this.timestamp)
 
-        ContentResolver contentResolver = context.getContentResolver();
-        Uri uri = ContentUris.withAppendedId(AwfulForum.CONTENT_URI, forumId);
+        val contentResolver = context.contentResolver
+        val uri = ContentUris.withAppendedId(AwfulForum.CONTENT_URI, forumId.toLong())
         if (contentResolver.update(uri, forumData, null, null) < 1) {
-            Log.w(TAG, "Unknown forum ID " + forumId + " while trying to update page count");
+            Log.w(TAG, "Unknown forum ID " + forumId + " while trying to update page count")
         }
     }
 
 
     /**
      * Build a list of Forum objects from a list of forum records, ordered by index.
-     * See {@link #storeForumData(ForumStructure)} for details on index ordering.
-     *
+     * See [.storeForumData] for details on index ordering.
+     * 
      * @param cursor a cursor over the required forum records
      * @return The resulting list of Forums
      */
-    @NonNull
-    private List<Forum> loadForumData(@Nullable Cursor cursor) {
-        List<Forum> forumList = new ArrayList<>();
+    private fun loadForumData(cursor: Cursor?): MutableList<Forum?> {
+        val forumList: MutableList<Forum?> = ArrayList<Forum?>()
         if (cursor == null) {
-            return forumList;
+            return forumList
         }
 
-        Forum forum;
-        List<String> favouriteForumIds = Arrays.asList(getFavouriteForumIds());
+        var forum: Forum?
+        val favouriteForumIds = Arrays.asList<String?>(*favouriteForumIds)
         while (cursor.moveToNext()) {
-            forum = new Forum(
-                    cursor.getInt(cursor.getColumnIndex(AwfulForum.ID)),
-                    cursor.getInt(cursor.getColumnIndex(AwfulForum.PARENT_ID)),
-                    cursor.getString(cursor.getColumnIndex(AwfulForum.TITLE)),
-                    cursor.getString(cursor.getColumnIndex(AwfulForum.SUBTEXT))
-            );
+            forum = Forum(
+                cursor.getInt(cursor.getColumnIndex(AwfulForum.ID)),
+                cursor.getInt(cursor.getColumnIndex(AwfulForum.PARENT_ID)),
+                cursor.getString(cursor.getColumnIndex(AwfulForum.TITLE)),
+                cursor.getString(cursor.getColumnIndex(AwfulForum.SUBTEXT))
+            )
             // the forum might have an image tag too
-            String tagUrl = cursor.getString(cursor.getColumnIndex(AwfulForum.TAG_URL));
-            forum.setTagUrl(tagUrl);
+            val tagUrl = cursor.getString(cursor.getColumnIndex(AwfulForum.TAG_URL))
+            forum.tagUrl = tagUrl
 
             // set favourite status by checking the favourites list
-            forum.setFavourite(favouriteForumIds.contains(Integer.toString(forum.getId())));
+            forum.isFavourite = favouriteForumIds.contains(forum.id.toString())
 
             // set the type e.g. for the index list to handle formatting
-            if (forum.getId() == Constants.USERCP_ID) {
-                forum.setType(BOOKMARKS);
-            } else if (forum.getParentId() == TOP_LEVEL_PARENT_ID) {
-                forum.setType(SECTION);
+            if (forum.id == Constants.USERCP_ID) {
+                forum.type = ForumType.BOOKMARKS
+            } else if (forum.parentId == TOP_LEVEL_PARENT_ID) {
+                forum.type = ForumType.SECTION
             }
-            forumList.add(forum);
+            forumList.add(forum)
         }
-        cursor.close();
-        return forumList;
+        cursor.close()
+        return forumList
     }
 
 
@@ -428,87 +370,145 @@ public class ForumRepository implements UpdateTask.ResultListener {
      * The forums will be assigned an index in the order they're passed in. This index is used
      * to determine the order a group of forums should be displayed in, e.g. a flat list of all
      * forums, or within a list of subforums.
-     *
+     * 
      * @param parsedStructure The forum hierarchy
      */
-    private void storeForumData(@NonNull ForumStructure parsedStructure) {
+    private fun storeForumData(parsedStructure: ForumStructure) {
         // we're replacing all the forums, so wipe them
-        clearForumData();
-        long timestamp = System.currentTimeMillis();
-        setLastRefreshTime(timestamp);
-        String updateTime = new Timestamp(timestamp).toString();
-        List<Forum> allForums = new ArrayList<>();
+        clearForumData()
+        val timestamp = System.currentTimeMillis()
+        this.lastRefreshTime = timestamp
+        val updateTime = Timestamp(timestamp).toString()
+        val allForums: MutableList<Forum> = ArrayList<Forum>()
 
         // add any special forums not on the main hierarchy
-        Forum bookmarks = new Forum(Constants.USERCP_ID, TOP_LEVEL_PARENT_ID, "Bookmarks", "");
-        allForums.add(bookmarks);
+        val bookmarks = Forum(Constants.USERCP_ID, TOP_LEVEL_PARENT_ID, "Bookmarks", "")
+        allForums.add(bookmarks)
 
         // get all the parsed forums in an ordered list, so we can store them in this order using the INDEX field
-        allForums.addAll(parsedStructure.getAsList().includeSections(true).formatAs(FLAT).build());
+        allForums.addAll(
+            parsedStructure.asList.includeSections(true).formatAs(ForumStructure.FLAT).build()
+        )
 
-        ContentResolver contentResolver = context.getContentResolver();
-        contentResolver.bulkInsert(AwfulForum.CONTENT_URI, getAsContentValues(allForums, updateTime));
+        val contentResolver = context.contentResolver
+        contentResolver.bulkInsert(
+            AwfulForum.CONTENT_URI,
+            getAsContentValues(allForums, updateTime)
+        )
     }
+
 
     // TODO: 06/02/2017 a way to push a forum in (for updates, esp page counts - aren't implemented in Forum yet)
     // indexes are a problem - they're used to order forums (keeping subforums with their parents, e.g. in a flat list)
     // but inserting a new forum means rewriting all the indices - basically rebuilding the forum
     // might be better to just ignore new forums and only catch them on refreshes
-
-
     /**
      * Create ContentValues objects for a set of forum details, and return them in an array.
      * This will automatically set the INDEX field according to the object's position in the input list.
-     *
+     * 
      * @param forums     an ordered list of Forums
      * @param updateTime a timestamp for the database records
      * @return the generated set of ContentValues
      */
-    private ContentValues[] getAsContentValues(@NonNull List<Forum> forums, @NonNull String updateTime) {
-        List<ContentValues> allContentValues = new ArrayList<>(forums.size());
-        ContentValues contentValues;
+    private fun getAsContentValues(
+        forums: MutableList<Forum>,
+        updateTime: String
+    ): Array<ContentValues?> {
+        val allContentValues: MutableList<ContentValues?> = ArrayList<ContentValues?>(forums.size)
+        var contentValues: ContentValues?
 
-        for (Forum forum : forums) {
-            contentValues = new ContentValues();
+        for (forum in forums) {
+            contentValues = ContentValues()
             // use the current list size (before we add this element) as the index counter
-            contentValues.put(AwfulForum.INDEX, allContentValues.size());
-            contentValues.put(AwfulForum.ID, forum.getId());
-            contentValues.put(AwfulForum.PARENT_ID, forum.getParentId());
-            contentValues.put(AwfulForum.TITLE, forum.getTitle());
-            contentValues.put(AwfulForum.SUBTEXT, forum.getSubtitle());
-            contentValues.put(DatabaseHelper.UPDATED_TIMESTAMP, updateTime);
-            allContentValues.add(contentValues);
+            contentValues.put(AwfulForum.INDEX, allContentValues.size)
+            contentValues.put(AwfulForum.ID, forum.id)
+            contentValues.put(AwfulForum.PARENT_ID, forum.parentId)
+            contentValues.put(AwfulForum.TITLE, forum.title)
+            contentValues.put(AwfulForum.SUBTEXT, forum.subtitle)
+            contentValues.put(DatabaseHelper.UPDATED_TIMESTAMP, updateTime)
+            allContentValues.add(contentValues)
         }
 
-        return allContentValues.toArray(new ContentValues[allContentValues.size()]);
+        return allContentValues.toTypedArray<ContentValues?>()
     }
 
-    /**
-     * The current time as an SQL timestamp
-     */
-    @NonNull
-    private String getTimestamp() {
-        return new Timestamp(System.currentTimeMillis()).toString();
-    }
+    private val timestamp: String
+        /**
+         * The current time as an SQL timestamp
+         */
+        get() = Timestamp(System.currentTimeMillis()).toString()
 
 
-    public interface ForumsUpdateListener {
+    interface ForumsUpdateListener {
         /**
          * Called when an update has started
          */
-        void onForumsUpdateStarted();
+        fun onForumsUpdateStarted()
 
         /**
          * Called when an update has finished - the forums data may or may not have changed.
-         *
+         * 
          * @param success true if the update operation finished successfully
          */
-        void onForumsUpdateCompleted(boolean success);
+        fun onForumsUpdateCompleted(success: Boolean)
 
         /**
          * Called when an update has been cancelled
          */
-        void onForumsUpdateCancelled();
+        fun onForumsUpdateCancelled()
     }
 
+    companion object {
+        /**
+         * The ID of the 'root' of the forums hierarchy - anything with this parent ID will be top-level
+         */
+        const val TOP_LEVEL_PARENT_ID: Int = 0
+        private const val TAG = "ForumRepo"
+        private const val PREF_KEY_FORUM_REFRESH_TIMESTAMP = "LAST_FORUM_REFRESH_TIME"
+        private const val FAV_ID_SEPARATOR = ' '
+        private var mThis: ForumRepository? = null
+
+        /**
+         * Get an instance of ForumsRepository.
+         * The first call **must** provide a Context to initialize the singleton!
+         * Subsequent calls can pass null.
+         * 
+         * @param context A context used to initialize the repo
+         * @return A reference to the application-wide ForumRepository
+         */
+        @JvmStatic
+        fun getInstance(context: Context?): ForumRepository {
+            check(!(mThis == null && context == null)) { "ForumRepository has not been initialised - requires a context, but got null" }
+            if (mThis == null) {
+                mThis = ForumRepository(context!!)
+            }
+            return mThis!!
+        }
+
+        /////////////////////////////////////////////////////////////////////////
+        // Favourites
+        /////////////////////////////////////////////////////////////////////////
+        /**
+        * Get the user's favourite forums, as a sequence of forum IDs.
+        */
+        private val favouriteForumIds: Array<String>
+            get() {
+                val favouriteList =
+                    AwfulPreferences.getInstance().getPreference(Keys.FAVOURITE_FORUMS, "")
+                return StringUtils.split(
+                    favouriteList,
+                    FAV_ID_SEPARATOR
+                )
+            }
+
+
+        /**
+         * Set the user's favourite forums, as a sequence of forum IDs.
+         */
+        private fun setFavouriteForumIds(forumIds: MutableList<String>) {
+            // stored as a single string of IDs
+            val joinedIds: String? = StringUtils.join(forumIds, FAV_ID_SEPARATOR)
+            AwfulPreferences.getInstance().setPreference(Keys.FAVOURITE_FORUMS, joinedIds)
+        }
+    }
 }

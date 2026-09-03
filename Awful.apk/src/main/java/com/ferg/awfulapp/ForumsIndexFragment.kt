@@ -110,7 +110,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
     override fun onResume() {
         super.onResume()
         forumRepo.registerListener(this)
-        if (lastUpdateTime != forumRepo.getLastRefreshTime()) {
+        if (lastUpdateTime != forumRepo.lastRefreshTime) {
             refreshForumList()
         } else {
             refreshNoDataView()
@@ -158,7 +158,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
     * Query the database for the current Forum data , and update the list
     */
     private fun refreshForumList() {
-        lastUpdateTime = forumRepo.getLastRefreshTime()
+        lastUpdateTime = forumRepo.lastRefreshTime
         // get a new data set (possibly empty if there's no data yet) and give it to the adapter
         val forumList = if (showFavourites) this.favouriteForums else this.allForums
         forumListAdapter?.updateForumList(forumList)
@@ -203,7 +203,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
 
 
     private val favouriteForums: MutableList<Forum>
-        get() = forumRepo.getFavouriteForums()
+        get() = forumRepo.favouriteForums
             .asList
             .formatAs(ForumStructure.FLAT)
             .build()

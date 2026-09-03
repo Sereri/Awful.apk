@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * added task by this amount of time, allowing you to space out requests and avoid hitting the site
  * too heavily.
  */
-internal abstract class UpdateTask(protected val context: Context, private val taskDelayMillis: Int = 0) {
+abstract class UpdateTask(protected val context: Context, private val taskDelayMillis: Int = 0) {
 
     /**
      * Single thread, basically processes request tasks sequentially, so they can be delayed
@@ -59,7 +59,7 @@ internal abstract class UpdateTask(protected val context: Context, private val t
     private var resultListener: ResultListener? = null
 
 
-    internal interface ResultListener {
+    interface ResultListener {
         /**
          * Called when the UpdateTask has finished.
          *

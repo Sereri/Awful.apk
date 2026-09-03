@@ -1,74 +1,50 @@
-package com.ferg.awfulapp.forums;
+package com.ferg.awfulapp.forums
 
-import android.graphics.Bitmap;
-import androidx.annotation.NonNull;
-
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.NetworkImageView;
-import com.ferg.awfulapp.network.NetworkUtils;
-
-import org.apache.commons.lang3.StringUtils;
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.ImageLoader.ImageContainer
+import com.android.volley.toolbox.ImageLoader.ImageListener
+import com.android.volley.toolbox.NetworkImageView
+import com.ferg.awfulapp.network.NetworkUtils
+import org.apache.commons.lang3.StringUtils
+import androidx.core.graphics.get
 
 /**
  * Created by baka kaba on 14/05/2016.
- * <p/>
+ * 
+ * 
  * Provides forum tag icons.
  */
-@SuppressWarnings("SpellCheckingInspection")
-public class TagProvider {
-
+object TagProvider {
     /**
      * Set a SquareForumTag's appearance for a given forum.
-     * <p/>
-     * This will apply the forum's associated colours and text overlay, if it has them.
-     *
+     * 
+     * 
+     * This will apply the forum's associated colors and text overlay, if it has them.
+     * 
      * @param target The SquareForumTag to remake
      * @param forum  The Forum whose details will be applied to the tag
      */
-    static void setSquareForumTag(@NonNull final SquareForumTag target, @NonNull final Forum forum) {
-        target.setTagText(forum.getAbbreviation());
-        if (StringUtils.isEmpty(forum.getTagUrl())) {
-            return;
+    fun setSquareForumTag(target: SquareForumTag, forum: Forum) {
+        target.setTagText(forum.abbreviation)
+        if (StringUtils.isEmpty(forum.tagUrl)) {
+            return
         }
-        NetworkUtils.getImageLoader().get(forum.getTagUrl(), new ImageLoader.ImageListener() {
-            @Override
-            public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-                Bitmap threadTag = response.getBitmap();
+        NetworkUtils.getImageLoader().get(forum.tagUrl, object : ImageListener {
+            override fun onResponse(response: ImageContainer, isImmediate: Boolean) {
+                val threadTag = response.bitmap
                 if (threadTag != null) {
                     // get square and background colors
-                    target.setAccentColour(threadTag.getPixel(4, 10));
-                    target.setMainColour(threadTag.getPixel(33, 13));
+                    target.setAccentColour(threadTag[4, 10])
+                    target.setMainColour(threadTag[33, 13])
                 } else {
-                    target.setAccentColour(null);
-                    target.setMainColour(null);
+                    target.setAccentColour(null)
+                    target.setMainColour(null)
                 }
             }
 
 
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
+            override fun onErrorResponse(error: VolleyError?) {
             }
-        });
+        })
     }
-
-
-    /**
-     * Sets a NetworkImageView to the image specified by a forum's tagUrl.
-     * <p/>
-     * This is the old look.
-     *
-     * @param target The ImageView to set
-     * @param forum  The forum whose tag will be used
-     */
-    @SuppressWarnings("unused")
-    static void setWebsiteForumTag(@NonNull NetworkImageView target, @NonNull Forum forum) {
-        if (StringUtils.isEmpty(forum.getTagUrl())) {
-            return;
-        }
-        target.setImageUrl(forum.getTagUrl(), NetworkUtils.getImageLoader());
-    }
-
-
 }

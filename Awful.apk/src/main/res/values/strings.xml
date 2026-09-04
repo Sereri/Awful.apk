@@ -230,6 +230,8 @@
     <string name="not_available_on_your_version">Not available on this version of Android</string>
     <string name="min_button_text">min</string>
     <string name="max_button_text">max</string>
+    <string name="new_message_placeholder">New Message</string>
+    <string name="message_sender">Sender: %s</string>
 
     <!-- search -->
     <string name="search_forums_activity_title">Search</string>

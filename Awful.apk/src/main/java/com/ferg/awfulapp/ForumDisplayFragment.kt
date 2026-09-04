@@ -698,7 +698,6 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
                 if (isBookmarks) AwfulThread.CONTENT_URI_UCP else AwfulThread.CONTENT_URI
 
             var selection: String?
-            val selectionArgs: Array<String?>?
             if (isBookmarks) {
                 selection = String.format(
                     "%s.%s>=? AND %s.%s<?",
@@ -721,11 +720,10 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
                     prefs.hiddenThreadIds?.joinToString(",")
                 )
             }
-            if (isBookmarks) {
-                selectionArgs = AwfulProvider.int2StrArray(thisPageIndex, nextPageIndex)
+            val selectionArgs = if (isBookmarks) {
+                AwfulProvider.int2StrArray(thisPageIndex, nextPageIndex)
             } else {
-                selectionArgs =
-                    AwfulProvider.int2StrArray(this@ForumDisplayFragment.forumId, thisPageIndex, nextPageIndex)
+                AwfulProvider.int2StrArray(this@ForumDisplayFragment.forumId, thisPageIndex, nextPageIndex)
             }
             val sortNewFirst =
                 (isBookmarks && prefs.newThreadsFirstUCP) || (!isBookmarks && prefs.newThreadsFirstForum)

@@ -1,5 +1,4 @@
-/**
- * *****************************************************************************
+/*******************************************************************************
  * Copyright (c) 2011, Scott Ferguson
  * All rights reserved.
  * 
@@ -26,8 +25,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * *****************************************************************************
- */
+ * *****************************************************************************/
 package com.ferg.awfulapp
 
 import android.Manifest
@@ -63,6 +61,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentActivity
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
@@ -120,8 +119,9 @@ class PostThreadFragment : AwfulFragment() {
     private var postSignature = false
 
 
-    /**//////////////////////////////////////////////////////////////////////// */ // Activity and fragment initialisation
-    /**//////////////////////////////////////////////////////////////////////// */
+    /////////////////////////////////////////////////////////////////////////
+    // Activity and fragment initialization
+    /////////////////////////////////////////////////////////////////////////
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         v("onCreate")
@@ -154,15 +154,15 @@ class PostThreadFragment : AwfulFragment() {
         messageComposer!!.setTextColor(ColorProvider.PRIMARY_TEXT.color)
 
         // grab all the important thread params
-        val intent = activity!!.intent
+        val intent = requireActivity().intent
         mForumId = intent.getIntExtra(Constants.POST_FORUM_ID, 0)
-        setActionBarTitle(getTitle()!!)
+        setActionBarTitle(getTitle())
 
         threadIconPicker =
             requireFragmentManager().findFragmentById(R.id.thread_icon_picker) as ThreadIconPicker?
         threadIconPicker!!.useForumIcons(mForumId)
 
-        subject = activity.findViewById<View?>(R.id.thread_subject) as EditText
+        subject = requireActivity().findViewById<View?>(R.id.thread_subject) as EditText
 
         // perform some sanity checking
         var badRequest = false
@@ -175,10 +175,10 @@ class PostThreadFragment : AwfulFragment() {
                 .show()
             val template = "Failed to init thread activity%n Forum ID: %d"
             w(template, mForumId)
-            activity.finish()
+            requireActivity().finish()
         }
 
-        mContentResolver = activity.contentResolver
+        mContentResolver = requireActivity().contentResolver
         // load any related stored draft before starting the thread request
         // TODO: 06/04/2017 probably better to handle this as two separate, completable requests - combine thread and draft data when they're both finished, instead of assuming the draft loader finishes first
         this.storedDraft
@@ -329,10 +329,7 @@ class PostThreadFragment : AwfulFragment() {
      * @param draft a draft message relevant to this post
      */
     private fun displayDraftAlert(draft: SavedDraft) {
-        val activity: Activity? = getActivity()
-        if (activity == null) {
-            return
-        }
+        val activity: FragmentActivity = activity ?: return
 
         val template = "You have a %s:" +
                 "<br/><b>%s:</b><br/><br/>" +
@@ -404,7 +401,7 @@ class PostThreadFragment : AwfulFragment() {
                             true,
                             true
                         )
-                        awfulActivity!!.setPreferredFont(
+                        awfulActivity?.setPreferredFont(
                             progressDialog!!.findViewById(
                                 android.R.id.title
                             )
@@ -419,12 +416,13 @@ class PostThreadFragment : AwfulFragment() {
             .setNegativeButton(
                 R.string.cancel,
                 DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int -> }).show()
-
-        awfulActivity!!.setPreferredFont(submit.findViewById(androidx.appcompat.R.id.alertTitle))
-        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.message))
-        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.button1))
-        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.button2))
-        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.button3))
+        awfulActivity?.let {
+            it.setPreferredFont(submit.findViewById(androidx.appcompat.R.id.alertTitle))
+            it.setPreferredFont(submit.findViewById(android.R.id.message))
+            it.setPreferredFont(submit.findViewById(android.R.id.button1))
+            it.setPreferredFont(submit.findViewById(android.R.id.button2))
+            it.setPreferredFont(submit.findViewById(android.R.id.button3))
+        }
     }
 
 
@@ -447,7 +445,7 @@ class PostThreadFragment : AwfulFragment() {
                         Toast.LENGTH_LONG
                     ).show()
                 }
-                mContentResolver!!.notifyChange(AwfulThread.CONTENT_URI, null)
+                mContentResolver?.notifyChange(AwfulThread.CONTENT_URI, null)
                 leave(RESULT_POSTED)
             }
 
@@ -1051,7 +1049,7 @@ class PostThreadFragment : AwfulFragment() {
                 // no draft saved for this thread
                 return
             }
-            // if there's some quote data, deserialise it into a SavedDraft
+            // if there's some quote data, deserialize it into a SavedDraft
             val quoteData = aData.getString(aData.getColumnIndex(AwfulMessage.POST_CONTENT))
             if (TextUtils.isEmpty(quoteData)) {
                 return

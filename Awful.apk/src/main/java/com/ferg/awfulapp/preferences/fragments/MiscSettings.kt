@@ -1,112 +1,98 @@
-package com.ferg.awfulapp.preferences.fragments;
+package com.ferg.awfulapp.preferences.fragments
 
-import android.app.Dialog;
-import androidx.preference.ListPreference;
-import androidx.preference.Preference;
-import androidx.annotation.NonNull;
-
-import android.view.View;
-import android.widget.Button;
-import android.widget.SeekBar;
-import android.widget.TextView;
-
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.preferences.Keys;
-import com.ferg.awfulapp.util.AwfulUtils;
+import android.app.Dialog
+import android.view.View
+import android.widget.Button
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.util.AwfulUtils
+import kotlin.math.roundToInt
 
 /**
  * Created by baka kaba on 04/05/2015.
  */
-public class MiscSettings extends SettingsFragment {
-
-    {
-        SETTINGS_XML_RES_ID = R.xml.miscsettings;
-        VALUE_SUMMARY_PREF_KEYS = new int[] {
-                R.string.pref_key_orientation
-        };
-        prefClickListeners.put(new P2RDistanceListener(), new int[] {
-                R.string.pref_key_pull_to_refresh_distance
-        });
+class MiscSettings : SettingsFragment() {
+    init {
+        SETTINGS_XML_RES_ID = R.xml.miscsettings
+        VALUE_SUMMARY_PREF_KEYS = intArrayOf(
+            R.string.pref_key_orientation
+        )
+        prefClickListeners[P2RDistanceListener()] = intArrayOf(
+            R.string.pref_key_pull_to_refresh_distance
+        )
     }
 
 
-    @NonNull
-    @Override
-    public String getTitle() {
-        return getString(R.string.prefs_misc);
+    override val title: String
+        get() = getString(R.string.prefs_misc)
+
+
+    override fun initialiseSettings() {
+        super.initialiseSettings()
+        val tab = AwfulUtils.isTablet(activity, true)
+        findPrefById(R.string.pref_key_page_layout)!!.isEnabled = tab
+        findPrefById(R.string.pref_key_transformer)!!.isEnabled = !tab
     }
 
 
-    @Override
-    protected void initialiseSettings() {
-        super.initialiseSettings();
-        boolean tab = AwfulUtils.isTablet(getActivity(), true);
-        findPrefById(R.string.pref_key_page_layout).setEnabled(tab);
-        findPrefById(R.string.pref_key_transformer).setEnabled(!tab);
-    }
-
-
-    @Override
-    protected void onSetSummaries() {
+    override fun onSetSummaries() {
         // p2r amount summary
-        String summary = getString(R.string.pull_to_refresh_distance_summary);
-        summary += "\n" + String.valueOf(Math.round(mPrefs.p2rDistance * 100.f)) + "%";
-        summary += " of the screen's height";
-        findPrefById(R.string.pref_key_pull_to_refresh_distance).setSummary(summary);
+        var summary = getString(R.string.pull_to_refresh_distance_summary)
+        summary += "\n" + (mPrefs!!.p2rDistance!! * 100f).roundToInt().toString() + "%"
+        summary += " of the screen's height"
+        findPrefById(R.string.pref_key_pull_to_refresh_distance)!!.setSummary(summary)
 
         // Thread layout option
-        ListPreference p = (ListPreference) findPrefById(R.string.pref_key_page_layout);
-        if (p.isEnabled()) {
-            p.setSummary(p.getEntry());
+        val p = findPrefById(R.string.pref_key_page_layout) as ListPreference?
+        if (p!!.isEnabled) {
+            p.setSummary(p.getEntry())
         } else {
-            p.setSummary(getString(R.string.page_layout_summary_disabled));
+            p.setSummary(getString(R.string.page_layout_summary_disabled))
         }
     }
 
 
+    /** Listener for the 'Pull-to-refresh distance' option  */
+    private inner class P2RDistanceListener : Preference.OnPreferenceClickListener {
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            val mP2RDistanceDialog = Dialog(requireActivity())
 
-    /** Listener for the 'Pull-to-refresh distance' option */
-    private class P2RDistanceListener implements Preference.OnPreferenceClickListener {
-        @Override
-        public boolean onPreferenceClick(Preference preference) {
-            final Dialog mP2RDistanceDialog = new Dialog(getActivity());
+            mP2RDistanceDialog.setContentView(R.layout.p2rdistance)
+            mP2RDistanceDialog.setTitle("Set Pull-to-refresh distance")
 
-            mP2RDistanceDialog.setContentView(R.layout.p2rdistance);
-            mP2RDistanceDialog.setTitle("Set Pull-to-refresh distance");
+            val mP2RDistanceText =
+                mP2RDistanceDialog.findViewById<View?>(R.id.p2rdistanceText) as TextView
+            val bar = mP2RDistanceDialog.findViewById<View?>(R.id.p2rdistanceBar) as SeekBar
+            val click = mP2RDistanceDialog.findViewById<View?>(R.id.p2rdistanceButton) as Button
 
-            final TextView mP2RDistanceText = (TextView) mP2RDistanceDialog.findViewById(R.id.p2rdistanceText);
-            SeekBar bar = (SeekBar) mP2RDistanceDialog.findViewById(R.id.p2rdistanceBar);
-            Button click = (Button) mP2RDistanceDialog.findViewById(R.id.p2rdistanceButton);
+            click.setOnClickListener { mP2RDistanceDialog.dismiss() }
 
-            click.setOnClickListener(new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    mP2RDistanceDialog.dismiss();
-                }
-            });
-
-            bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                    float distanceFloat = seekBar.getProgress();
-                    mPrefs.setPreference(Keys.P2R_DISTANCE, (distanceFloat / 100));
+            bar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    val distanceFloat = seekBar.progress.toFloat()
+                    mPrefs?.setPreference(Keys.P2R_DISTANCE, (distanceFloat / 100))
                 }
 
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 }
 
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    mP2RDistanceText.setText(progress+ "%"+((progress<20||progress>75)?" (not recommended)":""));
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    mP2RDistanceText.text = progress.toString() + "%" + (if (progress < 20 || progress > 75) " (not recommended)" else "")
                 }
-            });
-            bar.setProgress(Math.round(mPrefs.p2rDistance*100));
-            mP2RDistanceText.setText(bar.getProgress()+ "%"+((bar.getProgress()<20||bar.getProgress()>75)?" (not recommended)":""));
-            mP2RDistanceDialog.show();
-            return true;
+            })
+            bar.progress = (mPrefs?.p2rDistance!! * 100).roundToInt()
+            mP2RDistanceText.text = bar.progress.toString() + "%" + (if (bar.progress < 20 || bar.progress > 75) " (not recommended)" else "")
+            mP2RDistanceDialog.show()
+            return true
         }
     }
 }

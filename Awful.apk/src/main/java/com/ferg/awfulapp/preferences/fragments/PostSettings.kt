@@ -1,148 +1,151 @@
-package com.ferg.awfulapp.preferences.fragments;
+package com.ferg.awfulapp.preferences.fragments
 
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.graphics.Typeface;
-import androidx.preference.Preference;
-import androidx.annotation.NonNull;
-import android.util.Log;
-import android.util.TypedValue;
-import android.widget.Button;
-import android.widget.SeekBar;
-import android.widget.TextView;
-
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.preferences.Keys;
-import com.ferg.awfulapp.widget.MinMaxNumberPicker;
+import android.app.Dialog
+import android.content.DialogInterface
+import android.graphics.Typeface
+import android.util.Log
+import android.util.TypedValue
+import android.view.View
+import android.widget.Button
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
+import androidx.preference.Preference
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.widget.MinMaxNumberPicker
 
 /**
  * Created by baka kaba on 04/05/2015.
- *
+ * 
  * Settings fragment for the Posts settings submenu.
  */
-public class PostSettings extends SettingsFragment {
+class PostSettings : SettingsFragment() {
+    init {
+        SETTINGS_XML_RES_ID = R.xml.postsettings
 
-    {
-        SETTINGS_XML_RES_ID = R.xml.postsettings;
+        SUBMENU_OPENING_KEYS = intArrayOf(
+            R.string.pref_key_highlighting_menu_item,
+            R.string.pref_key_embedding_menu_item
+        )
 
-        SUBMENU_OPENING_KEYS = new int[] {
-                R.string.pref_key_highlighting_menu_item,
-                R.string.pref_key_embedding_menu_item
-        };
+        prefClickListeners[FontSizeListener()] = intArrayOf(
+            R.string.pref_key_post_font_size_sp,
+            R.string.pref_key_post_fixed_font_size_sp
+        )
 
-        prefClickListeners.put(new FontSizeListener(), new int[] {
-                R.string.pref_key_post_font_size_sp,
-                R.string.pref_key_post_fixed_font_size_sp
-        });
-
-        prefClickListeners.put(new PostsPerPageListener(), new int[] {
-                R.string.pref_key_post_per_page
-        });
+        prefClickListeners[PostsPerPageListener()] = intArrayOf(
+            R.string.pref_key_post_per_page
+        )
     }
 
 
-    @NonNull
-    @Override
-    public String getTitle() {
-        return getString(R.string.prefs_post_display);
-    }
+    override val title: String
+        get() = getString(R.string.prefs_post_display)
 
-    @SuppressWarnings("ConstantConditions")
-    @Override
-    protected void onSetSummaries() {
-        findPrefById(R.string.pref_key_post_font_size_sp)
-                .setSummary(String.valueOf(mPrefs.postFontSizeSp));
-        findPrefById(R.string.pref_key_post_fixed_font_size_sp)
-                .setSummary(String.valueOf(mPrefs.postFixedFontSizeSp));
-        findPrefById(R.string.pref_key_post_per_page)
-                .setSummary(String.valueOf(mPrefs.postPerPage));
+    override fun onSetSummaries() {
+        findPrefById(R.string.pref_key_post_font_size_sp)!!
+            .setSummary(mPrefs!!.postFontSizeSp.toString())
+        findPrefById(R.string.pref_key_post_fixed_font_size_sp)!!
+            .setSummary(mPrefs!!.postFixedFontSizeSp.toString())
+        findPrefById(R.string.pref_key_post_per_page)!!
+            .setSummary(mPrefs!!.postPerPage.toString())
     }
 
     /**
      * Listener for the default post font size options
      */
-    private class FontSizeListener implements Preference.OnPreferenceClickListener {
-        @Override
-        public boolean onPreferenceClick(Preference preference) {
-            final String prefKey = preference.getKey();
-            final String FONT_SIZE_KEY = getString(R.string.pref_key_post_font_size_sp);
-            final String FIXED_FONT_SIZE_KEY = getString(R.string.pref_key_post_fixed_font_size_sp);
-            final String SIZE_PICKER_FORMAT_STRING = getString(R.string.font_size_picker_format_string);
-            final int    MIN_SIZE = Constants.MINIMUM_FONT_SIZE_SP;
-            final Dialog mFontSizeDialog = new Dialog(getActivity());
+    private inner class FontSizeListener : Preference.OnPreferenceClickListener {
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            val prefKey = preference.key
+            val FONT_SIZE_KEY = getString(R.string.pref_key_post_font_size_sp)
+            val FIXED_FONT_SIZE_KEY = getString(R.string.pref_key_post_fixed_font_size_sp)
+            val SIZE_PICKER_FORMAT_STRING = getString(R.string.font_size_picker_format_string)
+            val MIN_SIZE = Constants.MINIMUM_FONT_SIZE_SP
+            val mFontSizeDialog = Dialog(requireActivity())
 
-            mFontSizeDialog.setContentView(R.layout.font_size);
-            if (prefKey.equals(FONT_SIZE_KEY)){
-                mFontSizeDialog.setTitle(getString(R.string.default_font_size_dialog_title));
+            mFontSizeDialog.setContentView(R.layout.font_size)
+            if (prefKey == FONT_SIZE_KEY) {
+                mFontSizeDialog.setTitle(getString(R.string.default_font_size_dialog_title))
+            } else if (prefKey == FIXED_FONT_SIZE_KEY) {
+                mFontSizeDialog.setTitle(getString(R.string.default_fixed_font_size_dialog_title))
             }
-            else if (prefKey.equals(FIXED_FONT_SIZE_KEY)) {
-                mFontSizeDialog.setTitle(getString(R.string.default_fixed_font_size_dialog_title));
-            }
-            final TextView mFontSizeText = (TextView) mFontSizeDialog.findViewById(R.id.fontSizeText);
-            SeekBar bar = (SeekBar) mFontSizeDialog.findViewById(R.id.fontSizeBar);
-            Button click = (Button) mFontSizeDialog.findViewById(R.id.fontSizeButton);
+            val mFontSizeText = mFontSizeDialog.findViewById<View?>(R.id.fontSizeText) as TextView
+            val bar = mFontSizeDialog.findViewById<View?>(R.id.fontSizeBar) as SeekBar
+            val click = mFontSizeDialog.findViewById<View?>(R.id.fontSizeButton) as Button
 
-            click.setOnClickListener(v -> mFontSizeDialog.dismiss());
+            click.setOnClickListener { _: View? -> mFontSizeDialog.dismiss() }
 
-            bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                    if (prefKey.equals(FONT_SIZE_KEY)) {
-                        mPrefs.setPreference(Keys.POST_FONT_SIZE_SP, seekBar.getProgress() + MIN_SIZE);
-                    } else if (prefKey.equals(FIXED_FONT_SIZE_KEY)) {
-                        mPrefs.setPreference(Keys.POST_FIXED_FONT_SIZE_SP, seekBar.getProgress() + MIN_SIZE);
+            bar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    if (prefKey == FONT_SIZE_KEY) {
+                        mPrefs!!.setPreference(
+                            Keys.POST_FONT_SIZE_SP,
+                            seekBar.progress + MIN_SIZE
+                        )
+                    } else if (prefKey == FIXED_FONT_SIZE_KEY) {
+                        mPrefs!!.setPreference(
+                            Keys.POST_FIXED_FONT_SIZE_SP,
+                            seekBar.progress + MIN_SIZE
+                        )
                     }
                 }
 
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 }
 
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    int selectedSize = progress + MIN_SIZE;
-                    mFontSizeText.setText(String.format(SIZE_PICKER_FORMAT_STRING, selectedSize));
-                    mFontSizeText.setTextSize(TypedValue.COMPLEX_UNIT_SP, selectedSize);
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
+                    val selectedSize = progress + MIN_SIZE
+                    mFontSizeText.text = String.format(SIZE_PICKER_FORMAT_STRING, selectedSize)
+                    mFontSizeText.setTextSize(TypedValue.COMPLEX_UNIT_SP, selectedSize.toFloat())
                 }
-            });
+            })
 
-            if (prefKey.equals(FONT_SIZE_KEY)){
-                bar.setProgress(mPrefs.postFontSizeSp - MIN_SIZE);
+            when (prefKey) {
+                FONT_SIZE_KEY -> {
+                    bar.progress = mPrefs!!.postFontSizeSp - MIN_SIZE
+                }
+                FIXED_FONT_SIZE_KEY -> {
+                    bar.progress = mPrefs!!.postFixedFontSizeSp - MIN_SIZE
+                    mFontSizeText.setTypeface(Typeface.MONOSPACE)
+                }
+                else -> Log.w(TAG, "Tried to set font size for: " + prefKey + ", not a valid key!")
             }
-            else if (prefKey.equals(FIXED_FONT_SIZE_KEY)) {
-                bar.setProgress(mPrefs.postFixedFontSizeSp - MIN_SIZE);
-                mFontSizeText.setTypeface(Typeface.MONOSPACE);
-            }
-            else Log.w(TAG, "Tried to set font size for: " + prefKey + ", not a valid key!");
 
-            int selectedSize = bar.getProgress() + MIN_SIZE;
-            mFontSizeText.setText(String.format(SIZE_PICKER_FORMAT_STRING, selectedSize));
-            mFontSizeText.setTextSize(TypedValue.COMPLEX_UNIT_SP, selectedSize);
-            mFontSizeDialog.show();
-            return true;
+            val selectedSize = bar.progress + MIN_SIZE
+            mFontSizeText.text = String.format(SIZE_PICKER_FORMAT_STRING, selectedSize)
+            mFontSizeText.setTextSize(TypedValue.COMPLEX_UNIT_SP, selectedSize.toFloat())
+            mFontSizeDialog.show()
+            return true
         }
     }
 
-    private class PostsPerPageListener implements Preference.OnPreferenceClickListener {
+    private inner class PostsPerPageListener : Preference.OnPreferenceClickListener {
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            val minPages = 1
+            val maxPages = Constants.ITEMS_PER_PAGE
 
-        @Override
-        public boolean onPreferenceClick(final Preference preference) {
-            final int minPages = 1;
-            final int maxPages = Constants.ITEMS_PER_PAGE;
+            MinMaxNumberPicker(
+                activity,
+                minPages,
+                maxPages,
+                mPrefs!!.postPerPage,
+                getString(R.string.setting_posts_per_page)
+            ) { button: Int, resultValue: Int ->
+                if (button == DialogInterface.BUTTON_POSITIVE) {
+                    val key = preference.key
+                    if (key == getString(R.string.pref_key_post_per_page)) {
+                        mPrefs?.setPreference(Keys.POST_PER_PAGE, resultValue)
+                    }
+                }
+            }.show()
 
-            new MinMaxNumberPicker(getActivity(), minPages, maxPages, mPrefs.postPerPage,
-                    getString(R.string.setting_posts_per_page), (button, resultValue) -> {
-                        if (button == DialogInterface.BUTTON_POSITIVE) {
-                            String key = preference.getKey();
-                            if (key.equals(getString(R.string.pref_key_post_per_page))) {
-                                mPrefs.setPreference(Keys.POST_PER_PAGE, resultValue);
-                            }
-                        }
-                    }).show();
-
-            return true;
+            return true
         }
     }
 }

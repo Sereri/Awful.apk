@@ -157,7 +157,7 @@ class PostReplyFragment : AwfulFragment() {
         messageComposer!!.setTextColor(ColorProvider.PRIMARY_TEXT.color)
 
         // grab all the important reply params
-        val intent = activity!!.intent
+        val intent = requireActivity().intent
         mReplyType = intent.getIntExtra(Constants.EDITING, -999)
         mPostId = intent.getIntExtra(Constants.REPLY_POST_ID, 0)
         mThreadId = intent.getIntExtra(Constants.REPLY_THREAD_ID, 0)
@@ -179,10 +179,10 @@ class PostReplyFragment : AwfulFragment() {
             val template =
                 "Failed to init reply activity%nReply type: %d, Thread ID: %d, Post ID: %d"
             w(template, mReplyType, mThreadId, mPostId)
-            activity.finish()
+            requireActivity().finish()
         }
 
-        mContentResolver = activity.contentResolver
+        mContentResolver = requireActivity().contentResolver
         // load any related stored draft before starting the reply request
         // TODO: 06/04/2017 probably better to handle this as two separate, completable requests - combine reply and draft data when they're both finished, instead of assuming the draft loader finishes first
         this.storedDraft
@@ -452,7 +452,7 @@ class PostReplyFragment : AwfulFragment() {
     * Display a dialog allowing the user to submit or preview their post
     */
     private fun showSubmitDialog() {
-        val submit = AlertDialog.Builder(activity!!)
+        val submit = AlertDialog.Builder(requireActivity())
             .setTitle(
                 String.format(
                     "Confirm %s?",

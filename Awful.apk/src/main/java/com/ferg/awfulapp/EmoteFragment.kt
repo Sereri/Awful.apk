@@ -307,7 +307,7 @@ abstract class EmoteGridFragment : AwfulFragment() {
                     ?.asSelectionAndArgs()
                     ?: Pair(null, null)
             return CursorLoader(
-                activity!!,
+                requireActivity(),
                 AwfulEmote.CONTENT_URI,
                 AwfulProvider.EmoteProjection,
                 selectionAndArgs.first,

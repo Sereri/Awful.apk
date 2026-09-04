@@ -19,6 +19,7 @@ import com.ferg.awfulapp.preferences.fragments.AccountSettings
 import com.ferg.awfulapp.preferences.fragments.RootSettings
 import timber.log.Timber.Forest.e
 import androidx.core.view.isVisible
+import com.ferg.awfulapp.preferences.fragments.SettingsFragment
 
 /**
  * Created by baka kaba on 04/05/2015.
@@ -46,7 +47,7 @@ import androidx.core.view.isVisible
  * (e.g. pressing back in dual-pane mode with a top-level submenu displayed will exit, but rotating
  * to portrait first will display the submenu, and pressing back will move to the root menu)
  */
-class SettingsActivity : AwfulActivity(), AwfulPreferenceUpdate, OnSubmenuSelectedListener {
+class SettingsActivity : AwfulActivity(), AwfulPreferenceUpdate, SettingsFragment.OnSubmenuSelectedListener {
     @JvmField
     var prefs: AwfulPreferences? = null
     private var currentThemeName: String? = null
@@ -211,7 +212,7 @@ class SettingsActivity : AwfulActivity(), AwfulPreferenceUpdate, OnSubmenuSelect
         if (fragment == null || !fragment.isAdded) {
             fragment = fm.findFragmentByTag(ROOT_FRAGMENT_TAG)
         }
-        actionBar.title = (fragment as SettingsFragment).getTitle()
+        actionBar.title = (fragment as SettingsFragment).title
     }
 
 

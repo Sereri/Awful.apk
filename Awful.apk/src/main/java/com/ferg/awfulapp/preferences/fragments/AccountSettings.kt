@@ -1,120 +1,127 @@
-package com.ferg.awfulapp.preferences.fragments;
+package com.ferg.awfulapp.preferences.fragments
 
-import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.content.Intent;
-import android.net.Uri;
-import androidx.preference.Preference;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import android.text.TextUtils;
-import android.widget.Toast;
-
-import com.android.volley.VolleyError;
-import com.ferg.awfulapp.AwfulActivity;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.network.NetworkUtils;
-import com.ferg.awfulapp.preferences.Keys;
-import com.ferg.awfulapp.task.AwfulRequest;
-import com.ferg.awfulapp.task.FeatureRequest;
-import com.ferg.awfulapp.task.RefreshUserProfileRequest;
+import android.app.Dialog
+import android.app.ProgressDialog
+import android.content.DialogInterface
+import android.content.Intent
+import android.text.TextUtils
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.preference.Preference
+import com.android.volley.VolleyError
+import com.ferg.awfulapp.AwfulActivity
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.network.NetworkUtils.queueRequest
+import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
+import com.ferg.awfulapp.task.FeatureRequest
+import com.ferg.awfulapp.task.RefreshUserProfileRequest
+import androidx.core.net.toUri
 
 /**
  * Created by baka kaba on 04/05/2015.
  */
-public class AccountSettings extends SettingsFragment {
-
-    {
-        SETTINGS_XML_RES_ID = R.xml.accountsettings;
-        prefClickListeners.put(new FeaturesListener(), new int[] {
-                R.string.pref_key_account_features_menu_item
-        });
-        prefClickListeners.put(new ImgurListener(), new int[] {
-                R.string.pref_key_account_imgur_menu_item
-        });
+class AccountSettings : SettingsFragment() {
+    init {
+        SETTINGS_XML_RES_ID = R.xml.accountsettings
+        prefClickListeners[FeaturesListener()] = intArrayOf(
+            R.string.pref_key_account_features_menu_item
+        )
+        prefClickListeners[ImgurListener()] = intArrayOf(
+            R.string.pref_key_account_imgur_menu_item
+        )
     }
 
 
-    @NonNull
-    @Override
-    public String getTitle() {
-        return getString(R.string.prefs_account);
+    override val title: String
+        get() = getString(R.string.prefs_account)
+
+    override fun onResume() {
+        super.onResume()
+        setSummaries()
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        setSummaries();
-    }
-
-    @Override
-    protected void onSetSummaries() {
-        findPrefById(R.string.pref_key_username).setSummary(mPrefs.username);
-        //Set summary for the 'Refresh account options' option
-        String platinum = "Platinum: " + ((mPrefs.hasPlatinum) ? "Yes" : "No");
-        String archives = "Archives: " + ((mPrefs.hasArchives) ? "Yes" : "No");
-        String noAds    = "No Ads: " + ((mPrefs.hasNoAds) ? "Yes" : "No");
-        String separator = " "+" "+" "+" ";
-        String summaryText = TextUtils.join(separator, new String[] {platinum, archives, noAds});
-        findPrefById(R.string.pref_key_account_features_menu_item).setSummary(summaryText);
-        if (mPrefs.imgurAccount != null) {
-            findPrefById(R.string.pref_key_account_imgur_menu_item).setSummary("user: " + mPrefs.imgurAccount);
-        }
-    }
-
-
-    private class FeaturesListener implements Preference.OnPreferenceClickListener {
-        @Override
-        public boolean onPreferenceClick(Preference preference) {
-            final Dialog dialog = ProgressDialog.show(getActivity(), "Loading", "Fetching Account Features", true);
-            ((AwfulActivity)getActivity()).setPreferredFont(dialog.findViewById(android.R.id.title));
-            NetworkUtils.queueRequest(new FeatureRequest(getActivity())
-                    .build(null, new AwfulRequest.AwfulResultCallback<Void>() {
-                        @Override
-                        public void success(Void result) {
-                            dialog.dismiss();
-                            setSummaries();
-                            NetworkUtils.queueRequest(new RefreshUserProfileRequest(getActivity()).build(null, null));
-                        }
-
-                        @Override
-                        public void failure(VolleyError error) {
-                            dialog.dismiss();
-                            Toast.makeText(getActivity(), "An error occured", Toast.LENGTH_LONG).show();
-                        }
-                    }));
-            return true;
-        }
-    }
-
-    private class ImgurListener implements Preference.OnPreferenceClickListener {
-        @Override
-        public boolean onPreferenceClick(Preference preference) {
-            if (mPrefs.imgurAccount != null) {
-                new AlertDialog.Builder(getActivity())
-                        .setTitle("Remove account?")
-                        .setPositiveButton(R.string.confirm,
-                                (dialog, button) -> {
-                                    mPrefs.setPreference(Keys.IMGUR_ACCOUNT_TOKEN, (String) null);
-                                    mPrefs.setPreference(Keys.IMGUR_REFRESH_TOKEN, (String) null);
-                                    mPrefs.setPreference(Keys.IMGUR_ACCOUNT, (String) null);
-                                    mPrefs.setPreference(Keys.IMGUR_TOKEN_EXPIRES, 0L);
-                                    findPrefById(R.string.pref_key_account_imgur_menu_item).setSummary(R.string.imgur_account_summary);
-                                })
-                        .setNegativeButton(R.string.cancel, (dialog, button) -> {
-                        })
-                        .show();
-            } else {
-                final String AUTHORIZATION_URL = "https://api.imgur.com/oauth2/authorize";
-                Uri imgurLogin = Uri.parse(AUTHORIZATION_URL).buildUpon()
-                        .appendQueryParameter("client_id", getResources().getString(R.string.imgur_api_client_id))
-                        .appendQueryParameter("response_type", "token")
-                        .build();
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, imgurLogin);
-                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                getActivity().startActivity(browserIntent);
+    override fun onSetSummaries() {
+        mPrefs?.let {
+            findPrefById(R.string.pref_key_username)?.setSummary(it.username)
+            //Set summary for the 'Refresh account options' option
+            val platinum = "Platinum: " + (if (it.hasPlatinum) "Yes" else "No")
+            val archives = "Archives: " + (if (it.hasArchives) "Yes" else "No")
+            val noAds = "No Ads: " + (if (it.hasNoAds) "Yes" else "No")
+            val summaryText = TextUtils.join("    ", arrayOf(platinum, archives, noAds))
+            findPrefById(R.string.pref_key_account_features_menu_item)?.setSummary(summaryText)
+            if (it.imgurAccount != null) {
+                findPrefById(R.string.pref_key_account_imgur_menu_item)?.setSummary("user: " + it.imgurAccount)
             }
-            return true;
+        }
+    }
+
+
+    private inner class FeaturesListener : Preference.OnPreferenceClickListener {
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            val dialog: Dialog = ProgressDialog.show(activity, "Loading", "Fetching Account Features", true)
+            (activity as AwfulActivity).setPreferredFont(dialog.findViewById<View?>(android.R.id.title))
+            queueRequest(
+                FeatureRequest(requireActivity())
+                    .build(null, object : AwfulResultCallback<Void?> {
+                        override fun success(result: Void?) {
+                            dialog.dismiss()
+                            setSummaries()
+                            queueRequest(
+                                RefreshUserProfileRequest(requireActivity()).build(
+                                    null,
+                                    null
+                                )
+                            )
+                        }
+
+                        override fun failure(error: VolleyError?) {
+                            dialog.dismiss()
+                            Toast.makeText(activity, "An error occured", Toast.LENGTH_LONG)
+                                .show()
+                        }
+                    })
+            )
+            return true
+        }
+    }
+
+    private inner class ImgurListener : Preference.OnPreferenceClickListener {
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            mPrefs?.let {
+                if (it.imgurAccount != null) {
+                    AlertDialog.Builder(requireActivity())
+                        .setTitle("Remove account?")
+                        .setPositiveButton(
+                            R.string.confirm
+                        ) { _: DialogInterface?, _: Int ->
+                            it.setPreference(Keys.IMGUR_ACCOUNT_TOKEN, null as String?)
+                            it.setPreference(Keys.IMGUR_REFRESH_TOKEN, null as String?)
+                            it.setPreference(Keys.IMGUR_ACCOUNT, null as String?)
+                            it.setPreference(Keys.IMGUR_TOKEN_EXPIRES, 0L)
+                            findPrefById(R.string.pref_key_account_imgur_menu_item)?.setSummary(R.string.imgur_account_summary)
+                        }
+                        .setNegativeButton(
+                            R.string.cancel
+                        ) { _: DialogInterface?, _: Int -> }
+                        .show()
+                } else {
+                    val AUTHORIZATION_URL = "https://api.imgur.com/oauth2/authorize"
+                    val imgurLogin = AUTHORIZATION_URL.toUri().buildUpon()
+                        .appendQueryParameter(
+                            "client_id",
+                            resources.getString(R.string.imgur_api_client_id)
+                        )
+                        .appendQueryParameter("response_type", "token")
+                        .build()
+                    val browserIntent = Intent(Intent.ACTION_VIEW, imgurLogin)
+                    browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    requireActivity().startActivity(browserIntent)
+                }
+                return true
+            }
+            return false
         }
     }
 }

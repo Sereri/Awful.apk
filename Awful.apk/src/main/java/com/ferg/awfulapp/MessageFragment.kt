@@ -369,13 +369,13 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
         }
     }
 
-    public override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
-        super.onPreferenceChange(prefs, key)
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(preferences, key)
         if (view != null) {
-            updateColors(view, prefs)
+            updateColors(view, preferences)
         } else {
             if (mBackground != null) {
-                updateColors(mBackground, prefs)
+                updateColors(mBackground, preferences)
             }
         }
     }

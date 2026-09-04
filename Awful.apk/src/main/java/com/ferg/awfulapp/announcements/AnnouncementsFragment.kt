@@ -56,7 +56,7 @@ class AnnouncementsFragment : AwfulFragment() {
         binding.announcementsWebview.setJavascriptHandler(object : WebViewJsInterface() {
             @get:JavascriptInterface
             val cSS: String
-                get() = AwfulTheme.forForum(null).getCssPath()
+                get() = AwfulTheme.forForum(null).cssPath
 
             @JavascriptInterface
             fun getIgnorePostHtml(id: String?): String? {

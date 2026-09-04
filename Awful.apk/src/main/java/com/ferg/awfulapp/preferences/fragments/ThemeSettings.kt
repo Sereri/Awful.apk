@@ -155,7 +155,7 @@ class ThemeSettings : SettingsFragment() {
          * @return null if the folder can't be accessed
          */
         get() {
-            val customDir = File(AwfulTheme.getCustomThemePath())
+            val customDir = File(AwfulTheme.customThemePath)
             if (!customDir.canRead() || !customDir.isDirectory) {
                 Log.w(
                     TAG,

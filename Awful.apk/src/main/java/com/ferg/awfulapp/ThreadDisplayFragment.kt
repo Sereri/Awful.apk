@@ -990,7 +990,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             String.format(
                 "changeCSS('%s')", AwfulTheme.forForum(
                     this.parentForumId
-                ).getCssPath()
+                ).cssPath
             )
         )
     }
@@ -1279,7 +1279,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
 
         @get:JavascriptInterface
         val cSS: String
-            get() = AwfulTheme.forForum(this@ThreadDisplayFragment.parentForumId).getCssPath()
+            get() = AwfulTheme.forForum(this@ThreadDisplayFragment.parentForumId).cssPath
 
 
         @JavascriptInterface
@@ -1681,7 +1681,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                         String.format(
                             "changeCSS('%s')", AwfulTheme.forForum(
                                 this@ThreadDisplayFragment.parentForumId
-                            ).getCssPath()
+                            ).cssPath
                         )
                     )
                 }

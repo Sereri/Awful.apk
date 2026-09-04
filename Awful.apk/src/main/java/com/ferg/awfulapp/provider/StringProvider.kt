@@ -1,51 +1,53 @@
-package com.ferg.awfulapp.provider;
+package com.ferg.awfulapp.provider
 
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
+import android.content.ContentUris
+import android.content.Context
+import android.net.Uri
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.thread.AwfulForum
+import com.ferg.awfulapp.thread.AwfulThread
 
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.thread.AwfulForum;
-import com.ferg.awfulapp.thread.AwfulThread;
+object StringProvider {
+    private val prefs = AwfulPreferences.getInstance()
 
-public class StringProvider {
-
-    private static AwfulPreferences prefs = AwfulPreferences.getInstance();
-
-    public static String getString(int stringId){
-        return prefs.getResources().getString(stringId);
+    fun getString(stringId: Int): String {
+        return prefs.resources.getString(stringId)
     }
 
-    public static String getForumName(Context context, int forumId){
-        return getName(context, forumId, AwfulForum.CONTENT_URI, AwfulProvider.ForumProjection,
-                AwfulForum.TITLE, "Forum #");
+    fun getForumName(context: Context, forumId: Int): String? {
+        return getName(
+            context, forumId, AwfulForum.CONTENT_URI, AwfulProvider.ForumProjection,
+            AwfulForum.TITLE, "Forum #"
+        )
     }
 
-    public static String getThreadName(Context context, int threadId){
-        return getName(context, threadId, AwfulThread.CONTENT_URI, AwfulProvider.ThreadProjection,
-                AwfulThread.TITLE, "Thread #");
+    fun getThreadName(context: Context, threadId: Int): String? {
+        return getName(
+            context, threadId, AwfulThread.CONTENT_URI, AwfulProvider.ThreadProjection,
+            AwfulThread.TITLE, "Thread #"
+        )
     }
 
 
-    private static String getName(Context context, int id, Uri contentUri, String[] projection,
-                                  String columnName, String defaultPrefix) {
-        String result;
-        ContentResolver contentResolver = context.getContentResolver();
-        Cursor cursor = contentResolver.query(ContentUris.withAppendedId(contentUri, id),
-                projection,
-                null,
-                null,
-                null);
-        if (cursor != null && cursor.moveToFirst()) {
-            result = cursor.getString(cursor.getColumnIndex(columnName));
+    private fun getName(
+        context: Context, id: Int, contentUri: Uri, projection: Array<String>,
+        columnName: String?, defaultPrefix: String?
+    ): String? {
+        val result: String?
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(
+            ContentUris.withAppendedId(contentUri, id.toLong()),
+            projection,
+            null,
+            null,
+            null
+        )
+        result = if (cursor != null && cursor.moveToFirst()) {
+            cursor.getString(cursor.getColumnIndex(columnName))
         } else {
-            result = defaultPrefix + String.valueOf(id);
+            defaultPrefix + id.toString()
         }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return result;
+        cursor?.close()
+        return result
     }
 }

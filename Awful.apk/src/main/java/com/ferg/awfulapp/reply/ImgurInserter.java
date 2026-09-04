@@ -12,38 +12,22 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.ferg.awfulapp.AwfulApplication;
-import com.ferg.awfulapp.databinding.InsertImgurDialogBinding;
-import com.google.android.material.textfield.TextInputLayout;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.appcompat.app.AlertDialog;
-
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
 import android.util.Log;
-import android.util.Pair;
 import android.util.Patterns;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.Spinner;
-import android.widget.TextView;
+import kotlin.Pair;
 
 import com.android.volley.Request;
 import com.android.volley.VolleyError;
+import com.ferg.awfulapp.AwfulApplication;
 import com.ferg.awfulapp.R;
+import com.ferg.awfulapp.databinding.InsertImgurDialogBinding;
 import com.ferg.awfulapp.network.NetworkUtils;
 import com.ferg.awfulapp.task.ImgurUploadRequest;
 
@@ -54,6 +38,13 @@ import org.json.JSONObject;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -176,8 +167,8 @@ public class ImgurInserter extends DialogFragment {
      */
     void updateRemainingUploads() {
         Pair<Integer, Long> uploadLimit = ImgurUploadRequest.getCurrentUploadLimit();
-        Integer remaining = uploadLimit.first;
-        Long resetTime = uploadLimit.second;
+        Integer remaining = uploadLimit.component1();
+        Long resetTime = uploadLimit.component2();
         binding.creditsResetTime.setText(resetTime == null ? "" : getString(R.string.imgur_uploader_remaining_uploads_reset_time, timeFormat.format(resetTime), dateFormat.format(resetTime)));
 
         if (remaining == null) {
@@ -251,7 +242,7 @@ public class ImgurInserter extends DialogFragment {
     @Nullable
     private String reasonImageIsInvalid(@NonNull Uri imageUri) {
         long maxUploadSize = 10L * 1024 * 1024; // 10MB limit
-        Long imageSizeBytes = getFileNameAndSize(imageUri).second;
+        Long imageSizeBytes = getFileNameAndSize(imageUri).component2();
         if (imageSizeBytes != null && imageSizeBytes > maxUploadSize) {
             String fullFileSize = Formatter.formatFileSize(getContext(), imageSizeBytes);
             return getString(R.string.imgur_uploader_error_image_too_large, fullFileSize);
@@ -298,13 +289,13 @@ public class ImgurInserter extends DialogFragment {
      */
     private void displayImageDetails(@NonNull Uri imageUri) {
         Pair<String, Long> nameAndSize = getFileNameAndSize(imageUri);
-        if (nameAndSize.first == null && nameAndSize.second == null) {
+        if (nameAndSize.component1() == null && nameAndSize.component2() == null) {
             binding.imageName.setText("");
             binding.imageDetails.setText(R.string.imgur_uploader_no_file_details);
         } else {
-            String name = (nameAndSize.first == null) ? getString(R.string.imgur_uploader_unknown_value) : nameAndSize.first;
+            String name = (nameAndSize.component1() == null) ? getString(R.string.imgur_uploader_unknown_value) : nameAndSize.component1();
             binding.imageName.setText(getString(R.string.imgur_uploader_file_name, name));
-            String size = (nameAndSize.second == null) ? getString(R.string.imgur_uploader_unknown_value) : Formatter.formatShortFileSize(getContext(), nameAndSize.second);
+            String size = (nameAndSize.component2() == null) ? getString(R.string.imgur_uploader_unknown_value) : Formatter.formatShortFileSize(getContext(), nameAndSize.component2());
             binding.imageDetails.setText(getString(R.string.imgur_uploader_file_size, size));
         }
     }

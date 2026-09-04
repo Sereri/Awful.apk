@@ -4,14 +4,14 @@
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,28 +23,19 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp.task
 
-package com.ferg.awfulapp.task;
+import android.os.AsyncTask
+import com.ferg.awfulapp.network.NetworkUtils.getRedirect
 
-import android.os.AsyncTask;
-
-import com.ferg.awfulapp.network.NetworkUtils;
-
-public class RedirectTask extends AsyncTask<Void,Void,String> {
-	private String mUrl; 
-	public RedirectTask(String url) {
-		mUrl = url;
-	}
-
-	@Override
-	protected String doInBackground(Void... params) {
-		try {
-			return NetworkUtils.getRedirect(mUrl, null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
+open class RedirectTask(private val mUrl: String) : AsyncTask<Void?, Void?, String?>() {
+    override fun doInBackground(vararg params: Void?): String? {
+        try {
+            return getRedirect(mUrl, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
+    }
 }

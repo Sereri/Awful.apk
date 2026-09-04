@@ -1,32 +1,29 @@
-package com.ferg.awfulapp.provider;
+package com.ferg.awfulapp.provider
 
-import android.content.res.Resources;
-import android.content.res.TypedArray;
-import androidx.annotation.ArrayRes;
-import androidx.annotation.AttrRes;
-import androidx.annotation.ColorInt;
-import androidx.annotation.ColorRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.TypedValue;
-
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-
+import android.util.TypedValue
+import androidx.annotation.ArrayRes
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
+import com.ferg.awfulapp.provider.AwfulTheme.Companion.forForum
+import com.ferg.awfulapp.provider.ColorProvider.Companion.getThemeColorResId
 
 /**
  * Created by baka kaba on 02/01/2017.
- * <p>
- * Access to themed colour attributes used by the app.
- * <p>
- * This class handles resolving attributes to colours specified in a particular theme,
+ * 
+ * 
+ * Access to themed color attributes used by the app.
+ * 
+ * 
+ * This class handles resolving attributes to colors specified in a particular theme,
  * according to the current app theme, any special themes for a current forum, and
  * whether the user has chosen to force those forum themes. It also provides a few
- * helper functions, including the available bookmark group colours.
+ * helper functions, including the available bookmark group colors.
  */
-
-public enum ColorProvider {
-
+enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
     PRIMARY_TEXT(R.attr.primaryPostFontColor),
     ALT_TEXT(R.attr.secondaryPostFontColor),
     BACKGROUND(androidx.appcompat.R.attr.background),
@@ -38,151 +35,156 @@ public enum ColorProvider {
     PROGRESS_BAR(R.attr.progressBarColor),
     SELF_THREAD_BACKGROUND(R.attr.selfThreadBackground);
 
-    private static final int[] BOOKMARK_COLORS = getColorResIds(R.array.bookmarkColors);
-    private static final int[] BOOKMARK_COLORS_DIM = getColorResIds(R.array.bookmarkDimColors);
 
-    private final int colorAttr;
-
-    ColorProvider(@AttrRes int colorAttr) {
-        this.colorAttr = colorAttr;
-    }
-
+    @get:ColorInt
+    val color: Int
+        /**
+         * Get the value for this color from the current app theme.
+         */
+        get() = getColor(null)
 
     /**
-     * Convert an RGB packed int to its hex representation.
-     * <p>
-     * Does not pad with leading zeroes.
-     */
-    @NonNull
-    public static String convertToRGB(@ColorInt int color) {
-        return "#" + Integer.toHexString(color & 0x00FFFFFF);
-    }
-
-
-    /**
-     * Get one of the standard bookmark colours.
-     *
-     * @param bookmarkGroup passed by the forum, used to colour the bookmarks
-     * @param dimmed        if true the dimmed version will be returned
-     * @return the bookmark group's colour, or the default for invalid group IDs
-     */
-    @SuppressWarnings("deprecation")
-    @ColorInt
-    public static int getBookmarkColor(int bookmarkGroup, boolean dimmed) {
-        if (bookmarkGroup < 0 || bookmarkGroup >= BOOKMARK_COLORS.length) {
-            bookmarkGroup = 0;
-        }
-        int colorId = dimmed ? BOOKMARK_COLORS_DIM[bookmarkGroup] : BOOKMARK_COLORS[bookmarkGroup];
-        return AwfulPreferences.getInstance().getResources().getColor(colorId);
-    }
-
-
-    /**
-     * Get the SRL background colour resource for a given forum.
-     * <p>
-     * This method returns a <b>resource ID</b>, not a resolved colour
-     *
-     * @return the ID for the appropriate colour resource
-     */
-    @ColorRes
-    public static int getSRLBackgroundColor(@Nullable Integer forumId) {
-        return getThemeColorResId(R.attr.srlBackgroundColor, forumId, AwfulPreferences.getInstance());
-    }
-
-
-    /**
-     * Get the SRL progress colour resources according to the current theme, forum and user settings.
-     * <p>
-     * This method returns a set of <b>resource IDs</b>, not resolved colour ints
-     *
-     * @return the forum's themed colour resources (if any), otherwise the default set
-     */
-    @NonNull
-    public static int[] getSRLProgressColors(@Nullable Integer forumId) {
-        AwfulPreferences prefs = AwfulPreferences.getInstance();
-        TypedValue colorsRef = new TypedValue();
-        boolean foundThemedColors = AwfulTheme
-                .forForum(forumId)
-                .getTheme(prefs)
-                .resolveAttribute(R.attr.srlProgressColors, colorsRef, true);
-
-        @ArrayRes
-        int colorArrayResId = foundThemedColors ? colorsRef.data : R.array.defaultSrlProgressColors;
-        return getColorResIds(colorArrayResId);
-    }
-
-
-    /**
-     * Helper function to get an int array from Resources
-     */
-    private static int[] getColorResIds(@ArrayRes int colorArrayResId) {
-        Resources resources = AwfulPreferences.getInstance().getResources();
-        TypedArray ta = resources.obtainTypedArray(colorArrayResId);
-        int[] resIds = new int[ta.length()];
-        for (int i = 0; i < ta.length(); i++) {
-            resIds[i] = ta.getResourceId(i, -1);
-        }
-        ta.recycle();
-        return resIds;
-    }
-
-
-    /**
-     * Resolves a colour attr to a colour according to the current theme, forum and user settings.
-     *
-     * @param colourAttr One of the app's colour attrs
-     * @param forumId    An optional forum to check for its theme
-     * @param prefs      User preferences
-     * @return The resolved colour
-     * @see ColorProvider#getThemeColorResId(int, Integer, AwfulPreferences)
-     */
-    @SuppressWarnings("deprecation")
-    @ColorInt
-    private static int getThemeColour(@AttrRes int colourAttr, @Nullable Integer forumId, @NonNull AwfulPreferences prefs) {
-        int resId = getThemeColorResId(colourAttr, forumId, prefs);
-        return prefs.getResources().getColor(resId);
-    }
-
-
-    /**
-     * Resolves a colour attr to a resource ID according to the current theme.
-     * <p>
-     * If a forum has its own theme, and the user has per-forum themes selected, this will retrieve
-     * the colour from that forum's theme, otherwise the current app theme will be used.
-     *
-     * @param colourAttr One of the app's colour attrs
-     * @param forumId    An optional forum to check for its theme
-     * @param prefs      User preferences
-     * @return The resolved resource ID
-     */
-    @ColorRes
-    private static int getThemeColorResId(@AttrRes int colourAttr, @Nullable Integer forumId, @NonNull AwfulPreferences prefs) {
-        TypedValue colourValue = new TypedValue();
-        AwfulTheme
-                .forForum(forumId)
-                .getTheme(prefs)
-                .resolveAttribute(colourAttr, colourValue, true);
-
-        return colourValue.resourceId;
-    }
-
-
-    /**
-     * Get the value for this colour from the current app theme.
-     */
-    @ColorInt
-    public int getColor() {
-        return getColor(null);
-    }
-
-    /**
-     * Get the value for this colour, resolving for a specific forum.
-     * <p>
+     * Get the value for this color, resolving for a specific forum.
+     * 
+     * 
      * This will check for a forum-specific theme and the user's per-forum preferences,
-     * and return the appropriate colour.
+     * and return the appropriate color.
      */
     @ColorInt
-    public int getColor(@Nullable Integer forumId) {
-        return getThemeColour(colorAttr, forumId, AwfulPreferences.getInstance());
+    fun getColor(forumId: Int?): Int {
+        return getThemeColor(colorAttr, forumId, getInstance())
+    }
+
+    companion object {
+        private val BOOKMARK_COLORS: IntArray = getColorResIds(R.array.bookmarkColors)
+        private val BOOKMARK_COLORS_DIM: IntArray = getColorResIds(R.array.bookmarkDimColors)
+
+        /**
+         * Convert an RGB packed int to its hex representation.
+         * 
+         * 
+         * Does not pad with leading zeroes.
+         */
+        fun convertToRGB(@ColorInt color: Int): String {
+            return "#" + Integer.toHexString(color and 0x00FFFFFF)
+        }
+
+
+        /**
+         * Get one of the standard bookmark colors.
+         * 
+         * @param bookmarkGroup passed by the forum, used to color the bookmarks
+         * @param dimmed        if true the dimmed version will be returned
+         * @return the bookmark group's color, or the default for invalid group IDs
+         */
+        @JvmStatic
+        @ColorInt
+        fun getBookmarkColor(bookmarkGroup: Int, dimmed: Boolean): Int {
+            var bookmarkGroup = bookmarkGroup
+            if (bookmarkGroup < 0 || bookmarkGroup >= BOOKMARK_COLORS.size) {
+                bookmarkGroup = 0
+            }
+            val colorId: Int =
+                if (dimmed) BOOKMARK_COLORS_DIM[bookmarkGroup] else BOOKMARK_COLORS[bookmarkGroup]
+            return getInstance().resources.getColor(colorId)
+        }
+
+
+        /**
+         * Get the SRL background color resource for a given forum.
+         * 
+         * 
+         * This method returns a **resource ID**, not a resolved color
+         * 
+         * @return the ID for the appropriate color resource
+         */
+        @ColorRes
+        fun getSRLBackgroundColor(forumId: Int?): Int {
+            return getThemeColorResId(R.attr.srlBackgroundColor, forumId, getInstance())
+        }
+
+
+        /**
+         * Get the SRL progress color resources according to the current theme, forum and user settings.
+         * 
+         * 
+         * This method returns a set of **resource IDs**, not resolved color ints
+         * 
+         * @return the forum's themed color resources (if any), otherwise the default set
+         */
+        fun getSRLProgressColors(forumId: Int?): IntArray {
+            val prefs = getInstance()
+            val colorsRef = TypedValue()
+            val foundThemedColors = forForum(forumId)
+                .getTheme(prefs)
+                .resolveAttribute(R.attr.srlProgressColors, colorsRef, true)
+
+            @ArrayRes val colorArrayResId =
+                if (foundThemedColors) colorsRef.data else R.array.defaultSrlProgressColors
+            return getColorResIds(colorArrayResId)
+        }
+
+
+        /**
+         * Helper function to get an int array from Resources
+         */
+        private fun getColorResIds(@ArrayRes colorArrayResId: Int): IntArray {
+            val resources = getInstance().resources
+            val ta = resources.obtainTypedArray(colorArrayResId)
+            val resIds = IntArray(ta.length())
+            for (i in 0..<ta.length()) {
+                resIds[i] = ta.getResourceId(i, -1)
+            }
+            ta.recycle()
+            return resIds
+        }
+
+
+        /**
+         * Resolves a color attr to a color according to the current theme, forum and user settings.
+         * 
+         * @param colorAttr One of the app's color attrs
+         * @param forumId    An optional forum to check for its theme
+         * @param prefs      User preferences
+         * @return The resolved color
+         * @see getThemeColorResId
+         */
+        @Suppress("deprecation")
+        @ColorInt
+        private fun getThemeColor(
+            @AttrRes colorAttr: Int,
+            forumId: Int?,
+            prefs: AwfulPreferences
+        ): Int {
+            val resId: Int = getThemeColorResId(colorAttr, forumId, prefs)
+            return prefs.resources.getColor(resId)
+        }
+
+
+        /**
+         * Resolves a color attr to a resource ID according to the current theme.
+         * 
+         * 
+         * If a forum has its own theme, and the user has per-forum themes selected, this will retrieve
+         * the color from that forum's theme, otherwise the current app theme will be used.
+         * 
+         * @param colorAttr One of the app's color attrs
+         * @param forumId    An optional forum to check for its theme
+         * @param prefs      User preferences
+         * @return The resolved resource ID
+         */
+        @ColorRes
+        private fun getThemeColorResId(
+            @AttrRes colorAttr: Int,
+            forumId: Int?,
+            prefs: AwfulPreferences
+        ): Int {
+            val colorValue = TypedValue()
+            forForum(forumId)
+                .getTheme(prefs)
+                .resolveAttribute(colorAttr, colorValue, true)
+
+            return colorValue.resourceId
+        }
     }
 }

@@ -38,18 +38,13 @@ import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import android.util.Log
 import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.provider.DatabaseHelper
 import com.ferg.awfulapp.thread.AwfulEmote
 import com.ferg.awfulapp.thread.AwfulForum
 import com.ferg.awfulapp.thread.AwfulMessage
 import com.ferg.awfulapp.thread.AwfulPost
 import com.ferg.awfulapp.thread.AwfulThread
 import androidx.core.database.sqlite.transaction
-import com.ferg.awfulapp.provider.DatabaseHelper.TABLE_DRAFTS
-import com.ferg.awfulapp.provider.DatabaseHelper.TABLE_FORUM
-import com.ferg.awfulapp.provider.DatabaseHelper.TABLE_PM
-import com.ferg.awfulapp.provider.DatabaseHelper.TABLE_THREADS
-import com.ferg.awfulapp.provider.DatabaseHelper.TABLE_UCP_THREADS
-import com.ferg.awfulapp.provider.DatabaseHelper.UPDATED_TIMESTAMP
 
 class AwfulProvider : ContentProvider() {
     companion object {
@@ -135,10 +130,10 @@ class AwfulProvider : ContentProvider() {
 
     // Thread
     private val sThreadProjectionMap = hashMapOf(
-        AwfulThread.ID to "$TABLE_THREADS.${AwfulThread.ID} AS ${AwfulThread.ID}",
+        AwfulThread.ID to "${DatabaseHelper.TABLE_THREADS}.${AwfulThread.ID} AS ${AwfulThread.ID}",
         AwfulThread.FORUM_ID to AwfulThread.FORUM_ID,
         AwfulThread.INDEX to AwfulThread.INDEX,
-        AwfulThread.TITLE to "$TABLE_THREADS.${AwfulThread.TITLE} AS ${AwfulThread.TITLE}",
+        AwfulThread.TITLE to "${DatabaseHelper.TABLE_THREADS}.${AwfulThread.TITLE} AS ${AwfulThread.TITLE}",
         AwfulThread.POSTCOUNT to AwfulThread.POSTCOUNT,
         AwfulThread.UNREADCOUNT to AwfulThread.UNREADCOUNT,
         AwfulThread.AUTHOR to AwfulThread.AUTHOR,
@@ -154,11 +149,11 @@ class AwfulProvider : ContentProvider() {
         AwfulThread.HAS_VIEWED_THREAD to AwfulThread.HAS_VIEWED_THREAD,
         AwfulThread.ARCHIVED to AwfulThread.ARCHIVED,
         AwfulThread.RATING to AwfulThread.RATING,
-        AwfulThread.TAG_URL to "$TABLE_THREADS.${AwfulThread.TAG_URL} AS ${AwfulThread.TAG_URL}",
-        AwfulThread.TAG_EXTRA to "$TABLE_THREADS.${AwfulThread.TAG_EXTRA} AS ${AwfulThread.TAG_EXTRA}",
-        AwfulThread.TAG_CACHEFILE to "$TABLE_THREADS.${AwfulThread.TAG_CACHEFILE} AS ${AwfulThread.TAG_CACHEFILE}",
-        AwfulThread.FORUM_TITLE to "$TABLE_FORUM.${AwfulForum.TITLE} AS ${AwfulThread.FORUM_TITLE}",
-        UPDATED_TIMESTAMP to "$TABLE_THREADS.${UPDATED_TIMESTAMP} AS $UPDATED_TIMESTAMP"
+        AwfulThread.TAG_URL to "${DatabaseHelper.TABLE_THREADS}.${AwfulThread.TAG_URL} AS ${AwfulThread.TAG_URL}",
+        AwfulThread.TAG_EXTRA to "${DatabaseHelper.TABLE_THREADS}.${AwfulThread.TAG_EXTRA} AS ${AwfulThread.TAG_EXTRA}",
+        AwfulThread.TAG_CACHEFILE to "${DatabaseHelper.TABLE_THREADS}.${AwfulThread.TAG_CACHEFILE} AS ${AwfulThread.TAG_CACHEFILE}",
+        AwfulThread.FORUM_TITLE to "${DatabaseHelper.TABLE_FORUM}.${AwfulForum.TITLE} AS ${AwfulThread.FORUM_TITLE}",
+        DatabaseHelper.UPDATED_TIMESTAMP to "${DatabaseHelper.TABLE_THREADS}.${DatabaseHelper.UPDATED_TIMESTAMP} AS ${DatabaseHelper.UPDATED_TIMESTAMP}"
     )
 
     @JvmField
@@ -191,10 +186,10 @@ class AwfulProvider : ContentProvider() {
 
     // UCP Thread
     private val sUCPThreadProjectionMap = hashMapOf(
-        AwfulThread.ID to "$TABLE_THREADS.${AwfulThread.ID} AS ${AwfulThread.ID}",
+        AwfulThread.ID to "${DatabaseHelper.TABLE_THREADS}.${AwfulThread.ID} AS ${AwfulThread.ID}",
         AwfulThread.FORUM_ID to AwfulThread.FORUM_ID,
-        AwfulThread.INDEX to "$TABLE_UCP_THREADS.${AwfulThread.INDEX} AS ${AwfulThread.INDEX}",
-        AwfulThread.TITLE to "$TABLE_THREADS.${AwfulThread.TITLE} AS ${AwfulThread.TITLE}",
+        AwfulThread.INDEX to "${DatabaseHelper.TABLE_UCP_THREADS}.${AwfulThread.INDEX} AS ${AwfulThread.INDEX}",
+        AwfulThread.TITLE to "${DatabaseHelper.TABLE_THREADS}.${AwfulThread.TITLE} AS ${AwfulThread.TITLE}",
         AwfulThread.POSTCOUNT to AwfulThread.POSTCOUNT,
         AwfulThread.UNREADCOUNT to AwfulThread.UNREADCOUNT,
         AwfulThread.AUTHOR to AwfulThread.AUTHOR,
@@ -214,7 +209,7 @@ class AwfulProvider : ContentProvider() {
         AwfulThread.ARCHIVED to AwfulThread.ARCHIVED,
         AwfulThread.RATING to AwfulThread.RATING,
         AwfulThread.FORUM_TITLE to "null",
-        UPDATED_TIMESTAMP to "$TABLE_UCP_THREADS.${UPDATED_TIMESTAMP} AS $UPDATED_TIMESTAMP"
+        DatabaseHelper.UPDATED_TIMESTAMP to "${DatabaseHelper.TABLE_UCP_THREADS}.${DatabaseHelper.UPDATED_TIMESTAMP} AS ${DatabaseHelper.UPDATED_TIMESTAMP}"
     )
 
     // Drafts
@@ -232,7 +227,7 @@ class AwfulProvider : ContentProvider() {
         AwfulMessage.REPLY_ATTACHMENT to AwfulMessage.REPLY_ATTACHMENT,
         AwfulPost.FORM_BOOKMARK to AwfulPost.FORM_BOOKMARK,
         AwfulMessage.EPOC_TIMESTAMP to AwfulMessage.EPOC_TIMESTAMP,
-        UPDATED_TIMESTAMP to UPDATED_TIMESTAMP
+        DatabaseHelper.UPDATED_TIMESTAMP to DatabaseHelper.UPDATED_TIMESTAMP
     )
 
     val DraftProjection: Array<String> = arrayOf(
@@ -254,7 +249,7 @@ class AwfulProvider : ContentProvider() {
         AwfulMessage.REPLY_ATTACHMENT,
         AwfulPost.FORM_BOOKMARK,
         AwfulMessage.EPOC_TIMESTAMP,
-        UPDATED_TIMESTAMP
+        DatabaseHelper.UPDATED_TIMESTAMP
     )
 
     private val sDraftThreadProjectionMap = hashMapOf(
@@ -268,21 +263,21 @@ class AwfulProvider : ContentProvider() {
         AwfulMessage.REPLY_ATTACHMENT to AwfulMessage.REPLY_ATTACHMENT,
         AwfulPost.FORM_BOOKMARK to AwfulPost.FORM_BOOKMARK,
         AwfulMessage.EPOC_TIMESTAMP to AwfulMessage.EPOC_TIMESTAMP,
-        UPDATED_TIMESTAMP to UPDATED_TIMESTAMP
+        DatabaseHelper.UPDATED_TIMESTAMP to DatabaseHelper.UPDATED_TIMESTAMP
     )
 
     val DraftThreadProjection: Array<String> = arrayOfKeys(sDraftThreadProjectionMap)
 
     // Private messages
     private val sPMReplyProjectionMap = hashMapOf(
-        AwfulMessage.ID to "$TABLE_PM.${AwfulMessage.ID} AS ${AwfulMessage.ID}",
-        AwfulMessage.TITLE to "$TABLE_PM.${AwfulMessage.TITLE} AS ${AwfulMessage.TITLE}",
+        AwfulMessage.ID to "${DatabaseHelper.TABLE_PM}.${AwfulMessage.ID} AS ${AwfulMessage.ID}",
+        AwfulMessage.TITLE to "${DatabaseHelper.TABLE_PM}.${AwfulMessage.TITLE} AS ${AwfulMessage.TITLE}",
         AwfulMessage.CONTENT to AwfulMessage.CONTENT,
         AwfulMessage.AUTHOR to AwfulMessage.AUTHOR,
         AwfulMessage.DATE to AwfulMessage.DATE,
         AwfulMessage.UNREAD to AwfulMessage.UNREAD,
         AwfulMessage.REPLY_CONTENT to AwfulMessage.REPLY_CONTENT,
-        AwfulMessage.REPLY_TITLE to "$TABLE_DRAFTS.${AwfulMessage.TITLE} AS ${AwfulMessage.REPLY_TITLE}",
+        AwfulMessage.REPLY_TITLE to "${DatabaseHelper.TABLE_DRAFTS}.${AwfulMessage.TITLE} AS ${AwfulMessage.REPLY_TITLE}",
         AwfulMessage.RECIPIENT to AwfulMessage.RECIPIENT,
         AwfulMessage.TYPE to AwfulMessage.TYPE,
         AwfulMessage.ICON to AwfulMessage.ICON,
@@ -320,7 +315,7 @@ class AwfulProvider : ContentProvider() {
         AwfulEmote.SUBTEXT to AwfulEmote.SUBTEXT,
         AwfulEmote.URL to AwfulEmote.URL,
         AwfulEmote.INDEX to AwfulEmote.INDEX,
-        UPDATED_TIMESTAMP to UPDATED_TIMESTAMP
+        DatabaseHelper.UPDATED_TIMESTAMP to DatabaseHelper.UPDATED_TIMESTAMP
     )
 
     val EmoteProjection: Array<String> = arrayOfKeys(sEmoteProjectionMap)

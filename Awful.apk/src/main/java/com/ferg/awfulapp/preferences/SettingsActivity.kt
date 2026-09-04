@@ -1,146 +1,110 @@
-package com.ferg.awfulapp.preferences;
+package com.ferg.awfulapp.preferences
 
-import android.app.Activity;
-
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import androidx.preference.PreferenceManager;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.widget.Toolbar;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
-
-import com.ferg.awfulapp.AwfulActivity;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.preferences.fragments.AccountSettings;
-import com.ferg.awfulapp.preferences.fragments.RootSettings;
-import com.ferg.awfulapp.preferences.fragments.SettingsFragment;
-
-import org.apache.commons.lang3.StringUtils;
-
-import timber.log.Timber;
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
+import androidx.preference.PreferenceManager
+import com.ferg.awfulapp.AwfulActivity
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.preferences.AwfulPreferences.AwfulPreferenceUpdate
+import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
+import com.ferg.awfulapp.preferences.fragments.AccountSettings
+import com.ferg.awfulapp.preferences.fragments.RootSettings
+import com.ferg.awfulapp.preferences.fragments.SettingsFragment
+import com.ferg.awfulapp.preferences.fragments.SettingsFragment.OnSubmenuSelectedListener
+import timber.log.Timber.Forest.e
+import androidx.core.view.isVisible
 
 /**
  * Created by baka kaba on 04/05/2015.
- * <p>
+ * 
+ * 
  * Activity to host a new fragment-based settings system!
- * Holds a {@link RootSettings} which forms the root menu, and handles and
- * displays additional {@link SettingsFragment}s in place of PreferenceScreens (which like
- * to spawn new activities all over the screen). Please see the {@link SettingsFragment}
+ * Holds a [RootSettings] which forms the root menu, and handles and
+ * displays additional [SettingsFragment]s in place of PreferenceScreens (which like
+ * to spawn new activities all over the screen). Please see the [SettingsFragment]
  * documentation for information on extending and adding to the Preference hierarchy.
- * <p>
+ * 
+ * 
  * In portrait mode the root menu is displayed, and submenus open on top of this, as usual. The
  * back button walks back through the hierarchy, until the root menu is shown, at which point
  * the back button will exit the Settings activity.
- * <p>
+ * 
+ * 
  * In dual-pane landscape mode, the fragment hierarchy is displayed on the right, and a copy of
  * the root menu is on the left. Since the root is always visible, the copy in the fragment
  * hierarchy is hidden, and the back stack will only walk back until the top level of a submenu is
  * visible.
- * <p>
+ * 
+ * 
  * Switching between orientations maintains this state, while ensuring you get the expected behaviour
  * (e.g. pressing back in dual-pane mode with a top-level submenu displayed will exit, but rotating
  * to portrait first will display the submenu, and pressing back will move to the root menu)
  */
-public class SettingsActivity extends AwfulActivity implements AwfulPreferences.AwfulPreferenceUpdate,
-        SettingsFragment.OnSubmenuSelectedListener {
+class SettingsActivity : AwfulActivity(), AwfulPreferenceUpdate, OnSubmenuSelectedListener {
+    @JvmField
+    var prefs: AwfulPreferences? = null
+    private var currentThemeName: String? = null
+    private var isDualPane = false
 
-    private static final String ROOT_FRAGMENT_TAG = "rootfragtag";
-    private static final String SUBMENU_FRAGMENT_TAG = "subfragtag";
-    public static final int DIALOG_ABOUT = 1;
-    public static final int SETTINGS_IMPORT = 2;
-    public static final int SETTINGS_EXPORT = 3;
+    private val importData: Intent? = null
 
-    public AwfulPreferences prefs;
-    private String currentThemeName;
-    private boolean isDualPane;
-
-    /**
-     * A list of all XML files involved in the preference hierarchy.
-     * This is required for initialising defaults from the XML,
-     * unfortunately. If you add a new fragment, put its XML file
-     * in here so it can be checked when the app is first run.
-     */
-    private static final int[] PREFERENCE_XML_FILES = new int[]{
-            R.xml.accountsettings,
-            R.xml.imagesettings,
-            R.xml.miscsettings,
-            R.xml.postsettings,
-            R.xml.post_highlighting_settings,
-            R.xml.rootsettings,
-            R.xml.themesettings,
-            R.xml.threadinfosettings
-    };
-    private Intent importData;
-
-    /**
-     * Initialise all preference defaults from the XML hierarchy
-     */
-    public static void setDefaultsFromXml(Context context) {
-        for (int id : PREFERENCE_XML_FILES) {
-            PreferenceManager.setDefaultValues(context, id, true);
-        }
-    }
-
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        prefs = AwfulPreferences.getInstance(this, this);
-        currentThemeName = prefs.theme;
-        updateTheme();
+    protected override fun onCreate(savedInstanceState: Bundle?) {
+        prefs = AwfulPreferences.getInstance(this, this)
+        currentThemeName = prefs?.theme
+        updateTheme()
         // theme needs to be set BEFORE the super call, or it'll be inconsistent
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.settings);
-        View leftPane = findViewById(R.id.root_fragment_container);
-        View mainPane = findViewById(R.id.main_fragment_container);
-        if (leftPane != null && leftPane.getVisibility() == View.VISIBLE) {
-            isDualPane = true;
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.settings)
+        val leftPane = findViewById<View?>(R.id.root_fragment_container)
+        val mainPane = findViewById<View?>(R.id.main_fragment_container)
+        if (leftPane != null && leftPane.isVisible) {
+            isDualPane = true
         }
 
-        String page = getIntent().getStringExtra(Constants.SETTINGS_PAGE);
+        val page = intent.getStringExtra(Constants.SETTINGS_PAGE)
 
-        SettingsFragment startFragment = null;
-        if ("account".equals(page)) {
-            startFragment = new AccountSettings();
+        var startFragment: SettingsFragment? = null
+        if ("account" == page) {
+            startFragment = AccountSettings()
         } else {
-            startFragment = new RootSettings();
+            startFragment = RootSettings()
         }
 
-        FragmentManager fm = getSupportFragmentManager();
-        // if there's no previous fragment history being restored, initialise!
+        val fm = supportFragmentManager
+        // if there's no previous fragment history being restored, initialize!
         // we need to start with the root fragment, so it's always under the backstack
         if (savedInstanceState == null) {
             fm.beginTransaction()
-                    .replace(R.id.main_fragment_container, startFragment, ROOT_FRAGMENT_TAG)
-                    .commit();
-            fm.executePendingTransactions();
+                .replace(R.id.main_fragment_container, startFragment, ROOT_FRAGMENT_TAG)
+                .commit()
+            fm.executePendingTransactions()
         }
 
         // hide the root fragment in dual-pane mode (there's a copy visible in the layout),
         // but make sure it's shown in single-pane (we might have switched from dual-pane)
-        SettingsFragment fragment = (SettingsFragment) fm.findFragmentByTag(ROOT_FRAGMENT_TAG);
+        val fragment = fm.findFragmentByTag(ROOT_FRAGMENT_TAG) as SettingsFragment?
         if (fragment != null) {
             if (isDualPane) {
-                fm.beginTransaction().hide(fragment).commit();
+                fm.beginTransaction().hide(fragment).commit()
             } else {
-                fm.beginTransaction().show(fragment).commit();
+                fm.beginTransaction().show(fragment).commit()
             }
         }
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.awful_toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        updateTitleBar();
-        setPreferredFont(leftPane);
-        setPreferredFont(mainPane);
+        val toolbar = findViewById<View?>(R.id.awful_toolbar) as Toolbar?
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        updateTitleBar()
+        setPreferredFont(leftPane)
+        setPreferredFont(mainPane)
     }
 
 
@@ -149,38 +113,39 @@ public class SettingsActivity extends AwfulActivity implements AwfulPreferences.
      * and looks at the SupportFragmentManager's backstack. We're using
      * PreferenceFragments which need to use the standard FragmentManager
      */
-    @Override
-    public void onBackPressed() {
-        FragmentManager fm = getSupportFragmentManager();
-        int backStackCount = fm.getBackStackEntryCount();
+    override fun onBackPressed() {
+        val fm = supportFragmentManager
+        val backStackCount = fm.backStackEntryCount
         // don't pop off the first entry in dual-pane mode, it will leave the second pane blank - just exit
         if (backStackCount == 0 || isDualPane && backStackCount == 1) {
-            finish();
+            finish()
         } else {
-            fm.popBackStackImmediate();
-            updateTitleBar();
+            fm.popBackStackImmediate()
+            updateTitleBar()
         }
     }
 
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
         }
-        return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item)
     }
 
 
-    @Override
-    public void onSubmenuSelected(@NonNull SettingsFragment sourceFragment, @NonNull String submenuFragmentName) {
+    override fun onSubmenuSelected(sourceFragment: SettingsFragment, submenuFragmentName: String) {
         try {
-            SettingsFragment fragment = (SettingsFragment) (Class.forName(submenuFragmentName).newInstance());
-            boolean fromRootMenu = sourceFragment instanceof RootSettings;
-            displayFragment(fragment, fromRootMenu);
-        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
-            Timber.e(e, "Unable to create fragment (%s)", submenuFragmentName);
+            val fragment = (Class.forName(submenuFragmentName).newInstance()) as SettingsFragment
+            val fromRootMenu = sourceFragment is RootSettings
+            displayFragment(fragment, fromRootMenu)
+        } catch (e: IllegalAccessException) {
+            e(e, "Unable to create fragment (%s)", submenuFragmentName)
+        } catch (e: ClassNotFoundException) {
+            e(e, "Unable to create fragment (%s)", submenuFragmentName)
+        } catch (e: InstantiationException) {
+            e(e, "Unable to create fragment (%s)", submenuFragmentName)
         }
     }
 
@@ -191,13 +156,13 @@ public class SettingsActivity extends AwfulActivity implements AwfulPreferences.
      * the backstack as necessary, depending on the current layout and
      * if the fragment was added by the root screen (i.e. it's a
      * new section opened from a category header in the root menu).
-     *
+     * 
      * @param fragment      The fragment to add and display
      * @param addedFromRoot True if the fragment was spawned from the root menu
      */
-    private void displayFragment(SettingsFragment fragment, boolean addedFromRoot) {
+    private fun displayFragment(fragment: SettingsFragment, addedFromRoot: Boolean) {
         /*
-        Dual-pane behaviour requires:
+        Dual-pane behavior requires:
         - The root menu is always present in the left pane
         - Submenus selected from the root open in the right pane, replacing its contents
         - Any subscreens within the submenu's hierarchy open in the right pane, and the
@@ -207,66 +172,62 @@ public class SettingsActivity extends AwfulActivity implements AwfulPreferences.
          */
 
         // if we're opening a submenu and there's already one open, wipe it from the back stack
-        FragmentManager fm = getSupportFragmentManager();
+
+        val fm = supportFragmentManager
         if (addedFromRoot) {
             // when a root submenu is clicked, we need a new submenu backstack
-            clearBackStack(fm);
+            clearBackStack(fm)
         }
         fm.beginTransaction()
-                .replace(R.id.main_fragment_container, fragment, SUBMENU_FRAGMENT_TAG)
-                .addToBackStack(null)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
-        updateTitleBar();
+            .replace(R.id.main_fragment_container, fragment, SUBMENU_FRAGMENT_TAG)
+            .addToBackStack(null)
+            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .commit()
+        updateTitleBar()
     }
 
 
-    private void clearBackStack(FragmentManager fm) {
-        int fragsAddedToStack = fm.getBackStackEntryCount();
-        for (int i = 0; i < fragsAddedToStack; i++) {
-            fm.popBackStackImmediate();
+    private fun clearBackStack(fm: FragmentManager) {
+        val fragsAddedToStack = fm.backStackEntryCount
+        for (i in 0..<fragsAddedToStack) {
+            fm.popBackStackImmediate()
         }
     }
 
 
     /**
      * Update the action bar's title according to what's being displayed.
-     * <p>
+     * 
+     * 
      * Call this whenever the layout or fragment stack changes.
      */
-    private void updateTitleBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar == null) {
-            return;
-        }
-        FragmentManager fm = getSupportFragmentManager();
+    private fun updateTitleBar() {
+        val actionBar = supportActionBar ?: return
+        val fm = supportFragmentManager
         // make sure fragment transactions are finished before we poke around in there
-        fm.executePendingTransactions();
+        fm.executePendingTransactions()
         // if there's a submenu fragment present, get the title from that
         // need to check #isAdded because popping the last submenu fragment off the backstack doesn't immediately remove it from the manager,
         // i.e. the find call won't return null (but it will later - this was fun to troubleshoot)
-        Fragment fragment = fm.findFragmentByTag(SUBMENU_FRAGMENT_TAG);
-        if (fragment == null || !fragment.isAdded()) {
-            fragment = fm.findFragmentByTag(ROOT_FRAGMENT_TAG);
+        var fragment = fm.findFragmentByTag(SUBMENU_FRAGMENT_TAG)
+        if (fragment == null || !fragment.isAdded) {
+            fragment = fm.findFragmentByTag(ROOT_FRAGMENT_TAG)
         }
-        actionBar.setTitle(((SettingsFragment) fragment).getTitle());
+        actionBar.title = (fragment as SettingsFragment).getTitle()
     }
 
 
-    @Override
-    public void onPreferenceChange(AwfulPreferences preferences, String key) {
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
         // update the summaries on any loaded fragments
-        for (String tag : new String[]{ROOT_FRAGMENT_TAG, SUBMENU_FRAGMENT_TAG}) {
-            SettingsFragment fragment = (SettingsFragment) getSupportFragmentManager().findFragmentByTag(tag);
-            if (fragment != null) {
-                fragment.setSummaries();
-            }
+        for (tag in arrayOf<String>(ROOT_FRAGMENT_TAG, SUBMENU_FRAGMENT_TAG)) {
+            val fragment = supportFragmentManager.findFragmentByTag(tag) as SettingsFragment?
+            fragment?.setSummaries()
         }
 
-        if (!getMPrefs().theme.equals(this.currentThemeName)) {
-            this.currentThemeName = getMPrefs().theme;
-            updateTheme();
-            recreate();
+        if (mPrefs.theme != this.currentThemeName) {
+            this.currentThemeName = mPrefs.theme
+            updateTheme()
+            recreate()
         }
     }
 
@@ -276,28 +237,68 @@ public class SettingsActivity extends AwfulActivity implements AwfulPreferences.
         CODE FROM ORIGINAL SETTINGS ACTIVITY
 
      */
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == SETTINGS_IMPORT) {
-                importFile(data);
-            } else if (requestCode == SETTINGS_EXPORT) {
-                exportSettings(data);
+    public override fun onActivityResult(request: Int, result: Int, intent: Intent?) {
+        super.onActivityResult(request, result, intent)
+        if (result == RESULT_OK) {
+            if (request == SETTINGS_IMPORT) {
+                importFile(intent!!)
+            } else if (request == SETTINGS_EXPORT) {
+                exportSettings(intent!!)
             }
         }
     }
 
-    protected void importFile(Intent data) {
-        Uri settingsUri = data.getData();
-        boolean success = (settingsUri != null && AwfulPreferences.getInstance(this).importSettings(settingsUri));
-        Toast.makeText(this, (success ? "Import success!" : "Unable to import settings file"), Toast.LENGTH_SHORT).show();
+    protected fun importFile(data: Intent) {
+        val settingsUri = data.data
+        val success = (settingsUri != null && getInstance(this).importSettings(settingsUri))
+        Toast.makeText(
+            this,
+            (if (success) "Import success!" else "Unable to import settings file"),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
-    private void exportSettings(Intent data) {
-        Uri settingsUri = data.getData();
-        boolean success = (settingsUri != null && AwfulPreferences.getInstance(this).exportSettings(settingsUri));
-        Toast.makeText(this, (success ? "Settings exported!" : "Failed to export"), Toast.LENGTH_SHORT).show();
+    private fun exportSettings(data: Intent) {
+        val settingsUri = data.data
+        val success = (settingsUri != null && getInstance(this).exportSettings(settingsUri))
+        Toast.makeText(
+            this,
+            (if (success) "Settings exported!" else "Failed to export"),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    companion object {
+        private const val ROOT_FRAGMENT_TAG = "rootfragtag"
+        private const val SUBMENU_FRAGMENT_TAG = "subfragtag"
+        const val DIALOG_ABOUT: Int = 1
+        const val SETTINGS_IMPORT: Int = 2
+        const val SETTINGS_EXPORT: Int = 3
+
+        /**
+         * A list of all XML files involved in the preference hierarchy.
+         * This is required for initializing defaults from the XML,
+         * unfortunately. If you add a new fragment, put its XML file
+         * in here so it can be checked when the app is first run.
+         */
+        private val PREFERENCE_XML_FILES = intArrayOf(
+            R.xml.accountsettings,
+            R.xml.imagesettings,
+            R.xml.miscsettings,
+            R.xml.postsettings,
+            R.xml.post_highlighting_settings,
+            R.xml.rootsettings,
+            R.xml.themesettings,
+            R.xml.threadinfosettings
+        )
+
+        /**
+         * Initialize all preference defaults from the XML hierarchy
+         */
+        fun setDefaultsFromXml(context: Context) {
+            for (id in PREFERENCE_XML_FILES) {
+                PreferenceManager.setDefaultValues(context, id, true)
+            }
+        }
     }
 }

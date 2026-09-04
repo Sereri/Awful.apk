@@ -52,6 +52,7 @@ import com.ferg.awfulapp.widget.ProbationBar
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection.TOP
 import timber.log.Timber
+import kotlin.math.roundToInt
 
 abstract class AwfulFragment : Fragment(), AwfulPreferences.AwfulPreferenceUpdate,
     AwfulRequest.ProgressListener, ForumsPagerPage, NavigationEventHandler {
@@ -222,11 +223,11 @@ abstract class AwfulFragment : Fragment(), AwfulPreferences.AwfulPreferenceUpdat
     }
 
 
-    override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
         swipyLayout?.apply {
-            val dpHeight =
-                with(this@AwfulFragment.resources.displayMetrics) { heightPixels / density }
-            setDistanceToTriggerSync(Math.round(prefs.p2rDistance * dpHeight))
+            val dpHeight = with(this@AwfulFragment.resources.displayMetrics) { heightPixels / density }
+            val p2rDistance = preferences.p2rDistance ?: 0.5f
+            setDistanceToTriggerSync((p2rDistance * dpHeight).roundToInt())
         }
         refreshProbationBar()
     }

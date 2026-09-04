@@ -67,7 +67,7 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
         }
         private set
 
-    protected var prefs: AwfulPreferences? = null
+    protected lateinit var prefs: AwfulPreferences
     var progressPercent: Int = 100
         protected set
     private var progressBar: AwfulProgressBar? = null
@@ -87,7 +87,7 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
         if (progressBar is AwfulProgressBar) {
             this.progressBar = progressBar
         }
-        this.awfulActivity?.setPreferredFont(v)
+        this.awfulActivity.setPreferredFont(v)
         return v
     }
 
@@ -98,12 +98,12 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
 
     override fun onDestroy() {
         super.onDestroy()
-        prefs?.unregisterCallback(this)
+        prefs.unregisterCallback(this)
     }
 
 
-    val awfulActivity: AwfulActivity?
-        get() = activity as AwfulActivity?
+    val awfulActivity: AwfulActivity
+        get() = requireActivity() as AwfulActivity
 
     protected fun setProgress(percent: Int) {
         this.progressPercent = percent
@@ -114,10 +114,10 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
         get() = isVisible
 
     protected fun startActionMode() {
-        this.awfulActivity?.startSupportActionMode(this)
+        this.awfulActivity.startSupportActionMode(this)
     }
 
-    override fun onPreferenceChange(prefs: AwfulPreferences?, key: String?) {
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
     }
 
     fun onBackPressed(): Boolean {
@@ -127,7 +127,7 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
     abstract fun getTitle() : String
 
     protected fun setTitle(title: String) {
-        this.awfulActivity?.setActionbarTitle(title)
+        this.awfulActivity.setActionbarTitle(title)
     }
 
     open fun volumeScroll(event: KeyEvent?): Boolean {
@@ -164,10 +164,8 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
 
     override fun requestStarted(req: AwfulRequest<*>) {
         val aa = this.awfulActivity
-        if (aa != null) {
-            aa.setSupportProgressBarVisibility(false)
-            aa.setSupportProgressBarIndeterminateVisibility(true)
-        }
+        aa?.setSupportProgressBarVisibility(false)
+        aa?.setSupportProgressBarIndeterminateVisibility(true)
     }
 
     override fun requestUpdate(req: AwfulRequest<*>, percent: Int) {

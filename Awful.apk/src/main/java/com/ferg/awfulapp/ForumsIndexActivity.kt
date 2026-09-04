@@ -257,9 +257,9 @@ class ForumsIndexActivity :
         } else super.dispatchKeyEvent(event)
     }
 
-    override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
-        super.onPreferenceChange(prefs, key)
-        forumsPager.onPreferenceChange(prefs)
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(preferences, key)
+        forumsPager.onPreferenceChange(preferences)
         setupImmersion()
     }
 

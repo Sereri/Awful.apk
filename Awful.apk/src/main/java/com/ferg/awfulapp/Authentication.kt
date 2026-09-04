@@ -2,6 +2,7 @@ package com.ferg.awfulapp
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
@@ -59,5 +60,5 @@ object Authentication {
     }
 
 
-    private val context by lazy { AwfulPreferences.getInstance().context }
+    private val context: Context by lazy { AwfulPreferences.getInstance().context }
 }

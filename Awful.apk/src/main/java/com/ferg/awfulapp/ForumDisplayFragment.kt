@@ -399,9 +399,8 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
      * @param threadId  The thread ID to hide or show
      */
     private fun toggleHiddenThread(threadId: Int) {
-        val hiddenThreadIds = prefs.getPreference(Keys.HIDDEN_THREAD_IDS, mutableSetOf<String>())
-        val newSet: MutableSet<String> =
-            HashSet<String>(hiddenThreadIds) // not allowed to mutate original set
+        val hiddenThreadIds = prefs.getPreference(Keys.HIDDEN_THREAD_IDS, mutableSetOf())
+        val newSet: MutableSet<String?> = hiddenThreadIds.toMutableSet() // not allowed to mutate original set
         val id = threadId.toString()
         if (!newSet.remove(id)) {
             newSet.add(id)
@@ -461,7 +460,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
             val row = mCursorAdapter?.getRow(aId)
             if (row != null && row.getColumnIndex(AwfulThread.BOOKMARKED) > -1) {
                 i("Thread ID: %s", aId)
-                if (prefs.hiddenThreadIds.contains(aId.toString())) {
+                if (prefs.hiddenThreadIds?.contains(aId.toString()) == true) {
                     return
                 }
                 val unreadPage = AwfulPagedItem.getLastReadPage(
@@ -719,7 +718,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
                 selection += String.format(
                     " AND %s NOT IN (%s)",
                     DatabaseHelper.TABLE_THREADS + "." + AwfulThread.ID,
-                    prefs.hiddenThreadIds.joinToString(",")
+                    prefs.hiddenThreadIds?.joinToString(",")
                 )
             }
             if (isBookmarks) {

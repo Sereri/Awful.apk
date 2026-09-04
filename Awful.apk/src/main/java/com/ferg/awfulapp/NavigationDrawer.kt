@@ -82,7 +82,11 @@ class NavigationDrawer(val activity: AwfulActivity, toolbar: Toolbar, val prefs:
         username = nav.findViewById(R.id.sidebar_username) as TextView
         avatar = nav.findViewById(R.id.sidebar_avatar) as ImageView
 
-        prefs.registerCallback { _, _ -> refresh() }
+        prefs.registerCallback(object: AwfulPreferences.AwfulPreferenceUpdate {
+            override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+                refresh()
+            }
+        })
         AnnouncementsManager.getInstance().registerListener(object : AnnouncementsManager.AnnouncementListener {
             override fun onAnnouncementsUpdated(newCount: Int, oldUnread: Int, oldRead: Int, isFirstUpdate: Boolean) {
                 refresh()

@@ -753,7 +753,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
      * Toggle a user as marked or unmarked.
      */
     fun toggleMarkUser(username: String?) {
-        if (prefs.markedUsers.contains(username)) {
+        if (prefs.markedUsers?.contains(username) == true) {
             prefs.unmarkUser(username)
         } else {
             prefs.markUser(username)
@@ -1174,7 +1174,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         try {
             d("populateThreadView: displaying %d posts", aPosts.size)
             val html = AwfulHtmlPage.getThreadHtml(
-                aPosts, AwfulPreferences.getInstance(activity),
+                aPosts, AwfulPreferences.getInstance(requireActivity()),
                 this.pageNumber,
                 this.lastPage
             )
@@ -1500,7 +1500,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                 it.runJavascript(
                     String.format(
                         "updateMarkedUsers('%s')",
-                        TextUtils.join(",", mPrefs.markedUsers)
+                        TextUtils.join(",", mPrefs.markedUsers!!)
                     )
                 )
             }

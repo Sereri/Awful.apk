@@ -65,7 +65,7 @@ class PostContextMenu : BasePopupMenu<PostMenuAction>() {
         }
         awfulActions.add(if (ownPost) PostMenuAction.YOUR_POSTS else PostMenuAction.USER_POSTS)
         if (!ownPost) {
-            awfulActions.add(if (prefs.markedUsers.contains(posterUsername)) PostMenuAction.UNMARK_USER else PostMenuAction.MARK_USER)
+            awfulActions.add(if (prefs.markedUsers?.contains(posterUsername) == true) PostMenuAction.UNMARK_USER else PostMenuAction.MARK_USER)
         }
         if (!ownPost && !posterIsUnreportable) {
             awfulActions.add(PostMenuAction.REPORT_POST)
@@ -76,7 +76,7 @@ class PostContextMenu : BasePopupMenu<PostMenuAction>() {
             awfulActions.add(PostMenuAction.IGNORE_USER)
         }
         if (prefs.avatarsEnabled && posterAvatarUrl != null) {
-            awfulActions.add(if (prefs.blockedAvatarUrls.contains(posterAvatarUrl)) PostMenuAction.SHOW_AVATAR else PostMenuAction.HIDE_AVATAR)
+            awfulActions.add(if (prefs.blockedAvatarUrls?.contains(posterAvatarUrl) == true) PostMenuAction.SHOW_AVATAR else PostMenuAction.HIDE_AVATAR)
         }
         return awfulActions
     }

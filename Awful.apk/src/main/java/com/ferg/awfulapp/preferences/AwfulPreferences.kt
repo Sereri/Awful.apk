@@ -2,7 +2,8 @@
  * *****************************************************************************
  * Copyright (c) 2012, Matthew Shepard
  * All rights reserved.
- * <p/>
+ * 
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * * Redistributions of source code must retain the above copyright
@@ -13,7 +14,8 @@
  * * Neither the name of the software nor the
  * names of its contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
- * <p/>
+ * 
+ * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,311 +28,332 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * *****************************************************************************
  */
+package com.ferg.awfulapp.preferences
 
-package com.ferg.awfulapp.preferences;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.content.res.Resources;
-import android.net.ConnectivityManager;
-import android.net.Uri;
-import android.preference.PreferenceManager;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import android.util.Log;
-import android.util.TypedValue;
-
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.constants.Constants;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import org.jsoup.nodes.Document;
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import android.content.res.Resources
+import android.net.ConnectivityManager
+import android.net.Uri
+import android.preference.PreferenceManager
+import android.util.Log
+import android.util.TypedValue
+import androidx.annotation.StringRes
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.preferences.Keys.BooleanPreference
+import com.ferg.awfulapp.preferences.Keys.FloatPreference
+import com.ferg.awfulapp.preferences.Keys.IntPreference
+import com.ferg.awfulapp.preferences.Keys.LongPreference
+import com.ferg.awfulapp.preferences.Keys.StringPreference
+import com.ferg.awfulapp.preferences.Keys.StringSetPreference
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.BufferedReader
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.InputStreamReader
+import java.util.Date
+import java.util.WeakHashMap
+import androidx.core.content.edit
 
 /**
- * This class acts as a convenience wrapper and simple cache for commonly used preference values. 
+ * This class acts as a convenience wrapper and simple cache for commonly used preference values.
  * Any changes made to primitive values will not carry over or affect the saved preferences.
- *
+ * 
  */
-public class AwfulPreferences implements OnSharedPreferenceChangeListener {
+class AwfulPreferences private constructor(
+    /**
+     * Only use in emergencies, terrible hack
+     * @returns a context
+     */
+    val context: Context
+) : OnSharedPreferenceChangeListener {
+    val sharedPrefs: SharedPreferences
 
-    private static final String TAG = "AwfulPreferences";
 
-    private static AwfulPreferences mSelf;
-
-    private SharedPreferences mPrefs;
-
-
-    private Context mContext;
-	private final Resources mResources;
-	private final WeakHashMap<AwfulPreferenceUpdate, Object> mCallback = new WeakHashMap<>();
+    private val mResources: Resources
+    private val mCallback = WeakHashMap<AwfulPreferenceUpdate?, Any?>()
 
     //GENERAL STUFF
-    public String username;
-    public String userAvatarUrl;
-	/** this is only set when the user is on probation! See {@link com.ferg.awfulapp.util.AwfulError#checkPageErrors(Document, AwfulPreferences)} */
-    public int userId;
-    public boolean hasPlatinum;
-    public boolean hasArchives;
-    public boolean hasNoAds;
-    public boolean sendUsernameInReport;
-    public float scaleFactor;
-    public String orientation;
-    public String pageLayout;
+	@JvmField
+    var username: String? = null
+    var userAvatarUrl: String? = null
+
+    /** this is only set when the user is on probation! See [com.ferg.awfulapp.util.AwfulError.checkPageErrors]  */
+	@JvmField
+    var userId: Int = 0
+    @JvmField
+    var hasPlatinum: Boolean = false
+    @JvmField
+    var hasArchives: Boolean = false
+    @JvmField
+    var hasNoAds: Boolean = false
+    var sendUsernameInReport: Boolean = false
+    var scaleFactor: Float = 0f
+    var orientation: String? = null
+    @JvmField
+    var pageLayout: String? = null
 
     //THEME STUFF
-    public int postFontSizeSp;
-    public int postFixedFontSizeSp;
-    public int postFontSizePx;
-    public boolean lockScrolling;
-	public String theme;
-	public String launcherIcon;
-    public boolean forceForumThemes;
-    public String layout;
-    public String preferredFont;
-    public boolean alternateBackground;
-    public boolean amberDefaultPos;
+	@JvmField
+    var postFontSizeSp: Int = 0
+    @JvmField
+    var postFixedFontSizeSp: Int = 0
+    var postFontSizePx: Int = 0
+    var lockScrolling: Boolean = false
+    @JvmField
+    var theme: String? = null
+    var launcherIcon: String? = null
+    @JvmField
+    var forceForumThemes: Boolean = false
+    @JvmField
+    var layout: String? = null
+    @JvmField
+    var preferredFont: String? = null
+    var alternateBackground: Boolean = false
+    @JvmField
+    var amberDefaultPos: Boolean = false
 
     //THREAD STUFF
-    public int postPerPage;
-    public boolean imagesEnabled;
-    public boolean no3gImages;
-    public boolean avatarsEnabled;
-    public boolean showSmilies;
-    public boolean hideOldImages;
-    public boolean highlightUserQuote;
-    public boolean highlightUsername;
-    public boolean highlightSelf;
-    public boolean highlightOP;
-    public boolean showAllSpoilers;
-	public String imgurAccount;
-	public String imgurAccountToken;
-	public String imgurRefreshToken;
-	public long imgurTokenExpires;
-    public String imgurThumbnails;
-    public boolean upperNextArrow;
-    public boolean disableGifs;
-    public boolean hideOldPosts;
-    public boolean disableTimgs;
-    public boolean volumeScroll;
-    public boolean coloredBookmarks;
-	public boolean hideSignatures;
-	public boolean hideIgnoredPosts;
-    public boolean noFAB;
-    public boolean alwaysOpenUrls;
-    public Set<String> blockedAvatarUrls;
-    public Set<String> hiddenThreadIds;
-    public boolean showHiddenThreads;
+	@JvmField
+    var postPerPage: Int = 0
+    var imagesEnabled: Boolean = false
+    var no3gImages: Boolean = false
+    var avatarsEnabled: Boolean = false
+    @JvmField
+    var showSmilies: Boolean = false
+    @JvmField
+    var hideOldImages: Boolean = false
+    @JvmField
+    var highlightUserQuote: Boolean = false
+    @JvmField
+    var highlightUsername: Boolean = false
+    @JvmField
+    var highlightSelf: Boolean = false
+    @JvmField
+    var highlightOP: Boolean = false
+    @JvmField
+    var showAllSpoilers: Boolean = false
+    @JvmField
+    var imgurAccount: String? = null
+    @JvmField
+    var imgurAccountToken: String? = null
+    var imgurRefreshToken: String? = null
+    @JvmField
+    var imgurTokenExpires: Long = 0
+    @JvmField
+    var imgurThumbnails: String? = null
+    var upperNextArrow: Boolean = false
+    @JvmField
+    var disableGifs: Boolean = false
+    @JvmField
+    var hideOldPosts: Boolean = false
+    @JvmField
+    var disableTimgs: Boolean = false
+    var volumeScroll: Boolean = false
+    @JvmField
+    var coloredBookmarks: Boolean = false
+    @JvmField
+    var hideSignatures: Boolean = false
+    @JvmField
+    var hideIgnoredPosts: Boolean = false
+    @JvmField
+    var noFAB: Boolean = false
+    var alwaysOpenUrls: Boolean = false
+    var blockedAvatarUrls: MutableSet<String?>? = null
+    @JvmField
+    var hiddenThreadIds: MutableSet<String?>? = null
+    var showHiddenThreads: Boolean = false
 
     //FORUM STUFF
-    public boolean newThreadsFirstUCP;
-    public boolean newThreadsFirstForum;
-    public boolean threadInfo_Rating;
-    public boolean threadInfo_Tag;
-    public boolean highlightYourThreads;
-    public boolean forumIndexShowSections;
-	public boolean forumIndexShowSubtitles;
-	public boolean forumIndexHideSubforums;
+    var newThreadsFirstUCP: Boolean = false
+    var newThreadsFirstForum: Boolean = false
+    @JvmField
+    var threadInfo_Rating: Boolean = false
+    @JvmField
+    var threadInfo_Tag: Boolean = false
+    @JvmField
+    var highlightYourThreads: Boolean = false
+    var forumIndexShowSections: Boolean = false
+    var forumIndexShowSubtitles: Boolean = false
+    var forumIndexHideSubforums: Boolean = false
 
     //EXPERIMENTAL STUFF
-    public boolean inlineYoutube;
-    public boolean inlineTweets;
-	public boolean inlineBluesky;
-	public boolean inlineTiktoks;
-    public boolean inlineVines;
-    public boolean inlineWebm;
-	public boolean autostartWebm;
-    public boolean disablePullNext;
-	public long probationTime;
-	public boolean probationIgnore;
-    public boolean showIgnoreWarning;
-    /** some user-specific validation key that's required when sending a request to ignore a user */
-    public String ignoreFormkey;
-    public Set<String> markedUsers;
-    public Float p2rDistance;
-    public boolean immersionMode;
-    public String transformer;
+    var inlineYoutube: Boolean = false
+    @JvmField
+    var inlineTweets: Boolean = false
+    @JvmField
+    var inlineBluesky: Boolean = false
+    var inlineTiktoks: Boolean = false
+    @JvmField
+    var inlineVines: Boolean = false
+    @JvmField
+    var inlineWebm: Boolean = false
+    @JvmField
+    var autostartWebm: Boolean = false
+    @JvmField
+    var disablePullNext: Boolean = false
+    var probationTime: Long = 0
+    var probationIgnore: Boolean = false
+    var showIgnoreWarning: Boolean = false
 
-	public boolean postWarningAccepted;
+    /** some user-specific validation key that's required when sending a request to ignore a user  */
+    var ignoreFormkey: String? = null
+    @JvmField
+    var markedUsers: MutableSet<String?>? = null
+    @JvmField
+    var p2rDistance: Float? = null
+    var immersionMode: Boolean = false
+    @JvmField
+    var transformer: String? = null
 
-	// APP VERSION STUFF
-    public int alertIDShown;
-	public int lastVersionSeen;
+    var postWarningAccepted: Boolean = false
 
-    private static final int PREFERENCES_VERSION = 1;
-    private int currPrefVersion;
+    // APP VERSION STUFF
+    var alertIDShown: Int = 0
+    var lastVersionSeen: Int = 0
 
-    private HashSet<String> longKeys;
+    private var currPrefVersion = 0
+
+    private val longKeys: HashSet<String?>
 
 
-    public interface AwfulPreferenceUpdate {
-        void onPreferenceChange(AwfulPreferences preferences, @Nullable String key);
+    interface AwfulPreferenceUpdate {
+        fun onPreferenceChange(preferences: AwfulPreferences, key: String?)
     }
 
     /**
-	 * Constructs a new AwfulPreferences object, registers preference change listener, and updates values.
-	 * @param context
-	 */
-	private AwfulPreferences(@NonNull Context context) {
-		mContext = context;
-		mResources = context.getResources();
-		// this is sort of redundant with what's going on in updateValues(), but best to be sure eh
-		SettingsActivity.setDefaultsFromXml(context);
-		mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-		mPrefs.registerOnSharedPreferenceChangeListener(this);
-		updateValues();
-		upgradePreferences();
-		
-		longKeys = new HashSet<>();
-		longKeys.add(mResources.getString(R.string.pref_key_probation_time));
-		longKeys.add(mResources.getString(R.string.pref_key_imgur_token_expires));
-	}
+     * Constructs a new AwfulPreferences object, registers preference change listener, and updates values.
+     * @param context
+     */
+    init {
+        mResources = context.resources
+        // this is sort of redundant with what's going on in updateValues(), but best to be sure eh
+        SettingsActivity.setDefaultsFromXml(context)
+        this.sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.context)
+        sharedPrefs.registerOnSharedPreferenceChangeListener(this)
+        updateValues()
+        upgradePreferences()
 
-	
-	public static AwfulPreferences getInstance(){
-		return mSelf;
-	}
-	
-	public static AwfulPreferences getInstance(Context context){
-		if(mSelf == null){
-			mSelf = new AwfulPreferences(context);
-		}
-		return mSelf;
-	}
-	
-	public static AwfulPreferences getInstance(Context context, AwfulPreferenceUpdate updateCallback) {
-		AwfulPreferences instance = getInstance(context);
-		instance.registerCallback(updateCallback);
-		return instance;
-	}
+        longKeys = HashSet<String?>()
+        longKeys.add(mResources.getString(R.string.pref_key_probation_time))
+        longKeys.add(mResources.getString(R.string.pref_key_imgur_token_expires))
+    }
 
-	public void unRegisterListener(){
-		mPrefs.unregisterOnSharedPreferenceChangeListener(this);
-	}
 
-	public SharedPreferences getSharedPrefs(){
-		return mPrefs;
-	}
-	
-	public void registerCallback(AwfulPreferenceUpdate client) {
-		mCallback.put(client, null);
-	}
-	
-	public void unregisterCallback(AwfulPreferenceUpdate client){
-		mCallback.remove(client);
-	}
-	
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-		updateValues();
-		for (AwfulPreferenceUpdate auc : mCallback.keySet()) {
-			if (auc != null) {
-				auc.onPreferenceChange(this, key);
-			}
-		}
-	}
+    fun unRegisterListener() {
+        sharedPrefs.unregisterOnSharedPreferenceChangeListener(this)
+    }
 
-	private void updateValues() {
-		Resources res = mContext.getResources();
-		scaleFactor				 = res.getDisplayMetrics().density;
-		username                 = getPreference(Keys.USERNAME, "Username");
-        userAvatarUrl            = getPreference(Keys.USER_AVATAR_URL, (String) null);
-		hasPlatinum              = getPreference(Keys.HAS_PLATINUM, false);
-		hasArchives              = getPreference(Keys.HAS_ARCHIVES, false);
-		hasNoAds         	     = getPreference(Keys.HAS_NO_ADS, false);
-		postFontSizeSp = getPreference(Keys.POST_FONT_SIZE_SP, Constants.DEFAULT_FONT_SIZE_SP);
-        postFixedFontSizeSp = getPreference(Keys.POST_FIXED_FONT_SIZE_SP, Constants.DEFAULT_FIXED_FONT_SIZE_SP);
-		postFontSizePx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, postFontSizeSp, mContext.getResources().getDisplayMetrics());
-		theme					 = getPreference(Keys.THEME, "default.css");
-		launcherIcon			 = getPreference(Keys.LAUNCHER_ICON, "frog");
-		layout					 = getPreference(Keys.LAYOUT, "default");
-        imagesEnabled            = getPreference(Keys.IMAGES_ENABLED, true);
-        no3gImages	             = getPreference(Keys.NO_3G_IMAGES, false);
-        avatarsEnabled           = getPreference(Keys.AVATARS_ENABLED, true);
-        hideOldImages            = getPreference(Keys.HIDE_OLD_IMAGES, false);
-        showSmilies              = getPreference(Keys.SHOW_SMILIES, true);
-        postPerPage              = getPreference(Keys.POST_PER_PAGE, Constants.ITEMS_PER_PAGE);
-       	alternateBackground      = getPreference(Keys.ALTERNATE_BACKGROUND, false);
-        highlightUserQuote       = getPreference(Keys.HIGHLIGHT_USER_QUOTE, true);
-        highlightUsername        = getPreference(Keys.HIGHLIGHT_USERNAME, true);
-        highlightSelf			 = getPreference(Keys.HIGHLIGHT_SELF, true);
-        highlightOP				 = getPreference(Keys.HIGHLIGHT_OP, true);
-		inlineYoutube            = getPreference(Keys.INLINE_YOUTUBE, true);
-		inlineTweets             = getPreference(Keys.INLINE_TWEETS, true);
-		inlineBluesky            = getPreference(Keys.INLINE_BLUESKY, true);
-		inlineTiktoks            = getPreference(Keys.INLINE_TIKTOKS, false);
-		inlineVines            	 = getPreference(Keys.INLINE_VINES, false);
-		inlineWebm            	 = getPreference(Keys.INLINE_WEBM, true);
-		autostartWebm            = getPreference(Keys.AUTOSTART_WEBM, false);
-        showAllSpoilers			 = getPreference(Keys.SHOW_ALL_SPOILERS, false);
-        threadInfo_Rating		 = getPreference(Keys.THREAD_INFO_RATING, true);
-        threadInfo_Tag		 	 = getPreference(Keys.THREAD_INFO_TAG, true);
-		highlightYourThreads	 = getPreference(Keys.HIGHLIGHT_YOUR_THREADS, true);
-		imgurAccount			 = getPreference(Keys.IMGUR_ACCOUNT, (String) null);
-		imgurAccountToken		 = getPreference(Keys.IMGUR_ACCOUNT_TOKEN, (String) null);
-		imgurRefreshToken		 = getPreference(Keys.IMGUR_REFRESH_TOKEN, (String) null);
-		imgurTokenExpires		 = getPreference(Keys.IMGUR_TOKEN_EXPIRES, 0L);
-        imgurThumbnails			 = getPreference(Keys.IMGUR_THUMBNAILS, "d");
-        newThreadsFirstUCP		 = getPreference(Keys.NEW_THREADS_FIRST_UCP, false);
-        newThreadsFirstForum	 = getPreference(Keys.NEW_THREADS_FIRST_FORUM, false);
-        preferredFont			 = getPreference(Keys.PREFERRED_FONT, "default");
-        upperNextArrow		     = getPreference(Keys.UPPER_NEXT_ARROW, false);
-        sendUsernameInReport	 = getPreference(Keys.SEND_USERNAME_IN_REPORT, true);
-        disableGifs	 			 = getPreference(Keys.DISABLE_GIFS, true);
-        hideOldPosts	 	 	 = getPreference(Keys.HIDE_OLD_POSTS, true);
-        alwaysOpenUrls	 	 	 = getPreference(Keys.ALWAYS_OPEN_URLS, false);
-        blockedAvatarUrls        = getPreference(Keys.BLOCKED_AVATAR_URLS, Collections.emptySet());
-        hiddenThreadIds 		 = getPreference(Keys.HIDDEN_THREAD_IDS, Collections.emptySet());
-        showHiddenThreads 		 = getPreference(Keys.SHOW_HIDDEN_THREADS, true);
-        lockScrolling			 = getPreference(Keys.LOCK_SCROLLING, false);
-        disableTimgs			 = getPreference(Keys.DISABLE_TIMGS, false);
-        currPrefVersion          = getPreference(Keys.CURR_PREF_VERSION, 0);
-        disablePullNext          = getPreference(Keys.DISABLE_PULL_NEXT, false);
-        alertIDShown             = getPreference(Keys.ALERT_ID_SHOWN, 0);
-		lastVersionSeen 		 = getPreference(Keys.LAST_VERSION_SEEN, 0);
-		volumeScroll         	 = getPreference(Keys.VOLUME_SCROLL, false);
-		forceForumThemes		 = getPreference(Keys.FORCE_FORUM_THEMES, true);
-		noFAB					 = getPreference(Keys.NO_FAB, false);
-		probationTime			 = getPreference(Keys.PROBATION_TIME, 0L);
-		probationIgnore			 = getPreference(Keys.PROBATION_IGNORE, false);
-        userId					 = getPreference(Keys.USER_ID, 0);
-		showIgnoreWarning		 = getPreference(Keys.SHOW_IGNORE_WARNING, true);
-		ignoreFormkey			 = getPreference(Keys.IGNORE_FORMKEY, (String) null);
-		orientation				 = getPreference(Keys.ORIENTATION, "default");
-		pageLayout				 = getPreference(Keys.PAGE_LAYOUT, "auto");
-		coloredBookmarks		 = getPreference(Keys.COLORED_BOOKMARKS, false);
-		p2rDistance				 = getPreference(Keys.P2R_DISTANCE, 0.5f);
-		immersionMode			 = getPreference(Keys.IMMERSION_MODE, false);
-		hideSignatures  		 = getPreference(Keys.HIDE_SIGNATURES, false);
-		transformer  		     = getPreference(Keys.TRANSFORMER, "Default");
-		amberDefaultPos  		 = getPreference(Keys.AMBER_DEFAULT_POS, false);
-		hideIgnoredPosts  		 = getPreference(Keys.HIDE_IGNORED_POSTS, false);
-		markedUsers				 = getPreference(Keys.MARKED_USERS, new HashSet<>());
-		forumIndexShowSections	 = getPreference(Keys.FORUM_INDEX_SHOW_SECTIONS, true);
-		forumIndexShowSubtitles	 = getPreference(Keys.FORUM_INDEX_SHOW_SUBTITLES, true);
-		forumIndexHideSubforums	 = getPreference(Keys.FORUM_INDEX_HIDE_SUBFORUMS, true);
-		postWarningAccepted 	 = getPreference(Keys.POST_WARNING_ACCEPTED, false);
+    fun registerCallback(client: AwfulPreferenceUpdate?) {
+        mCallback[client] = null
+    }
+
+    fun unregisterCallback(client: AwfulPreferenceUpdate?) {
+        mCallback.remove(client)
+    }
+
+    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
+        updateValues()
+        for (auc in mCallback.keys) {
+            auc?.onPreferenceChange(this, key!!)
+        }
+    }
+
+    private fun updateValues() {
+        val res = context.resources
+        scaleFactor = res.displayMetrics.density
+        username = getPreference(Keys.USERNAME, "Username")
+        userAvatarUrl = getPreference(Keys.USER_AVATAR_URL, null as String?)
+        hasPlatinum = getPreference(Keys.HAS_PLATINUM, false)
+        hasArchives = getPreference(Keys.HAS_ARCHIVES, false)
+        hasNoAds = getPreference(Keys.HAS_NO_ADS, false)
+        postFontSizeSp = getPreference(Keys.POST_FONT_SIZE_SP, Constants.DEFAULT_FONT_SIZE_SP)
+        postFixedFontSizeSp =
+            getPreference(Keys.POST_FIXED_FONT_SIZE_SP, Constants.DEFAULT_FIXED_FONT_SIZE_SP)
+        postFontSizePx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            postFontSizeSp.toFloat(),
+            context.resources.displayMetrics
+        ).toInt()
+        theme = getPreference(Keys.THEME, "default.css")
+        launcherIcon = getPreference(Keys.LAUNCHER_ICON, "frog")
+        layout = getPreference(Keys.LAYOUT, "default")
+        imagesEnabled = getPreference(Keys.IMAGES_ENABLED, true)
+        no3gImages = getPreference(Keys.NO_3G_IMAGES, false)
+        avatarsEnabled = getPreference(Keys.AVATARS_ENABLED, true)
+        hideOldImages = getPreference(Keys.HIDE_OLD_IMAGES, false)
+        showSmilies = getPreference(Keys.SHOW_SMILIES, true)
+        postPerPage = getPreference(Keys.POST_PER_PAGE, Constants.ITEMS_PER_PAGE)
+        alternateBackground = getPreference(Keys.ALTERNATE_BACKGROUND, false)
+        highlightUserQuote = getPreference(Keys.HIGHLIGHT_USER_QUOTE, true)
+        highlightUsername = getPreference(Keys.HIGHLIGHT_USERNAME, true)
+        highlightSelf = getPreference(Keys.HIGHLIGHT_SELF, true)
+        highlightOP = getPreference(Keys.HIGHLIGHT_OP, true)
+        inlineYoutube = getPreference(Keys.INLINE_YOUTUBE, true)
+        inlineTweets = getPreference(Keys.INLINE_TWEETS, true)
+        inlineBluesky = getPreference(Keys.INLINE_BLUESKY, true)
+        inlineTiktoks = getPreference(Keys.INLINE_TIKTOKS, false)
+        inlineVines = getPreference(Keys.INLINE_VINES, false)
+        inlineWebm = getPreference(Keys.INLINE_WEBM, true)
+        autostartWebm = getPreference(Keys.AUTOSTART_WEBM, false)
+        showAllSpoilers = getPreference(Keys.SHOW_ALL_SPOILERS, false)
+        threadInfo_Rating = getPreference(Keys.THREAD_INFO_RATING, true)
+        threadInfo_Tag = getPreference(Keys.THREAD_INFO_TAG, true)
+        highlightYourThreads = getPreference(Keys.HIGHLIGHT_YOUR_THREADS, true)
+        imgurAccount = getPreference(Keys.IMGUR_ACCOUNT, null as String?)
+        imgurAccountToken = getPreference(Keys.IMGUR_ACCOUNT_TOKEN, null as String?)
+        imgurRefreshToken = getPreference(Keys.IMGUR_REFRESH_TOKEN, null as String?)
+        imgurTokenExpires = getPreference(Keys.IMGUR_TOKEN_EXPIRES, 0L)
+        imgurThumbnails = getPreference(Keys.IMGUR_THUMBNAILS, "d")
+        newThreadsFirstUCP = getPreference(Keys.NEW_THREADS_FIRST_UCP, false)
+        newThreadsFirstForum = getPreference(Keys.NEW_THREADS_FIRST_FORUM, false)
+        preferredFont = getPreference(Keys.PREFERRED_FONT, "default")
+        upperNextArrow = getPreference(Keys.UPPER_NEXT_ARROW, false)
+        sendUsernameInReport = getPreference(Keys.SEND_USERNAME_IN_REPORT, true)
+        disableGifs = getPreference(Keys.DISABLE_GIFS, true)
+        hideOldPosts = getPreference(Keys.HIDE_OLD_POSTS, true)
+        alwaysOpenUrls = getPreference(Keys.ALWAYS_OPEN_URLS, false)
+        blockedAvatarUrls = getPreference(Keys.BLOCKED_AVATAR_URLS, mutableSetOf<String?>())
+        hiddenThreadIds = getPreference(Keys.HIDDEN_THREAD_IDS, mutableSetOf<String?>())
+        showHiddenThreads = getPreference(Keys.SHOW_HIDDEN_THREADS, true)
+        lockScrolling = getPreference(Keys.LOCK_SCROLLING, false)
+        disableTimgs = getPreference(Keys.DISABLE_TIMGS, false)
+        currPrefVersion = getPreference(Keys.CURR_PREF_VERSION, 0)
+        disablePullNext = getPreference(Keys.DISABLE_PULL_NEXT, false)
+        alertIDShown = getPreference(Keys.ALERT_ID_SHOWN, 0)
+        lastVersionSeen = getPreference(Keys.LAST_VERSION_SEEN, 0)
+        volumeScroll = getPreference(Keys.VOLUME_SCROLL, false)
+        forceForumThemes = getPreference(Keys.FORCE_FORUM_THEMES, true)
+        noFAB = getPreference(Keys.NO_FAB, false)
+        probationTime = getPreference(Keys.PROBATION_TIME, 0L)
+        probationIgnore = getPreference(Keys.PROBATION_IGNORE, false)
+        userId = getPreference(Keys.USER_ID, 0)
+        showIgnoreWarning = getPreference(Keys.SHOW_IGNORE_WARNING, true)
+        ignoreFormkey = getPreference(Keys.IGNORE_FORMKEY, null as String?)
+        orientation = getPreference(Keys.ORIENTATION, "default")
+        pageLayout = getPreference(Keys.PAGE_LAYOUT, "auto")
+        coloredBookmarks = getPreference(Keys.COLORED_BOOKMARKS, false)
+        p2rDistance = getPreference(Keys.P2R_DISTANCE, 0.5f)
+        immersionMode = getPreference(Keys.IMMERSION_MODE, false)
+        hideSignatures = getPreference(Keys.HIDE_SIGNATURES, false)
+        transformer = getPreference(Keys.TRANSFORMER, "Default")
+        amberDefaultPos = getPreference(Keys.AMBER_DEFAULT_POS, false)
+        hideIgnoredPosts = getPreference(Keys.HIDE_IGNORED_POSTS, false)
+        markedUsers = getPreference(Keys.MARKED_USERS, HashSet<String?>())
+        forumIndexShowSections = getPreference(Keys.FORUM_INDEX_SHOW_SECTIONS, true)
+        forumIndexShowSubtitles = getPreference(Keys.FORUM_INDEX_SHOW_SUBTITLES, true)
+        forumIndexHideSubforums = getPreference(Keys.FORUM_INDEX_HIDE_SUBFORUMS, true)
+        postWarningAccepted = getPreference(Keys.POST_WARNING_ACCEPTED, false)
 
         //I have never seen this before oh god
     }
 
-	/*
+    /*
 		Type-checked preference getters
 
 		Lint can't infer the correct signature by the type annotation, so if there's any
@@ -338,37 +361,38 @@ public class AwfulPreferences implements OnSharedPreferenceChangeListener {
 
 		The @StringRes annotation is there to enforce storing keys as resource strings!
 	 */
+    fun getPreference(
+        @StringPreference @StringRes key: Int,
+        defaultValue: String?
+    ): String? {
+        return sharedPrefs.getString(mResources.getString(key), defaultValue)
+    }
 
-	@Nullable
-	public String getPreference(@Keys.StringPreference @StringRes int key,
-								 @Nullable String defaultValue) {
-		return mPrefs.getString(mResources.getString(key), defaultValue);
-	}
+    fun getPreference(
+        @StringSetPreference @StringRes key: Int,
+        defaultValue: MutableSet<String?>
+    ): MutableSet<String?> {
+        return sharedPrefs.getStringSet(mResources.getString(key), defaultValue)!!
+    }
 
-	@NonNull
-	public Set<String> getPreference(@Keys.StringSetPreference @StringRes int key,
-									  @NonNull Set<String> defaultValue) {
-		return mPrefs.getStringSet(mResources.getString(key), defaultValue);
-	}
+    fun getPreference(@BooleanPreference @StringRes key: Int, defaultValue: Boolean): Boolean {
+        return sharedPrefs.getBoolean(mResources.getString(key), defaultValue)
+    }
 
-	public boolean getPreference(@Keys.BooleanPreference @StringRes int key, boolean defaultValue) {
-		return mPrefs.getBoolean(mResources.getString(key), defaultValue);
-	}
+    fun getPreference(@IntPreference @StringRes key: Int, defaultValue: Int): Int {
+        return sharedPrefs.getInt(mResources.getString(key), defaultValue)
+    }
 
-	public int getPreference(@Keys.IntPreference @StringRes int key, int defaultValue) {
-		return mPrefs.getInt(mResources.getString(key), defaultValue);
-	}
+    fun getPreference(@LongPreference @StringRes key: Int, defaultValue: Long): Long {
+        return sharedPrefs.getLong(mResources.getString(key), defaultValue)
+    }
 
-	public long getPreference(@Keys.LongPreference @StringRes int key, long defaultValue) {
-		return mPrefs.getLong(mResources.getString(key), defaultValue);
-	}
-
-	public float getPreference(@Keys.FloatPreference @StringRes int key, float defaultValue) {
-		return mPrefs.getFloat(mResources.getString(key), defaultValue);
-	}
+    fun getPreference(@FloatPreference @StringRes key: Int, defaultValue: Float): Float {
+        return sharedPrefs.getFloat(mResources.getString(key), defaultValue)
+    }
 
 
-	/*
+    /*
 		Type-checked preference setters
 
 		Lint can't infer the correct signature by the type annotation, so if there's any
@@ -376,166 +400,175 @@ public class AwfulPreferences implements OnSharedPreferenceChangeListener {
 
 		The @StringRes annotation is there to enforce storing keys as resource strings!
 	 */
+    fun setPreference(
+        @StringPreference @StringRes key: Int,
+        value: String?
+    ) {
+        sharedPrefs.edit { putString(mResources.getString(key), value) }
+    }
 
-	public void setPreference(@Keys.StringPreference @StringRes int key,
-							  @Nullable String value) {
-		mPrefs.edit().putString(mResources.getString(key), value).apply();
-	}
+    fun setPreference(
+        @StringSetPreference @StringRes key: Int,
+        value: MutableSet<String?>
+    ) {
+        sharedPrefs.edit { putStringSet(mResources.getString(key), value) }
+    }
 
-	public void setPreference(@Keys.StringSetPreference @StringRes int key,
-							  @NonNull Set<String> value) {
-		mPrefs.edit().putStringSet(mResources.getString(key), value).apply();
-	}
+    fun setPreference(@BooleanPreference @StringRes key: Int, value: Boolean) {
+        sharedPrefs.edit { putBoolean(mResources.getString(key), value) }
+    }
 
-	public void setPreference(@Keys.BooleanPreference @StringRes int key, boolean value) {
-		mPrefs.edit().putBoolean(mResources.getString(key), value).apply();
-	}
+    fun setPreference(@IntPreference @StringRes key: Int, value: Int) {
+        sharedPrefs.edit { putInt(mResources.getString(key), value) }
+    }
 
-	public void setPreference(@Keys.IntPreference @StringRes int key, int value) {
-		mPrefs.edit().putInt(mResources.getString(key), value).apply();
-	}
+    fun setPreference(@LongPreference @StringRes key: Int, value: Long) {
+        sharedPrefs.edit { putLong(mResources.getString(key), value) }
+    }
 
-	public void setPreference(@Keys.LongPreference @StringRes int key, long value) {
-		mPrefs.edit().putLong(mResources.getString(key), value).apply();
-	}
-
-	public void setPreference(@Keys.FloatPreference @StringRes int key, float value) {
-		mPrefs.edit().putFloat(mResources.getString(key), value).apply();
-	}
-
-	
-	public void upgradePreferences() {
-		if(currPrefVersion < PREFERENCES_VERSION) {
-			switch(currPrefVersion) {//this switch intentionally falls through!
-			case 0:
-				// Get the current value of the obsolete preference, then remove it
-				String obsoleteKey = "new_threads_first";
-				boolean newThreadsFirst = mPrefs.getBoolean(obsoleteKey, false);
-				mPrefs.edit().remove(obsoleteKey).apply();
-				// transfer the value to the new key
-				setPreference(Keys.NEW_THREADS_FIRST_UCP, newThreadsFirst);
-        		newThreadsFirstUCP = newThreadsFirst;
-				break;
-			default://make sure to keep this break statement on the last case of this switch
-				break;
-			}
-
-			//update the preferences so this doesn't run again
-    		setPreference(Keys.CURR_PREF_VERSION, PREFERENCES_VERSION);
-    		currPrefVersion = PREFERENCES_VERSION;
-		}
-	}
-	
-
-	public Resources getResources(){
-		return mContext.getResources();
-	}
-	
-	public boolean isOnProbation(){
-		if(probationTime == 0 || probationIgnore){
-			return false;
-		}else{
-			if(new Date(probationTime).compareTo(new Date()) < 0){
-				setPreference(Keys.PROBATION_TIME, 0L);
-				return false;
-			}
-			return true;
-		}
-	}
-
-    public boolean canLoadImages() {
-		ConnectivityManager conman = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-		return imagesEnabled && !(no3gImages && !conman.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected());
-	}
-	
-	public boolean canLoadAvatars(){
-		return avatarsEnabled && canLoadImages();
-	}
-
-	public boolean isBlockedAvatar(String avatarUrl) {
-		return avatarUrl != null && blockedAvatarUrls.contains(avatarUrl);
-	}
-
-	/**
-	 * Export the app's current preferences to a user-picked location.
-	 *
-	 * @param settingsUri the file/location to export to
-	 * @return false if the export failed
-	 * @see #importSettings(Uri) 
-	 */
-	public boolean exportSettings(@NonNull Uri settingsUri) {
-		Map settings = mPrefs.getAll();
-		Gson gson = new Gson();
-		// serialise all SharedPreferences mappings to JSON
-		String settingsJson = gson.toJson(settings);
-
-		// save the JSON in binary format
-		Log.i(TAG, "exporting settings to uri: " + settingsUri.getLastPathSegment());
-		try (OutputStream out = getContext().getContentResolver().openOutputStream(settingsUri)) {
-			out.write(settingsJson.getBytes());
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
+    fun setPreference(@FloatPreference @StringRes key: Int, value: Float) {
+        sharedPrefs.edit { putFloat(mResources.getString(key), value) }
+    }
 
 
-	/**
-	 * Import an exported settings file, and apply it to the app, updating AwfulPreferences.
-	 *
-	 * @param settingsUri the file to import
-	 * @return false if importing failed completely
-	 * @see #exportSettings(Uri)
-	 */
-	public boolean importSettings(@NonNull Uri settingsUri) {
-		Log.i(TAG, "importing settings from file: " + settingsUri.getLastPathSegment());
-		BufferedReader br;
-		try {
-			InputStream in = getContext().getContentResolver().openInputStream(settingsUri);
-			if (in == null) {
-				Log.w(TAG, "importSettings: unable to get input stream for uri: " + settingsUri);
-				return false;
-			}
-			br = new BufferedReader(new InputStreamReader(in));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return false;
-		}
+    fun upgradePreferences() {
+        if (currPrefVersion < PREFERENCES_VERSION) {
+            when (currPrefVersion) {
+                0 -> {
+                    // Get the current value of the obsolete preference, then remove it
+                    val obsoleteKey = "new_threads_first"
+                    val newThreadsFirst = sharedPrefs.getBoolean(obsoleteKey, false)
+                    sharedPrefs.edit { remove(obsoleteKey) }
+                    // transfer the value to the new key
+                    setPreference(Keys.NEW_THREADS_FIRST_UCP, newThreadsFirst)
+                    newThreadsFirstUCP = newThreadsFirst
+                }
 
-		// read settings JSON file and deserialise into the types SharedPreferences dumps as
-		Map<String, Object> settings;
-		try {
-			settings = new Gson().fromJson(br, new TypeToken<Map<String, Object>>() {
-			}.getType());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-		SharedPreferences.Editor editor = mPrefs.edit();
+                else -> {}
+            }
 
-		// TODO: 15/12/2017 there's no checking here at all - need to handle any errors safely. What happens when a pref no longer exists, or has its type changed between versions?
-		for (Map.Entry<String, Object> entry : settings.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-			// basically switching on the value type so we can call the correct setter method :/
-			if (value instanceof Boolean) {
-				editor.putBoolean(key, (Boolean) value);
-			} else if (value instanceof String) {
-				editor.putString(key, (String) value);
-			} else if (value instanceof Float) {
-				editor.putFloat(key, (Float) value);
-			} else if (value instanceof List) {
-				// this one's a little different, list -> string set
-				Set<String> values = new HashSet<>();
-				for (Object item : (List) value) {
-					values.add(item.toString());
-				}
-				editor.putStringSet(key, values);
-			} else {
-				// catch everything else - seems bad, look for Ints/Longs only
-				// TODO: the following prefs currently export and import as doubles, and get cast to either int or long - why??
-				/*
+            //update the preferences so this doesn't run again
+            setPreference(Keys.CURR_PREF_VERSION, PREFERENCES_VERSION)
+            currPrefVersion = PREFERENCES_VERSION
+        }
+    }
+
+
+    val resources: Resources
+        get() = context.resources
+
+    val isOnProbation: Boolean
+        get() {
+            if (probationTime == 0L || probationIgnore) {
+                return false
+            } else {
+                if (Date(probationTime) < Date()) {
+                    setPreference(Keys.PROBATION_TIME, 0L)
+                    return false
+                }
+                return true
+            }
+        }
+
+    fun canLoadImages(): Boolean {
+        val conman = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return imagesEnabled && !(no3gImages && !conman.getNetworkInfo(ConnectivityManager.TYPE_WIFI)!!
+            .isConnected)
+    }
+
+    fun canLoadAvatars(): Boolean {
+        return avatarsEnabled && canLoadImages()
+    }
+
+    fun isBlockedAvatar(avatarUrl: String?): Boolean {
+        return avatarUrl != null && blockedAvatarUrls!!.contains(avatarUrl)
+    }
+
+    /**
+     * Export the app's current preferences to a user-picked location.
+     * 
+     * @param settingsUri the file/location to export to
+     * @return false if the export failed
+     * @see .importSettings
+     */
+    fun exportSettings(settingsUri: Uri): Boolean {
+        val settings: MutableMap<*, *>? = sharedPrefs.all
+        val gson = Gson()
+        // serialise all SharedPreferences mappings to JSON
+        val settingsJson = gson.toJson(settings)
+
+        // save the JSON in binary format
+        Log.i(TAG, "exporting settings to uri: " + settingsUri.lastPathSegment)
+        try {
+            this.context.contentResolver.openOutputStream(settingsUri).use { out ->
+                out!!.write(settingsJson.toByteArray())
+                return true
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            return false
+        }
+    }
+
+
+    /**
+     * Import an exported settings file, and apply it to the app, updating AwfulPreferences.
+     * 
+     * @param settingsUri the file to import
+     * @return false if importing failed completely
+     * @see .exportSettings
+     */
+    fun importSettings(settingsUri: Uri): Boolean {
+        Log.i(TAG, "importing settings from file: " + settingsUri.lastPathSegment)
+        val br: BufferedReader?
+        try {
+            val `in` = this.context.contentResolver.openInputStream(settingsUri)
+            if (`in` == null) {
+                Log.w(TAG, "importSettings: unable to get input stream for uri: " + settingsUri)
+                return false
+            }
+            br = BufferedReader(InputStreamReader(`in`))
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+            return false
+        }
+
+        // read settings JSON file and deserialise into the types SharedPreferences dumps as
+        val settings: MutableMap<String?, Any?>
+        try {
+            settings = Gson().fromJson<MutableMap<String?, Any?>>(
+                br,
+                object : TypeToken<MutableMap<String?, Any?>?>() {
+                }.type
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+        sharedPrefs.edit {
+
+            // TODO: 15/12/2017 there's no checking here at all - need to handle any errors safely. What happens when a pref no longer exists, or has its type changed between versions?
+            for (entry in settings.entries) {
+                val key = entry.key
+                val value: Any = entry.value!!
+                // basically switching on the value type so we can call the correct setter method :/
+                if (value is Boolean) {
+                    putBoolean(key, value)
+                } else if (value is String) {
+                    putString(key, value)
+                } else if (value is Float) {
+                    putFloat(key, value)
+                } else if (value is MutableList<*>) {
+                    // this one's a little different, list -> string set
+                    val values: MutableSet<String?> = HashSet<String?>()
+                    for (item in value) {
+                        values.add(item.toString())
+                    }
+                    putStringSet(key, values)
+                } else {
+                    // catch everything else - seems bad, look for Ints/Longs only
+                    // TODO: the following prefs currently export and import as doubles, and get cast to either int or long - why??
+                    /*
 				default_post_fixed_font_size_dip is type Double -> parses as int (are these two legacy settings?)
 				default_post_font_size_dip is type Double -> int
 				curr_pref_version is type Double -> int
@@ -544,45 +577,74 @@ public class AwfulPreferences implements OnSharedPreferenceChangeListener {
 				probation_time is type Double -> long
 		 		*/
 
-				if (longKeys.contains(key)) {
-					editor.putLong(key, ((Double) value).longValue());
-				} else {
-					editor.putInt(key, ((Double) value).intValue());
-				}
-				// TODO: 15/12/2017 once the doubles are sorted out, probably better to explicitly catch those types and have a safe failure default
-			}
-		}
-		editor.apply();
-		updateValues();
-		return true;
-	}
-	
-	@Override
-	protected void finalize() throws Throwable {
-		unRegisterListener();
-		super.finalize();
-	}
-	
-	public void markUser(String username){
-		Set<String> newMarkedUsers = new HashSet<String>(markedUsers);
-		newMarkedUsers.add(username);
-		setPreference(Keys.MARKED_USERS, newMarkedUsers);
-		markedUsers = newMarkedUsers;
-	}
-	
-	public void unmarkUser(String username){
-		Set<String> newMarkedUsers = new HashSet<String>(markedUsers);
-		newMarkedUsers.remove(username);
-		setPreference(Keys.MARKED_USERS, newMarkedUsers);
-		markedUsers = newMarkedUsers;
-	}
-
-    /**
-     * Only use in emergencies, terrible hack
-     * @returns a context
-     */
-    public Context getContext() {
-        return mContext;
+                    if (longKeys.contains(key)) {
+                        putLong(key, (value as Double).toLong())
+                    } else {
+                        putInt(key, (value as Double).toInt())
+                    }
+                    // TODO: 15/12/2017 once the doubles are sorted out, probably better to explicitly catch those types and have a safe failure default
+                }
+            }
+        }
+        updateValues()
+        return true
     }
 
+    @Throws(Throwable::class)
+    protected fun finalize() {
+        unRegisterListener()
+    }
+
+    fun markUser(username: String?) {
+        val newMarkedUsers: MutableSet<String?> = HashSet<String?>(markedUsers)
+        newMarkedUsers.add(username)
+        setPreference(Keys.MARKED_USERS, newMarkedUsers)
+        markedUsers = newMarkedUsers
+    }
+
+    fun unmarkUser(username: String?) {
+        val newMarkedUsers: MutableSet<String?> = HashSet<String?>(markedUsers)
+        newMarkedUsers.remove(username)
+        setPreference(Keys.MARKED_USERS, newMarkedUsers)
+        markedUsers = newMarkedUsers
+    }
+
+    companion object {
+        private const val TAG = "AwfulPreferences"
+
+        @SuppressLint("StaticFieldLeak")
+        var awfulPrefsInstance: AwfulPreferences? = null
+            private set
+
+        private const val PREFERENCES_VERSION = 1
+
+        @JvmStatic
+        fun getInstance(context: Context): AwfulPreferences {
+            awfulPrefsInstance = awfulPrefsInstance ?: AwfulPreferences(context)
+            return awfulPrefsInstance!!
+        }
+
+        @JvmStatic
+        fun getInstance(): AwfulPreferences {
+            return awfulPrefsInstance!!
+        }
+
+        @JvmStatic
+        fun getInstance(
+            context: Context,
+            updateCallback: AwfulPreferenceUpdate?
+        ): AwfulPreferences {
+            val instance: AwfulPreferences = getInstance(context)
+            instance.registerCallback(updateCallback)
+            return instance
+        }
+
+        @JvmStatic
+        fun getInstance(
+            activity: Activity,
+            updateCallback: AwfulPreferenceUpdate?
+        ): AwfulPreferences {
+            return getInstance(activity as Context, updateCallback)
+        }
+    }
 }

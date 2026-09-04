@@ -105,7 +105,7 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
         aSavedState: Bundle?
     ): View {
         super.onCreateView(aInflater, aContainer, aSavedState)
-        mPrefs = AwfulPreferences.getInstance(activity)
+        mPrefs = AwfulPreferences.getInstance(requireActivity())
 
         setRetainInstance(true)
 

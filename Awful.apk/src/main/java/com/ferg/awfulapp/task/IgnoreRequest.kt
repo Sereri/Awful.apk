@@ -20,8 +20,8 @@ class IgnoreRequest(context: Context, userId: Int)
         with(parameters) {
             add(PARAM_ACTION, ACTION_ADDLIST)
             add(PARAM_USERLIST, USERLIST_IGNORE)
-            add(FORMKEY, preferences.ignoreFormkey)
-            add(PARAM_USER_ID, Integer.toString(userId))
+            add(FORMKEY, preferences.ignoreFormkey!!)
+            add(PARAM_USER_ID, userId.toString())
         }
     }
 

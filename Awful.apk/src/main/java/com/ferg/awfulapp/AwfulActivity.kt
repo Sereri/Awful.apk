@@ -175,7 +175,7 @@ abstract class AwfulActivity : AppCompatActivity(), AwfulPreferences.AwfulPrefer
     // Preferences and other UI
     //
 
-    override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
         Timber.i("Key changed: ${key!!}")
         updateOrientation()
         if ("theme" == key || "page_layout" == key) {

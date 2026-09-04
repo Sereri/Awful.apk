@@ -1,64 +1,61 @@
-package com.ferg.awfulapp.preferences.fragments;
+package com.ferg.awfulapp.preferences.fragments
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.res.Resources;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import androidx.preference.ListPreference;
-import androidx.preference.Preference;
-import androidx.preference.PreferenceFragmentCompat;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.collection.ArrayMap;
-import androidx.preference.PreferenceGroup;
-import androidx.preference.PreferenceGroupAdapter;
-import androidx.preference.PreferenceScreen;
-import androidx.preference.PreferenceViewHolder;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.util.Log;
-import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ListView;
-
-import com.ferg.awfulapp.AwfulActivity;
-import com.ferg.awfulapp.NavigationEvent;
-import com.ferg.awfulapp.NavigationEventHandler;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.preferences.SettingsActivity;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Map;
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.res.Resources.NotFoundException
+import android.graphics.PorterDuff
+import android.os.Bundle
+import android.util.Log
+import android.util.TypedValue
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.StringRes
+import androidx.collection.ArrayMap
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceGroup
+import androidx.preference.PreferenceGroupAdapter
+import androidx.preference.PreferenceScreen
+import androidx.preference.PreferenceViewHolder
+import androidx.recyclerview.widget.RecyclerView
+import com.ferg.awfulapp.AwfulActivity
+import com.ferg.awfulapp.NavigationEvent
+import com.ferg.awfulapp.NavigationEventHandler
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.preferences.SettingsActivity
+import kotlin.concurrent.Volatile
 
 /**
  * Created by baka kaba on 04/05/2015.
- * <p>
- * <p>Base fragment that adds preferences from a given XML resource,
+ * 
+ * 
+ * 
+ * Base fragment that adds preferences from a given XML resource,
  * sets defaults and enables options based on the user's device,
- * and sets preference summaries.</p>
- * <p>
- * <p>For some fragments the XML resource ID is all that's required.
+ * and sets preference summaries.
+ * 
+ * 
+ * 
+ * For some fragments the XML resource ID is all that's required.
  * Others may need to specify preferences etc., or override the
- * initialisation methods to perform more advanced shenanigans.</p>
- * <p>
- * <p>When adding a new fragment, please add its XML resId to
- * {@link SettingsActivity#PREFERENCE_XML_FILES} so it can be
- * automatically checked for defaults!</p>
+ * initialisation methods to perform more advanced shenanigans.
+ * 
+ * 
+ * 
+ * When adding a new fragment, please add its XML resId to
+ * [SettingsActivity.PREFERENCE_XML_FILES] so it can be
+ * automatically checked for defaults!
  */
-public abstract class SettingsFragment extends PreferenceFragmentCompat implements NavigationEventHandler {
+abstract class SettingsFragment : PreferenceFragmentCompat(), NavigationEventHandler {
+    @Volatile
+    private var isInflated = false
+    @JvmField
+    protected var mPrefs: AwfulPreferences? = null
+    protected var submenuSelectedListener: OnSubmenuSelectedListener? = null
 
-    public static final String TAG = "SettingsFragment";
-    private volatile boolean isInflated;
-    protected AwfulPreferences mPrefs;
-    protected OnSubmenuSelectedListener submenuSelectedListener;
-    
     /*
         CONFIGURATION
 
@@ -75,152 +72,150 @@ public abstract class SettingsFragment extends PreferenceFragmentCompat implemen
         them to prefClickListeners, mapping them to the keys of the preferences
         you want to apply the listener to.
      */
-
     /**
-     * <p>This must be set to the resource ID of a layout file containing the fragment's preferences</p>
-     * <p>
-     * <p>Layout files should describe <b>a single level</b> in the preference hierarchy -
-     * don't use the standard {@link android.preference.PreferenceScreen} behaviour to define
-     * additional levels, as they will launch a separate activity.</p>
-     * <p>
-     * <p>Instead, create a separate fragment to hold that content, and define a preference in
+     * 
+     * This must be set to the resource ID of a layout file containing the fragment's preferences
+     * 
+     * 
+     * 
+     * Layout files should describe **a single level** in the preference hierarchy -
+     * don't use the standard [android.preference.PreferenceScreen] behaviour to define
+     * additional levels, as they will launch a separate activity.
+     * 
+     * 
+     * 
+     * Instead, create a separate fragment to hold that content, and define a preference in
      * this layout which will open that fragment when clicked. Set this preference's
-     * <i>android:fragment</i> value to this target fragment, and add the preference's key
+     * *android:fragment* value to this target fragment, and add the preference's key
      * to the SUBMENU_OPENING_KEYS array to enable its click behaviour.
-     * See the {@link RootSettings} class for an example</p>
-     * <p>
-     * <p>(This isn't ideal, it would be better if the click listener was added automatically wherever
-     * a fragment value is set on a preference in the XML, so if anyone can handle that cleanly be my guest)</p>
+     * See the [RootSettings] class for an example
+     * 
+     * 
+     * 
+     * (This isn't ideal, it would be better if the click listener was added automatically wherever
+     * a fragment value is set on a preference in the XML, so if anyone can handle that cleanly be my guest)
      */
-    protected int SETTINGS_XML_RES_ID;
+    @JvmField
+    protected var SETTINGS_XML_RES_ID: Int = 0
 
     /**
      * Preferences which should display a submenu fragment when clicked.
      * Set this to an array of preference key ResIDs, and those preferences
-     * will display the fragment defined in their <i>android:fragment</i>
+     * will display the fragment defined in their *android:fragment*
      * tag when clicked.
      */
-    protected int[] SUBMENU_OPENING_KEYS;
+    @JvmField
+    protected var SUBMENU_OPENING_KEYS: IntArray? = null
 
     /**
      * Preferences whose summaries should be set to show their value.
      * Set this to an array of preference key ResIDs, and they will
      * automatically update and display their current value as a summary.
      */
-    protected int[] VALUE_SUMMARY_PREF_KEYS;
+    @JvmField
+    protected var VALUE_SUMMARY_PREF_KEYS: IntArray? = null
 
     /**
      * Preferences whose summaries should reflect their unavailability on the user's version of Android,
      * if applicable. You need to actually disable the preference to mark it as unavailable.
      */
-    protected int[] VERSION_DEPENDENT_SUMMARY_PREF_KEYS;
+    protected var VERSION_DEPENDENT_SUMMARY_PREF_KEYS: IntArray? = null
 
     /**
      * Add any custom onClick listeners here, mapping them to an array of
      * preference keys that the listener should be applied to.
      */
-    protected Map<Preference.OnPreferenceClickListener, int[]> prefClickListeners = new ArrayMap<>();
+    @JvmField
+    protected var prefClickListeners: MutableMap<Preference.OnPreferenceClickListener?, IntArray?> =
+        ArrayMap<Preference.OnPreferenceClickListener?, IntArray?>()
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-        mPrefs = ((SettingsActivity) getActivity()).prefs;
+        mPrefs = (activity as SettingsActivity).prefs
 
         try {
-            addPreferencesFromResource(SETTINGS_XML_RES_ID);
+            addPreferencesFromResource(SETTINGS_XML_RES_ID)
             // only set this flag AFTER the layout is inflated
-            isInflated = true;
-            initialiseSettings();
-            setSummaries();
-            registerListeners();
-        } catch (Resources.NotFoundException e) {
-            Log.w(TAG, "Resource not found while creating fragment: " + e.getMessage());
+            isInflated = true
+            initialiseSettings()
+            setSummaries()
+            registerListeners()
+        } catch (e: NotFoundException) {
+            Log.w(TAG, "Resource not found while creating fragment: " + e.message)
         }
     }
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
         // for some reason, if you theme android:listDivider it won't show up in the preference list
         // so doing this directly seems to be the only way to theme it? Can't just get() it either
-        Drawable divider = getResources().getDrawable(R.drawable.list_divider);
-        TypedValue colour = new TypedValue();
-        getActivity().getTheme().resolveAttribute(android.R.attr.listDivider, colour, true);
-        divider.setColorFilter(colour.data, PorterDuff.Mode.SRC_IN);
-        setDivider(divider);
+        val divider = resources.getDrawable(R.drawable.list_divider)
+        val colour = TypedValue()
+        requireActivity().theme.resolveAttribute(android.R.attr.listDivider, colour, true)
+        divider.setColorFilter(colour.data, PorterDuff.Mode.SRC_IN)
+        setDivider(divider)
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View result = super.onCreateView(inflater, container, savedInstanceState);
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val result = super.onCreateView(inflater, container, savedInstanceState)
 
-        ((AwfulActivity) getActivity()).setPreferredFont(result);
+        (activity as AwfulActivity).setPreferredFont(result)
 
-        return result;
+        return result
     }
 
     @SuppressLint("RestrictedApi")
-    class AwfulPreferenceAdapter extends PreferenceGroupAdapter {
-        String TAG = "MyAdapter";
-        public AwfulPreferenceAdapter(PreferenceGroup preferenceGroup) {
-            super(preferenceGroup);
-        }
-
-        @NonNull
-        @Override
-        public PreferenceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            PreferenceViewHolder holder = super.onCreateViewHolder(parent, viewType);
-            ((AwfulActivity)getActivity()).setPreferredFont(holder.itemView);
-            return holder;
+    internal inner class AwfulPreferenceAdapter(preferenceGroup: PreferenceGroup) :
+        PreferenceGroupAdapter(preferenceGroup) {
+        var TAG: String = "MyAdapter"
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PreferenceViewHolder {
+            val holder = super.onCreateViewHolder(parent, viewType)
+            (activity as AwfulActivity).setPreferredFont(holder.itemView)
+            return holder
         }
     }
 
-    @NonNull
-    @Override
-    protected RecyclerView.Adapter onCreateAdapter(@NonNull PreferenceScreen preferenceScreen) {
-        return new AwfulPreferenceAdapter(preferenceScreen);
+    override fun onCreateAdapter(preferenceScreen: PreferenceScreen): RecyclerView.Adapter<*> {
+        return AwfulPreferenceAdapter(preferenceScreen)
     }
 
     //
     // Navigation
     //
     // TODO: convert to Kotlin, we only need defaultRoute defined (the interface has default implementations for the others)
-    @Override
-    public boolean handleNavigation(@NotNull NavigationEvent event) {
-        return false;
+    override fun handleNavigation(event: NavigationEvent): Boolean {
+        return false
     }
 
-    @Override
-    public void defaultRoute(@NotNull NavigationEvent event) {
-        NavigationEventHandler activity = (NavigationEventHandler) getActivity();
-        if (activity != null) {
-            activity.navigate(event);
-        }
+    override fun defaultRoute(event: NavigationEvent) {
+        val activity = activity as NavigationEventHandler?
+        activity?.navigate(event)
     }
 
-    @Override
-    public void navigate(@NotNull NavigationEvent event) {
-        if (!handleNavigation(event)) defaultRoute(event);
+    override fun navigate(event: NavigationEvent) {
+        if (!handleNavigation(event)) defaultRoute(event)
     }
-
 
 
     /**
      * Set required defaults and selectively enable preferences.
-     * Override this to perform any custom initialisation in the fragment
+     * Override this to perform any custom initialization in the fragment
      */
-    protected void initialiseSettings() {
+    protected open fun initialiseSettings() {
     }
 
 
     /**
      * Get a title for this fragment - this should usually be the same as the label of the preference
      * that opened it, e.g. clicking 'Images' should open a fragment whose title is 'Images'.
-     * See <a href="https://material.io/guidelines/patterns/settings.html#settings-grouping-settings">the Material Design specs</a>
+     * See [the Material Design specs](https://material.io/guidelines/patterns/settings.html#settings-grouping-settings)
      */
-    @NonNull
-    public abstract String getTitle();
+    abstract val title: String
 
 
     /**
@@ -228,126 +223,124 @@ public abstract class SettingsFragment extends PreferenceFragmentCompat implemen
      * This is called during fragment creation, and should also be called
      * on preference updates.
      */
-    public final synchronized void setSummaries() {
-        // viewing preferences for the first time initialises them with their
+    @Synchronized
+    fun setSummaries() {
+        // viewing preferences for the first time initializes them with their
         // defaults, causing a lot of onPreferenceChanged callbacks that
         // trigger this method call. So check the preferences are ready
-        if (!isInflated || getActivity() == null) {
-            return;
+        if (!isInflated || activity == null) {
+            return
         }
-        String keyName;
+        var keyName: String?
 
         // handle standard summary setting
         if (VALUE_SUMMARY_PREF_KEYS != null) {
-            for (int keyResId : VALUE_SUMMARY_PREF_KEYS) {
-                keyName = getString(keyResId);
-                ListPreference pl = (ListPreference) findPreference(keyName);
-                pl.setSummary(pl.getEntry());
+            for (keyResId in VALUE_SUMMARY_PREF_KEYS) {
+                keyName = getString(keyResId)
+                val pl = findPreference<Preference?>(keyName) as ListPreference?
+                pl?.setSummary(pl.getEntry())
             }
         }
 
         // display a 'not on your version' summary if required and the pref has been disabled
         if (VERSION_DEPENDENT_SUMMARY_PREF_KEYS != null) {
-            for (int keyResId : VERSION_DEPENDENT_SUMMARY_PREF_KEYS) {
-                keyName = getString(keyResId);
-                Preference p = findPreference(keyName);
-                if (!p.isEnabled()) {
-                    p.setSummary(getString(R.string.not_available_on_your_version));
+            for (keyResId in VERSION_DEPENDENT_SUMMARY_PREF_KEYS) {
+                keyName = getString(keyResId)
+                val p = findPreference<Preference?>(keyName)
+                p?.isEnabled?.let {
+                    if (!it) {
+                        p.setSummary(getString(R.string.not_available_on_your_version))
+                    }
                 }
             }
         }
         // run any custom handling in the subclass
-        onSetSummaries();
+        onSetSummaries()
     }
 
     /**
      * Override this if you want to perform any special handling
      * when a summary update call comes in.
      */
-    protected void onSetSummaries() {
+    protected open fun onSetSummaries() {
     }
 
 
     /**
      * Register all the fragment's required listeners to their associated preferences.
      */
-    private void registerListeners() {
+    private fun registerListeners() {
         // add submenu handling if required
-        if (SUBMENU_OPENING_KEYS != null && SUBMENU_OPENING_KEYS.length > 0) {
-            prefClickListeners.put(new SubmenuListener(this), SUBMENU_OPENING_KEYS);
+        if (SUBMENU_OPENING_KEYS != null && SUBMENU_OPENING_KEYS!!.isNotEmpty()) {
+            prefClickListeners[SubmenuListener(this)] = SUBMENU_OPENING_KEYS
         }
 
         // attach each listener to its associated preferences
-        Preference tempPref;
-        String keyName;
+        var tempPref: Preference?
+        var keyName: String?
 
-        for (Map.Entry<Preference.OnPreferenceClickListener, int[]> entry : prefClickListeners.entrySet()) {
-            int[] prefKeyIds = entry.getValue();
+        for (entry in prefClickListeners.entries) {
+            val prefKeyIds = entry.value
             if (prefKeyIds != null) {
-                Preference.OnPreferenceClickListener listener = entry.getKey();
-                for (int keyResId : prefKeyIds) {
-                    keyName = getString(keyResId);
-                    if ((tempPref = findPreference(keyName)) != null) {
-                        tempPref.setOnPreferenceClickListener(listener);
+                val listener = entry.key
+                for (keyResId in prefKeyIds) {
+                    keyName = getString(keyResId)
+                    if ((findPreference<Preference?>(keyName).also { tempPref = it }) != null) {
+                        tempPref?.onPreferenceClickListener = listener
                     } else {
-                        Log.w(TAG, "Unable to set click listener on missing preference: " + keyName);
+                        Log.w(TAG, "Unable to set click listener on missing preference: " + keyName)
                     }
                 }
             }
         }
-
     }
 
-    @Nullable
-    Preference findPrefById(@StringRes int prefKeyResId) {
-        return findPreference(getString(prefKeyResId));
+    fun findPrefById(@StringRes prefKeyResId: Int): Preference? {
+        return findPreference(getString(prefKeyResId))
     }
 
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    override fun onAttach(activity: Activity) {
+        super.onAttach(activity)
         // Activities loading this fragment need to handle submenus
-        if (activity instanceof OnSubmenuSelectedListener) {
-            submenuSelectedListener = (OnSubmenuSelectedListener) activity;
+        if (activity is OnSubmenuSelectedListener) {
+            submenuSelectedListener = activity as OnSubmenuSelectedListener
         } else {
-            throw new ClassCastException(activity.toString()
-                    + " must implement SettingsFragment.OnItemSelectedListener");
+            throw ClassCastException(
+                activity.toString()
+                        + " must implement SettingsFragment.OnItemSelectedListener"
+            )
         }
     }
 
 
-    public interface OnSubmenuSelectedListener {
+    interface OnSubmenuSelectedListener {
         /**
          * Respond to a click on a preference that opens a submenu
-         *
+         * 
          * @param sourceFragment      The fragment containing the clicked preference
          * @param submenuFragmentName The name of the submenu fragment's class
          */
-        void onSubmenuSelected(@NonNull SettingsFragment sourceFragment, @NonNull String submenuFragmentName);
+        fun onSubmenuSelected(sourceFragment: SettingsFragment, submenuFragmentName: String)
     }
 
 
     /**
      * Listener for clicks on options that open submenus
      */
-    private class SubmenuListener implements Preference.OnPreferenceClickListener {
-
-        private final SettingsFragment mThis;
-
-        SubmenuListener(SettingsFragment fragment) {
-            mThis = fragment;
-        }
-
-        @Override
-        public boolean onPreferenceClick(Preference preference) {
-            submenuSelectedListener.onSubmenuSelected(mThis, preference.getFragment());
-            return true;
+    private inner class SubmenuListener(private val mThis: SettingsFragment) :
+        Preference.OnPreferenceClickListener {
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            submenuSelectedListener?.onSubmenuSelected(mThis, preference.fragment!!)
+            return true
         }
     }
 
-    @Override
-    public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
-        return;
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        return
+    }
+
+    companion object {
+        const val TAG: String = "SettingsFragment"
     }
 }

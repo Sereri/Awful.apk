@@ -17,8 +17,6 @@ import com.ferg.awfulapp.preferences.AwfulPreferences.AwfulPreferenceUpdate
 import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
 import com.ferg.awfulapp.preferences.fragments.AccountSettings
 import com.ferg.awfulapp.preferences.fragments.RootSettings
-import com.ferg.awfulapp.preferences.fragments.SettingsFragment
-import com.ferg.awfulapp.preferences.fragments.SettingsFragment.OnSubmenuSelectedListener
 import timber.log.Timber.Forest.e
 import androidx.core.view.isVisible
 

@@ -9,7 +9,7 @@ import android.widget.TextView
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import com.ferg.awfulapp.R
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.FloatPreference
 import com.ferg.awfulapp.util.AwfulUtils
 import kotlin.math.roundToInt
 
@@ -75,7 +75,7 @@ class MiscSettings : SettingsFragment() {
             bar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
                     val distanceFloat = seekBar.progress.toFloat()
-                    mPrefs?.setPreference(Keys.P2R_DISTANCE, (distanceFloat / 100))
+                    mPrefs?.setPreference(FloatPreference.P2R_DISTANCE, (distanceFloat / 100))
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {

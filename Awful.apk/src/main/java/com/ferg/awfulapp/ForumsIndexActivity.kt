@@ -48,7 +48,7 @@ import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.dialog.Changelog
 import com.ferg.awfulapp.messages.PmManager
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.IntPreference
 import com.ferg.awfulapp.sync.SyncManager
 import timber.log.Timber
 import java.util.*
@@ -212,7 +212,7 @@ class ForumsIndexActivity :
         if (lastVersionCode != versionCode) {
             Timber.i("App version changed from %d to %d - showing changelog", lastVersionCode, versionCode)
             Changelog.showDialog(this, 1)
-            mPrefs.setPreference(Keys.LAST_VERSION_SEEN, versionCode)
+            mPrefs.setPreference(IntPreference.LAST_VERSION_SEEN, versionCode)
         }
     }
 

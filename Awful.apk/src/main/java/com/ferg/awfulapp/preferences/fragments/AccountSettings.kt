@@ -13,11 +13,12 @@ import com.android.volley.VolleyError
 import com.ferg.awfulapp.AwfulActivity
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.network.NetworkUtils.queueRequest
-import com.ferg.awfulapp.preferences.Keys
 import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
 import com.ferg.awfulapp.task.FeatureRequest
 import com.ferg.awfulapp.task.RefreshUserProfileRequest
 import androidx.core.net.toUri
+import com.ferg.awfulapp.preferences.LongPreference
+import com.ferg.awfulapp.preferences.StringPreference
 
 /**
  * Created by baka kaba on 04/05/2015.
@@ -96,10 +97,10 @@ class AccountSettings : SettingsFragment() {
                         .setPositiveButton(
                             R.string.confirm
                         ) { _: DialogInterface?, _: Int ->
-                            it.setPreference(Keys.IMGUR_ACCOUNT_TOKEN, null as String?)
-                            it.setPreference(Keys.IMGUR_REFRESH_TOKEN, null as String?)
-                            it.setPreference(Keys.IMGUR_ACCOUNT, null as String?)
-                            it.setPreference(Keys.IMGUR_TOKEN_EXPIRES, 0L)
+                            it.setPreference(StringPreference.IMGUR_ACCOUNT_TOKEN, null as String?)
+                            it.setPreference(StringPreference.IMGUR_REFRESH_TOKEN, null as String?)
+                            it.setPreference(StringPreference.IMGUR_ACCOUNT, null as String?)
+                            it.setPreference(LongPreference.IMGUR_TOKEN_EXPIRES, 0L)
                             findPrefById(R.string.pref_key_account_imgur_menu_item)?.setSummary(R.string.imgur_account_summary)
                         }
                         .setNegativeButton(

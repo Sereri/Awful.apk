@@ -21,7 +21,7 @@ import androidx.viewpager.widget.ViewPager
 import com.android.volley.VolleyError
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.StringPreference
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.service.AwfulCursorAdapter
@@ -55,7 +55,7 @@ private object EmoteHistory {
     private const val MAX_RECENT_EMOTES = 30
     const val SEPARATOR = " "
     private val recentList: MutableList<String> by lazy {
-        AwfulPreferences.getInstance().getPreference(Keys.RECENT_EMOTES, "")!!.split(SEPARATOR)
+        AwfulPreferences.getInstance().getPreference(StringPreference.RECENT_EMOTES, "")!!.split(SEPARATOR)
                 .toMutableList()
     }
 
@@ -77,7 +77,7 @@ private object EmoteHistory {
             plus(emoteCode).takeLast(MAX_RECENT_EMOTES)
                     .let { newRecent -> clear(); addAll(newRecent) }
         }
-        AwfulPreferences.getInstance().setPreference(Keys.RECENT_EMOTES, getRecent())
+        AwfulPreferences.getInstance().setPreference(StringPreference.RECENT_EMOTES, getRecent())
     }
 }
 

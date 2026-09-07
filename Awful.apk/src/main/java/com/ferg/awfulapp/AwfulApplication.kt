@@ -18,7 +18,7 @@ import com.ferg.awfulapp.announcements.AnnouncementsManager
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.BooleanPreference
 import com.ferg.awfulapp.search.SearchFragment
 import com.ferg.awfulapp.sync.SyncManager
 import com.ferg.awfulapp.util.AwfulUtils
@@ -79,7 +79,7 @@ class AwfulApplication : Application() {
         val mPref = AwfulPreferences.getInstance(this)
 
         appStatePrefs = this.getSharedPreferences(APP_STATE_PREFERENCES, MODE_PRIVATE)
-        mPref.setPreference(Keys.PROBATION_IGNORE, false)
+        mPref.setPreference(BooleanPreference.PROBATION_IGNORE, false)
 
         NetworkUtils.init(this)
         AndroidThreeTen.init(this)

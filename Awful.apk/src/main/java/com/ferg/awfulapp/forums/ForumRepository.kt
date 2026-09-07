@@ -10,7 +10,6 @@ import com.ferg.awfulapp.AwfulApplication.Companion.appStatePrefs
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.Keys
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.provider.DatabaseHelper
 import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
@@ -23,6 +22,8 @@ import java.util.Arrays
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.concurrent.Volatile
 import androidx.core.content.edit
+import com.ferg.awfulapp.preferences.StringPreference
+import com.ferg.awfulapp.preferences.StringSetPreference
 
 /**
  * Created by baka kaba on 04/04/2016.
@@ -494,7 +495,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
         private val favouriteForumIds: Array<String>
             get() {
                 val favouriteList =
-                    AwfulPreferences.getInstance().getPreference(Keys.FAVOURITE_FORUMS, "")
+                    AwfulPreferences.getInstance().getPreference(StringPreference.FAVOURITE_FORUMS, "")
                 return StringUtils.split(
                     favouriteList,
                     FAV_ID_SEPARATOR
@@ -508,7 +509,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
         private fun setFavouriteForumIds(forumIds: MutableList<String>) {
             // stored as a single string of IDs
             val joinedIds: String? = StringUtils.join(forumIds, FAV_ID_SEPARATOR)
-            AwfulPreferences.getInstance().setPreference(Keys.FAVOURITE_FORUMS, joinedIds)
+            AwfulPreferences.getInstance().setPreference(StringPreference.FAVOURITE_FORUMS, joinedIds)
         }
     }
 }

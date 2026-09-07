@@ -53,7 +53,8 @@ import com.ferg.awfulapp.NavigationEvent.SearchForums
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.BooleanPreference
+import com.ferg.awfulapp.preferences.StringSetPreference
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.provider.DatabaseHelper
@@ -292,7 +293,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
                 "I accept",
                 DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
                     displayPostThreadDialog(this.forumId)
-                    AwfulPreferences.getInstance().setPreference(Keys.POST_WARNING_ACCEPTED, true)
+                    AwfulPreferences.getInstance().setPreference(BooleanPreference.POST_WARNING_ACCEPTED, true)
                 })
             .setNegativeButton(
                 "Nope",
@@ -399,13 +400,13 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
      * @param threadId  The thread ID to hide or show
      */
     private fun toggleHiddenThread(threadId: Int) {
-        val hiddenThreadIds = prefs.getPreference(Keys.HIDDEN_THREAD_IDS, mutableSetOf())
+        val hiddenThreadIds = prefs.getPreference(StringSetPreference.HIDDEN_THREAD_IDS, mutableSetOf())
         val newSet: MutableSet<String?> = hiddenThreadIds.toMutableSet() // not allowed to mutate original set
         val id = threadId.toString()
         if (!newSet.remove(id)) {
             newSet.add(id)
         }
-        prefs.setPreference(Keys.HIDDEN_THREAD_IDS, newSet)
+        prefs.setPreference(StringSetPreference.HIDDEN_THREAD_IDS, newSet)
     }
 
     /**

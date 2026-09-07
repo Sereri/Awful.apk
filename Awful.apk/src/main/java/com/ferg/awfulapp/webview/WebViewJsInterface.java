@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 import android.webkit.JavascriptInterface;
 
 import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.preferences.Keys;
+import com.ferg.awfulapp.preferences.BooleanPreference;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,9 +45,9 @@ public class WebViewJsInterface {
         preferences.put("highlightUsername", Boolean.toString(aPrefs.highlightUsername));
         preferences.put("inlineTweets", Boolean.toString(aPrefs.inlineTweets));
         preferences.put("inlineBluesky", Boolean.toString(aPrefs.inlineBluesky));
-        preferences.put("inlineInstagram", Boolean.toString(aPrefs.getPreference(Keys.INLINE_INSTAGRAM, false)));
-        preferences.put("inlineSoundcloud", Boolean.toString(aPrefs.getPreference(Keys.INLINE_SOUNDCLOUD, true)));
-        preferences.put("inlineTwitch", Boolean.toString(aPrefs.getPreference(Keys.INLINE_TWITCH, false)));
+        preferences.put("inlineInstagram", Boolean.toString(aPrefs.getPreference(BooleanPreference.INLINE_INSTAGRAM, false)));
+        preferences.put("inlineSoundcloud", Boolean.toString(aPrefs.getPreference(BooleanPreference.INLINE_SOUNDCLOUD, true)));
+        preferences.put("inlineTwitch", Boolean.toString(aPrefs.getPreference(BooleanPreference.INLINE_TWITCH, false)));
         preferences.put("inlineWebm", Boolean.toString(aPrefs.inlineWebm));
         preferences.put("autostartWebm", Boolean.toString(aPrefs.autostartWebm));
         preferences.put("inlineVines", Boolean.toString(aPrefs.inlineVines));

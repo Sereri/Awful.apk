@@ -2,7 +2,7 @@ package com.ferg.awfulapp.task
 
 import android.content.Context
 import com.ferg.awfulapp.constants.Constants.BASE_URL
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.StringPreference
 import com.ferg.awfulapp.thread.AwfulForum
 import com.ferg.awfulapp.util.AwfulError
 import org.jsoup.nodes.Document
@@ -43,7 +43,7 @@ class IndexIconRequest(context: Context) : AwfulRequest<Void?>(context, BASE_URL
                     }
                     Timber.v("text: $name - $unreadCount")
                     if (name != null && name.isNotEmpty()) {
-                        preferences.setPreference(Keys.USERNAME, name)
+                        preferences.setPreference(StringPreference.USERNAME, name)
                     }
                 }
             }

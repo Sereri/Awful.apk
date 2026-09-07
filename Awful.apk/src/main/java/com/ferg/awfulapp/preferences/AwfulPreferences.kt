@@ -44,12 +44,6 @@ import android.util.TypedValue
 import androidx.annotation.StringRes
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.constants.Constants
-import com.ferg.awfulapp.preferences.Keys.BooleanPreference
-import com.ferg.awfulapp.preferences.Keys.FloatPreference
-import com.ferg.awfulapp.preferences.Keys.IntPreference
-import com.ferg.awfulapp.preferences.Keys.LongPreference
-import com.ferg.awfulapp.preferences.Keys.StringPreference
-import com.ferg.awfulapp.preferences.Keys.StringSetPreference
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.BufferedReader
@@ -75,7 +69,7 @@ class AwfulPreferences private constructor(
     val sharedPrefs: SharedPreferences
 
 
-    private val mResources: Resources
+    private val mResources: Resources = context.resources
     private val mCallback = WeakHashMap<AwfulPreferenceUpdate?, Any?>()
 
     //GENERAL STUFF
@@ -231,7 +225,6 @@ class AwfulPreferences private constructor(
      * @param context
      */
     init {
-        mResources = context.resources
         // this is sort of redundant with what's going on in updateValues(), but best to be sure eh
         SettingsActivity.setDefaultsFromXml(context)
         this.sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.context)
@@ -267,88 +260,88 @@ class AwfulPreferences private constructor(
     private fun updateValues() {
         val res = context.resources
         scaleFactor = res.displayMetrics.density
-        username = getPreference(Keys.USERNAME, "Username")
-        userAvatarUrl = getPreference(Keys.USER_AVATAR_URL, null as String?)
-        hasPlatinum = getPreference(Keys.HAS_PLATINUM, false)
-        hasArchives = getPreference(Keys.HAS_ARCHIVES, false)
-        hasNoAds = getPreference(Keys.HAS_NO_ADS, false)
-        postFontSizeSp = getPreference(Keys.POST_FONT_SIZE_SP, Constants.DEFAULT_FONT_SIZE_SP)
+        username = getPreference(StringPreference.USERNAME, "Username")
+        userAvatarUrl = getPreference(StringPreference.USER_AVATAR_URL, null as String?)
+        hasPlatinum = getPreference(BooleanPreference.HAS_PLATINUM, false)
+        hasArchives = getPreference(BooleanPreference.HAS_ARCHIVES, false)
+        hasNoAds = getPreference(BooleanPreference.HAS_NO_ADS, false)
+        postFontSizeSp = getPreference(IntPreference.POST_FONT_SIZE_SP, Constants.DEFAULT_FONT_SIZE_SP)
         postFixedFontSizeSp =
-            getPreference(Keys.POST_FIXED_FONT_SIZE_SP, Constants.DEFAULT_FIXED_FONT_SIZE_SP)
+            getPreference(IntPreference.POST_FIXED_FONT_SIZE_SP, Constants.DEFAULT_FIXED_FONT_SIZE_SP)
         postFontSizePx = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_SP,
             postFontSizeSp.toFloat(),
             context.resources.displayMetrics
         ).toInt()
-        theme = getPreference(Keys.THEME, "default.css")
-        launcherIcon = getPreference(Keys.LAUNCHER_ICON, "frog")
-        layout = getPreference(Keys.LAYOUT, "default")
-        imagesEnabled = getPreference(Keys.IMAGES_ENABLED, true)
-        no3gImages = getPreference(Keys.NO_3G_IMAGES, false)
-        avatarsEnabled = getPreference(Keys.AVATARS_ENABLED, true)
-        hideOldImages = getPreference(Keys.HIDE_OLD_IMAGES, false)
-        showSmilies = getPreference(Keys.SHOW_SMILIES, true)
-        postPerPage = getPreference(Keys.POST_PER_PAGE, Constants.ITEMS_PER_PAGE)
-        alternateBackground = getPreference(Keys.ALTERNATE_BACKGROUND, false)
-        highlightUserQuote = getPreference(Keys.HIGHLIGHT_USER_QUOTE, true)
-        highlightUsername = getPreference(Keys.HIGHLIGHT_USERNAME, true)
-        highlightSelf = getPreference(Keys.HIGHLIGHT_SELF, true)
-        highlightOP = getPreference(Keys.HIGHLIGHT_OP, true)
-        inlineYoutube = getPreference(Keys.INLINE_YOUTUBE, true)
-        inlineTweets = getPreference(Keys.INLINE_TWEETS, true)
-        inlineBluesky = getPreference(Keys.INLINE_BLUESKY, true)
-        inlineTiktoks = getPreference(Keys.INLINE_TIKTOKS, false)
-        inlineVines = getPreference(Keys.INLINE_VINES, false)
-        inlineWebm = getPreference(Keys.INLINE_WEBM, true)
-        autostartWebm = getPreference(Keys.AUTOSTART_WEBM, false)
-        showAllSpoilers = getPreference(Keys.SHOW_ALL_SPOILERS, false)
-        threadInfo_Rating = getPreference(Keys.THREAD_INFO_RATING, true)
-        threadInfo_Tag = getPreference(Keys.THREAD_INFO_TAG, true)
-        highlightYourThreads = getPreference(Keys.HIGHLIGHT_YOUR_THREADS, true)
-        imgurAccount = getPreference(Keys.IMGUR_ACCOUNT, null as String?)
-        imgurAccountToken = getPreference(Keys.IMGUR_ACCOUNT_TOKEN, null as String?)
-        imgurRefreshToken = getPreference(Keys.IMGUR_REFRESH_TOKEN, null as String?)
-        imgurTokenExpires = getPreference(Keys.IMGUR_TOKEN_EXPIRES, 0L)
-        imgurThumbnails = getPreference(Keys.IMGUR_THUMBNAILS, "d")
-        newThreadsFirstUCP = getPreference(Keys.NEW_THREADS_FIRST_UCP, false)
-        newThreadsFirstForum = getPreference(Keys.NEW_THREADS_FIRST_FORUM, false)
-        preferredFont = getPreference(Keys.PREFERRED_FONT, "default")
-        upperNextArrow = getPreference(Keys.UPPER_NEXT_ARROW, false)
-        sendUsernameInReport = getPreference(Keys.SEND_USERNAME_IN_REPORT, true)
-        disableGifs = getPreference(Keys.DISABLE_GIFS, true)
-        hideOldPosts = getPreference(Keys.HIDE_OLD_POSTS, true)
-        alwaysOpenUrls = getPreference(Keys.ALWAYS_OPEN_URLS, false)
-        blockedAvatarUrls = getPreference(Keys.BLOCKED_AVATAR_URLS, mutableSetOf<String?>())
-        hiddenThreadIds = getPreference(Keys.HIDDEN_THREAD_IDS, mutableSetOf<String?>())
-        showHiddenThreads = getPreference(Keys.SHOW_HIDDEN_THREADS, true)
-        lockScrolling = getPreference(Keys.LOCK_SCROLLING, false)
-        disableTimgs = getPreference(Keys.DISABLE_TIMGS, false)
-        currPrefVersion = getPreference(Keys.CURR_PREF_VERSION, 0)
-        disablePullNext = getPreference(Keys.DISABLE_PULL_NEXT, false)
-        alertIDShown = getPreference(Keys.ALERT_ID_SHOWN, 0)
-        lastVersionSeen = getPreference(Keys.LAST_VERSION_SEEN, 0)
-        volumeScroll = getPreference(Keys.VOLUME_SCROLL, false)
-        forceForumThemes = getPreference(Keys.FORCE_FORUM_THEMES, true)
-        noFAB = getPreference(Keys.NO_FAB, false)
-        probationTime = getPreference(Keys.PROBATION_TIME, 0L)
-        probationIgnore = getPreference(Keys.PROBATION_IGNORE, false)
-        userId = getPreference(Keys.USER_ID, 0)
-        showIgnoreWarning = getPreference(Keys.SHOW_IGNORE_WARNING, true)
-        ignoreFormkey = getPreference(Keys.IGNORE_FORMKEY, null as String?)
-        orientation = getPreference(Keys.ORIENTATION, "default")
-        pageLayout = getPreference(Keys.PAGE_LAYOUT, "auto")
-        coloredBookmarks = getPreference(Keys.COLORED_BOOKMARKS, false)
-        p2rDistance = getPreference(Keys.P2R_DISTANCE, 0.5f)
-        immersionMode = getPreference(Keys.IMMERSION_MODE, false)
-        hideSignatures = getPreference(Keys.HIDE_SIGNATURES, false)
-        transformer = getPreference(Keys.TRANSFORMER, "Default")
-        amberDefaultPos = getPreference(Keys.AMBER_DEFAULT_POS, false)
-        hideIgnoredPosts = getPreference(Keys.HIDE_IGNORED_POSTS, false)
-        markedUsers = getPreference(Keys.MARKED_USERS, HashSet<String?>())
-        forumIndexShowSections = getPreference(Keys.FORUM_INDEX_SHOW_SECTIONS, true)
-        forumIndexShowSubtitles = getPreference(Keys.FORUM_INDEX_SHOW_SUBTITLES, true)
-        forumIndexHideSubforums = getPreference(Keys.FORUM_INDEX_HIDE_SUBFORUMS, true)
-        postWarningAccepted = getPreference(Keys.POST_WARNING_ACCEPTED, false)
+        theme = getPreference(StringPreference.THEME, "default.css")
+        launcherIcon = getPreference(StringPreference.LAUNCHER_ICON, "frog")
+        layout = getPreference(StringPreference.LAYOUT, "default")
+        imagesEnabled = getPreference(BooleanPreference.IMAGES_ENABLED, true)
+        no3gImages = getPreference(BooleanPreference.NO_3G_IMAGES, false)
+        avatarsEnabled = getPreference(BooleanPreference.AVATARS_ENABLED, true)
+        hideOldImages = getPreference(BooleanPreference.HIDE_OLD_IMAGES, false)
+        showSmilies = getPreference(BooleanPreference.SHOW_SMILIES, true)
+        postPerPage = getPreference(IntPreference.POST_PER_PAGE, Constants.ITEMS_PER_PAGE)
+        alternateBackground = getPreference(BooleanPreference.ALTERNATE_BACKGROUND, false)
+        highlightUserQuote = getPreference(BooleanPreference.HIGHLIGHT_USER_QUOTE, true)
+        highlightUsername = getPreference(BooleanPreference.HIGHLIGHT_USERNAME, true)
+        highlightSelf = getPreference(BooleanPreference.HIGHLIGHT_SELF, true)
+        highlightOP = getPreference(BooleanPreference.HIGHLIGHT_OP, true)
+        inlineYoutube = getPreference(BooleanPreference.INLINE_YOUTUBE, true)
+        inlineTweets = getPreference(BooleanPreference.INLINE_TWEETS, true)
+        inlineBluesky = getPreference(BooleanPreference.INLINE_BLUESKY, true)
+        inlineTiktoks = getPreference(BooleanPreference.INLINE_TIKTOKS, false)
+        inlineVines = getPreference(BooleanPreference.INLINE_VINES, false)
+        inlineWebm = getPreference(BooleanPreference.INLINE_WEBM, true)
+        autostartWebm = getPreference(BooleanPreference.AUTOSTART_WEBM, false)
+        showAllSpoilers = getPreference(BooleanPreference.SHOW_ALL_SPOILERS, false)
+        threadInfo_Rating = getPreference(BooleanPreference.THREAD_INFO_RATING, true)
+        threadInfo_Tag = getPreference(BooleanPreference.THREAD_INFO_TAG, true)
+        highlightYourThreads = getPreference(BooleanPreference.HIGHLIGHT_YOUR_THREADS, true)
+        imgurAccount = getPreference(StringPreference.IMGUR_ACCOUNT, null as String?)
+        imgurAccountToken = getPreference(StringPreference.IMGUR_ACCOUNT_TOKEN, null as String?)
+        imgurRefreshToken = getPreference(StringPreference.IMGUR_REFRESH_TOKEN, null as String?)
+        imgurTokenExpires = getPreference(LongPreference.IMGUR_TOKEN_EXPIRES, 0L)
+        imgurThumbnails = getPreference(StringPreference.IMGUR_THUMBNAILS, "d")
+        newThreadsFirstUCP = getPreference(BooleanPreference.NEW_THREADS_FIRST_UCP, false)
+        newThreadsFirstForum = getPreference(BooleanPreference.NEW_THREADS_FIRST_FORUM, false)
+        preferredFont = getPreference(StringPreference.PREFERRED_FONT, "default")
+        upperNextArrow = getPreference(BooleanPreference.UPPER_NEXT_ARROW, false)
+        sendUsernameInReport = getPreference(BooleanPreference.SEND_USERNAME_IN_REPORT, true)
+        disableGifs = getPreference(BooleanPreference.DISABLE_GIFS, true)
+        hideOldPosts = getPreference(BooleanPreference.HIDE_OLD_POSTS, true)
+        alwaysOpenUrls = getPreference(BooleanPreference.ALWAYS_OPEN_URLS, false)
+        blockedAvatarUrls = getPreference(StringSetPreference.BLOCKED_AVATAR_URLS, mutableSetOf())
+        hiddenThreadIds = getPreference(StringSetPreference.HIDDEN_THREAD_IDS, mutableSetOf())
+        showHiddenThreads = getPreference(BooleanPreference.SHOW_HIDDEN_THREADS, true)
+        lockScrolling = getPreference(BooleanPreference.LOCK_SCROLLING, false)
+        disableTimgs = getPreference(BooleanPreference.DISABLE_TIMGS, false)
+        currPrefVersion = getPreference(IntPreference.CURR_PREF_VERSION, 0)
+        disablePullNext = getPreference(BooleanPreference.DISABLE_PULL_NEXT, false)
+        alertIDShown = getPreference(IntPreference.ALERT_ID_SHOWN, 0)
+        lastVersionSeen = getPreference(IntPreference.LAST_VERSION_SEEN, 0)
+        volumeScroll = getPreference(BooleanPreference.VOLUME_SCROLL, false)
+        forceForumThemes = getPreference(BooleanPreference.FORCE_FORUM_THEMES, true)
+        noFAB = getPreference(BooleanPreference.NO_FAB, false)
+        probationTime = getPreference(LongPreference.PROBATION_TIME, 0L)
+        probationIgnore = getPreference(BooleanPreference.PROBATION_IGNORE, false)
+        userId = getPreference(IntPreference.USER_ID, 0)
+        showIgnoreWarning = getPreference(BooleanPreference.SHOW_IGNORE_WARNING, true)
+        ignoreFormkey = getPreference(StringPreference.IGNORE_FORMKEY, null as String?)
+        orientation = getPreference(StringPreference.ORIENTATION, "default")
+        pageLayout = getPreference(StringPreference.PAGE_LAYOUT, "auto")
+        coloredBookmarks = getPreference(BooleanPreference.COLORED_BOOKMARKS, false)
+        p2rDistance = getPreference(FloatPreference.P2R_DISTANCE, 0.5f)
+        immersionMode = getPreference(BooleanPreference.IMMERSION_MODE, false)
+        hideSignatures = getPreference(BooleanPreference.HIDE_SIGNATURES, false)
+        transformer = getPreference(StringPreference.TRANSFORMER, "Default")
+        amberDefaultPos = getPreference(BooleanPreference.AMBER_DEFAULT_POS, false)
+        hideIgnoredPosts = getPreference(BooleanPreference.HIDE_IGNORED_POSTS, false)
+        markedUsers = getPreference(StringSetPreference.MARKED_USERS, HashSet<String?>())
+        forumIndexShowSections = getPreference(BooleanPreference.FORUM_INDEX_SHOW_SECTIONS, true)
+        forumIndexShowSubtitles = getPreference(BooleanPreference.FORUM_INDEX_SHOW_SUBTITLES, true)
+        forumIndexHideSubforums = getPreference(BooleanPreference.FORUM_INDEX_HIDE_SUBFORUMS, true)
+        postWarningAccepted = getPreference(BooleanPreference.POST_WARNING_ACCEPTED, false)
 
         //I have never seen this before oh god
     }
@@ -362,33 +355,33 @@ class AwfulPreferences private constructor(
 		The @StringRes annotation is there to enforce storing keys as resource strings!
 	 */
     fun getPreference(
-        @StringPreference @StringRes key: Int,
+        key: StringPreference,
         defaultValue: String?
     ): String? {
-        return sharedPrefs.getString(mResources.getString(key), defaultValue)
+        return sharedPrefs.getString(mResources.getString(key.key), defaultValue)
     }
 
     fun getPreference(
-        @StringSetPreference @StringRes key: Int,
+        key: StringSetPreference,
         defaultValue: MutableSet<String?>
     ): MutableSet<String?> {
-        return sharedPrefs.getStringSet(mResources.getString(key), defaultValue)!!
+        return sharedPrefs.getStringSet(mResources.getString(key.key), defaultValue)!!
     }
 
-    fun getPreference(@BooleanPreference @StringRes key: Int, defaultValue: Boolean): Boolean {
-        return sharedPrefs.getBoolean(mResources.getString(key), defaultValue)
+    fun getPreference(key: BooleanPreference, defaultValue: Boolean): Boolean {
+        return sharedPrefs.getBoolean(mResources.getString(key.key), defaultValue)
     }
 
-    fun getPreference(@IntPreference @StringRes key: Int, defaultValue: Int): Int {
-        return sharedPrefs.getInt(mResources.getString(key), defaultValue)
+    fun getPreference(key: IntPreference, defaultValue: Int): Int {
+        return sharedPrefs.getInt(mResources.getString(key.key), defaultValue)
     }
 
-    fun getPreference(@LongPreference @StringRes key: Int, defaultValue: Long): Long {
-        return sharedPrefs.getLong(mResources.getString(key), defaultValue)
+    fun getPreference(key: LongPreference, defaultValue: Long): Long {
+        return sharedPrefs.getLong(mResources.getString(key.key), defaultValue)
     }
 
-    fun getPreference(@FloatPreference @StringRes key: Int, defaultValue: Float): Float {
-        return sharedPrefs.getFloat(mResources.getString(key), defaultValue)
+    fun getPreference(key: FloatPreference, defaultValue: Float): Float {
+        return sharedPrefs.getFloat(mResources.getString(key.key), defaultValue)
     }
 
 
@@ -401,33 +394,33 @@ class AwfulPreferences private constructor(
 		The @StringRes annotation is there to enforce storing keys as resource strings!
 	 */
     fun setPreference(
-        @StringPreference @StringRes key: Int,
+        key: StringPreference,
         value: String?
     ) {
-        sharedPrefs.edit { putString(mResources.getString(key), value) }
+        sharedPrefs.edit { putString(mResources.getString(key.key), value) }
     }
 
     fun setPreference(
-        @StringSetPreference @StringRes key: Int,
+        key: StringSetPreference,
         value: MutableSet<String?>
     ) {
-        sharedPrefs.edit { putStringSet(mResources.getString(key), value) }
+        sharedPrefs.edit { putStringSet(mResources.getString(key.key), value) }
     }
 
-    fun setPreference(@BooleanPreference @StringRes key: Int, value: Boolean) {
-        sharedPrefs.edit { putBoolean(mResources.getString(key), value) }
+    fun setPreference(key: BooleanPreference, value: Boolean) {
+        sharedPrefs.edit { putBoolean(mResources.getString(key.key), value) }
     }
 
-    fun setPreference(@IntPreference @StringRes key: Int, value: Int) {
-        sharedPrefs.edit { putInt(mResources.getString(key), value) }
+    fun setPreference(key: IntPreference, value: Int) {
+        sharedPrefs.edit { putInt(mResources.getString(key.key), value) }
     }
 
-    fun setPreference(@LongPreference @StringRes key: Int, value: Long) {
-        sharedPrefs.edit { putLong(mResources.getString(key), value) }
+    fun setPreference(key: LongPreference, value: Long) {
+        sharedPrefs.edit { putLong(mResources.getString(key.key), value) }
     }
 
-    fun setPreference(@FloatPreference @StringRes key: Int, value: Float) {
-        sharedPrefs.edit { putFloat(mResources.getString(key), value) }
+    fun setPreference(key: FloatPreference, value: Float) {
+        sharedPrefs.edit { putFloat(mResources.getString(key.key), value) }
     }
 
 
@@ -440,7 +433,7 @@ class AwfulPreferences private constructor(
                     val newThreadsFirst = sharedPrefs.getBoolean(obsoleteKey, false)
                     sharedPrefs.edit { remove(obsoleteKey) }
                     // transfer the value to the new key
-                    setPreference(Keys.NEW_THREADS_FIRST_UCP, newThreadsFirst)
+                    setPreference(BooleanPreference.NEW_THREADS_FIRST_UCP, newThreadsFirst)
                     newThreadsFirstUCP = newThreadsFirst
                 }
 
@@ -448,7 +441,7 @@ class AwfulPreferences private constructor(
             }
 
             //update the preferences so this doesn't run again
-            setPreference(Keys.CURR_PREF_VERSION, PREFERENCES_VERSION)
+            setPreference(IntPreference.CURR_PREF_VERSION, PREFERENCES_VERSION)
             currPrefVersion = PREFERENCES_VERSION
         }
     }
@@ -463,7 +456,7 @@ class AwfulPreferences private constructor(
                 return false
             } else {
                 if (Date(probationTime) < Date()) {
-                    setPreference(Keys.PROBATION_TIME, 0L)
+                    setPreference(LongPreference.PROBATION_TIME, 0L)
                     return false
                 }
                 return true
@@ -598,14 +591,14 @@ class AwfulPreferences private constructor(
     fun markUser(username: String?) {
         val newMarkedUsers: MutableSet<String?> = HashSet<String?>(markedUsers)
         newMarkedUsers.add(username)
-        setPreference(Keys.MARKED_USERS, newMarkedUsers)
+        setPreference(StringSetPreference.MARKED_USERS, newMarkedUsers)
         markedUsers = newMarkedUsers
     }
 
     fun unmarkUser(username: String?) {
         val newMarkedUsers: MutableSet<String?> = HashSet<String?>(markedUsers)
         newMarkedUsers.remove(username)
-        setPreference(Keys.MARKED_USERS, newMarkedUsers)
+        setPreference(StringSetPreference.MARKED_USERS, newMarkedUsers)
         markedUsers = newMarkedUsers
     }
 

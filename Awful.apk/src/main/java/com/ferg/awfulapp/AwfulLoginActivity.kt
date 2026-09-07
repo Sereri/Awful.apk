@@ -51,7 +51,7 @@ import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.CookieController
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.StringPreference
 import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
 import com.ferg.awfulapp.task.LoginRequest
 import org.apache.http.HttpStatus
@@ -166,7 +166,7 @@ class AwfulLoginActivity : AwfulActivity() {
                             if (result) {
                                 // TODO: this should probably be handled by firing a ProfileRequest and getting the username from there, maybe through SyncManager
                                 val prefs = AwfulPreferences.getInstance(applicationContext)
-                                prefs.setPreference(Keys.USERNAME, username)
+                                prefs.setPreference(StringPreference.USERNAME, username)
                                 onLoginSuccess()
                             } else {
                                 onLoginFailed()

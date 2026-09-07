@@ -7,7 +7,8 @@ import android.view.animation.Animation;
 import com.android.volley.VolleyError;
 import com.ferg.awfulapp.R;
 import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.preferences.Keys;
+import com.ferg.awfulapp.preferences.IntPreference;
+import com.ferg.awfulapp.preferences.LongPreference;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
@@ -161,13 +162,13 @@ public class AwfulError extends VolleyError {
         Element probation = page.getElementById("probation_warn");
         if (probation == null) {
             // clear any probation
-            prefs.setPreference(Keys.PROBATION_TIME, 0L);
+            prefs.setPreference(LongPreference.PROBATION_TIME, 0L);
         } else {
             // try to get the user ID (for the link to the Leper's Colony)
             Element userLink = probation.getElementsByTag("a").first();
             if (userLink != null) {
                 String userId = StringUtils.substringAfterLast(userLink.attr("href"), "=");
-                prefs.setPreference(Keys.USER_ID, Integer.parseInt(userId));
+                prefs.setPreference(IntPreference.USER_ID, Integer.parseInt(userId));
             }
 
             // try to parse the probation date - default to 1 day in case we can't parse it (not too scary)
@@ -188,7 +189,7 @@ public class AwfulError extends VolleyError {
                 Timber.w("checkPageErrors: couldn't find expected probation date text!\nFull text: %s", probation.text());
             }
 
-            prefs.setPreference(Keys.PROBATION_TIME, probTimestamp);
+            prefs.setPreference(LongPreference.PROBATION_TIME, probTimestamp);
             return new AwfulError(ERROR_PROBATION);
         }
         return null;

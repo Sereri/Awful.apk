@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.ferg.awfulapp.R;
 import com.ferg.awfulapp.databinding.ProbationBarBinding;
 import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.preferences.Keys;
+import com.ferg.awfulapp.preferences.BooleanPreference;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -60,7 +60,7 @@ public class ProbationBar extends LinearLayout {
         binding.closeProbationBar.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                AwfulPreferences.getInstance().setPreference(Keys.PROBATION_IGNORE, true);
+                AwfulPreferences.getInstance().setPreference(BooleanPreference.PROBATION_IGNORE, true);
             }
         });
         binding.goToLC.setOnClickListener(new OnClickListener() {

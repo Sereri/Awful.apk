@@ -84,7 +84,6 @@ import com.ferg.awfulapp.popupmenu.PostContextMenu
 import com.ferg.awfulapp.popupmenu.PostContextMenu.PostMenuAction
 import com.ferg.awfulapp.popupmenu.UrlContextMenu
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.Keys
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.provider.AwfulTheme
 import com.ferg.awfulapp.provider.ColorProvider
@@ -138,6 +137,8 @@ import androidx.core.view.get
 import androidx.core.view.size
 import androidx.core.view.isEmpty
 import com.ferg.awfulapp.popupmenu.AwfulAction
+import com.ferg.awfulapp.preferences.BooleanPreference
+import com.ferg.awfulapp.preferences.StringSetPreference
 
 /**
  * Uses intent extras:
@@ -722,7 +723,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                 DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
                     if (which == AlertDialog.BUTTON_NEUTRAL) {
                         // cancel future alerts if the user clicks the "don't warn" option
-                        prefs.setPreference(Keys.SHOW_IGNORE_WARNING, false)
+                        prefs.setPreference(BooleanPreference.SHOW_IGNORE_WARNING, false)
                     }
                     doIgnoreUser(requireActivity(), userId)
                 }
@@ -863,14 +864,14 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         if (TextUtils.isEmpty(avatarUrl)) {
             return
         }
-        val blocked = prefs.getPreference(Keys.BLOCKED_AVATAR_URLS, mutableSetOf<String?>())
+        val blocked = prefs.getPreference(StringSetPreference.BLOCKED_AVATAR_URLS, mutableSetOf<String?>())
         val newSet: MutableSet<String?> =
             HashSet(blocked) // not allowed to mutate original set
 
         if (!newSet.remove(avatarUrl)) {
             newSet.add(avatarUrl)
         }
-        prefs.setPreference(Keys.BLOCKED_AVATAR_URLS, newSet)
+        prefs.setPreference(StringSetPreference.BLOCKED_AVATAR_URLS, newSet)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -985,7 +986,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
      */
     private fun toggleYospos() {
         prefs.amberDefaultPos = !prefs.amberDefaultPos
-        prefs.setPreference(Keys.AMBER_DEFAULT_POS, prefs.amberDefaultPos)
+        prefs.setPreference(BooleanPreference.AMBER_DEFAULT_POS, prefs.amberDefaultPos)
         mThreadView?.runJavascript(
             String.format(
                 "changeCSS('%s')", AwfulTheme.forForum(

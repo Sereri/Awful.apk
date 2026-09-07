@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.preference.Preference
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.constants.Constants
-import com.ferg.awfulapp.preferences.Keys
+import com.ferg.awfulapp.preferences.IntPreference
 import com.ferg.awfulapp.widget.MinMaxNumberPicker
 
 /**
@@ -80,13 +80,13 @@ class PostSettings : SettingsFragment() {
             bar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
                     if (prefKey == FONT_SIZE_KEY) {
-                        mPrefs!!.setPreference(
-                            Keys.POST_FONT_SIZE_SP,
+                        mPrefs?.setPreference(
+                            IntPreference.POST_FONT_SIZE_SP,
                             seekBar.progress + MIN_SIZE
                         )
                     } else if (prefKey == FIXED_FONT_SIZE_KEY) {
-                        mPrefs!!.setPreference(
-                            Keys.POST_FIXED_FONT_SIZE_SP,
+                        mPrefs?.setPreference(
+                            IntPreference.POST_FIXED_FONT_SIZE_SP,
                             seekBar.progress + MIN_SIZE
                         )
                     }
@@ -140,7 +140,7 @@ class PostSettings : SettingsFragment() {
                 if (button == DialogInterface.BUTTON_POSITIVE) {
                     val key = preference.key
                     if (key == getString(R.string.pref_key_post_per_page)) {
-                        mPrefs?.setPreference(Keys.POST_PER_PAGE, resultValue)
+                        mPrefs?.setPreference(IntPreference.POST_PER_PAGE, resultValue)
                     }
                 }
             }.show()

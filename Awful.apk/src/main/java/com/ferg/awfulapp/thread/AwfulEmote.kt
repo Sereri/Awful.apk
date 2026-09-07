@@ -60,10 +60,10 @@ object AwfulEmote {
 
     fun getView(current: View, aPref: AwfulPreferences?, data: Cursor) {
         val emoteText = current.findViewById<View?>(R.id.emote_text) as TextView
-        emoteText.text = data.getString(data.getColumnIndex(TEXT))
+        emoteText.text = data.getString(data.getColumnIndexOrThrow(TEXT))
         emoteText.setTextColor(current.resources.getColor(R.color.default_post_font))
         val emoteImage = current.findViewById<View?>(R.id.emote_icon) as NetworkImageView
-        emoteImage.setImageUrl(data.getString(data.getColumnIndex(URL)), imageLoader)
+        emoteImage.setImageUrl(data.getString(data.getColumnIndexOrThrow(URL)), imageLoader)
     }
 
 

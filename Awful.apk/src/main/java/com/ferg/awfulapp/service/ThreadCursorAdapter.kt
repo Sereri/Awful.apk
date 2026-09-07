@@ -83,7 +83,7 @@ class ThreadCursorAdapter(
         val tmpcursor = cursor
         if (tmpcursor != null && tmpcursor.moveToFirst()) {
             do {
-                if (tmpcursor.getLong(tmpcursor.getColumnIndex(AwfulThread.ID)) == id) { //contentprovider id tables are required to be _id
+                if (tmpcursor.getLong(tmpcursor.getColumnIndexOrThrow(AwfulThread.ID)) == id) { //contentprovider id tables are required to be _id
                     return UncloseableCursor(tmpcursor)
                 }
             } while (tmpcursor.moveToNext())

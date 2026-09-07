@@ -264,9 +264,9 @@ class ImgurInserter : DialogFragment() {
         val cursor: Cursor? = requireActivity().contentResolver.query(fileUri, null, null, null, null)
         cursor.use { cursor ->
             if (cursor != null && cursor.moveToFirst()) {
-                val name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                val name = cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
                 val size: Long? = try {
-                    cursor.getString(cursor.getColumnIndex(OpenableColumns.SIZE)).toLong()
+                    cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.SIZE)).toLong()
                 } catch (e: NumberFormatException) {
                     null
                 }

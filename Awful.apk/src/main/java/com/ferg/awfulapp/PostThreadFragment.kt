@@ -1050,16 +1050,16 @@ class PostThreadFragment : AwfulFragment() {
                 return
             }
             // if there's some quote data, deserialize it into a SavedDraft
-            val quoteData = aData.getString(aData.getColumnIndex(AwfulMessage.POST_CONTENT))
+            val quoteData = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.POST_CONTENT))
             if (TextUtils.isEmpty(quoteData)) {
                 return
             }
-            val subject = aData.getString(aData.getColumnIndex(AwfulMessage.POST_SUBJECT))
-            val draftTimestamp = aData.getLong(aData.getColumnIndex(AwfulMessage.EPOC_TIMESTAMP))
+            val subject = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.POST_SUBJECT))
+            val draftTimestamp = aData.getLong(aData.getColumnIndexOrThrow(AwfulMessage.EPOC_TIMESTAMP))
             val draftThread = NetworkUtils.unencodeHtml(quoteData)
 
-            val draftIconId = aData.getString(aData.getColumnIndex(AwfulMessage.POST_ICON_ID))
-            val draftIconUrl = aData.getString(aData.getColumnIndex(AwfulMessage.POST_ICON_URL))
+            val draftIconId = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.POST_ICON_ID))
+            val draftIconUrl = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.POST_ICON_URL))
 
             savedDraft = SavedDraft(draftThread, subject, draftIconId, draftIconUrl, draftTimestamp)
             if (Constants.DEBUG) {

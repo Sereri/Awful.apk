@@ -402,20 +402,20 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
             if (aData != null && aData.moveToFirst()) {
                 Log.v(Companion.TAG, "PM load finished, populating: " + aData.count)
 				messageWebView?.setBodyHtml(null)
-                val title = aData.getString(aData.getColumnIndex(AwfulMessage.TITLE))
+                val title = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.TITLE))
                 mTitle?.text = title
                 messageWebView?.setBodyHtml(
                     AwfulMessage.getMessageHtml(
                         aData.getString(
-                            aData.getColumnIndex(
+                            aData.getColumnIndexOrThrow(
                                 AwfulMessage.CONTENT
                             )
                         )
                     )
                 )
-                mPostdate?.text = aData.getString(aData.getColumnIndex(AwfulMessage.DATE))
-                val replyTitle = aData.getString(aData.getColumnIndex(AwfulMessage.REPLY_TITLE))
-                val replyContent = aData.getString(aData.getColumnIndex(AwfulMessage.REPLY_CONTENT))
+                mPostdate?.text = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.DATE))
+                val replyTitle = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.REPLY_TITLE))
+                val replyContent = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.REPLY_CONTENT))
                 if (replyContent != null) {
                     if (replyContent != messageComposer?.text) {
                         messageComposer?.setText(replyContent, false)
@@ -431,9 +431,9 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
                     mSubject?.setText(title)
                 }
                 awfulActivity?.setPreferredFont(mSubject)
-                val author = aData.getString(aData.getColumnIndex(AwfulMessage.AUTHOR))
+                val author = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.AUTHOR))
                 mUsername?.text = getString(R.string.message_sender).format(author)
-                val recip = aData.getString(aData.getColumnIndex(AwfulMessage.RECIPIENT))
+                val recip = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.RECIPIENT))
                 if (recip != null) {
                     mRecipient?.setText(recip)
                 } else {

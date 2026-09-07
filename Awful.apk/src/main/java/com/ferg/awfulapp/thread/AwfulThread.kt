@@ -175,34 +175,34 @@ class AwfulThread : AwfulPagedItem() {
             }
             val thread = AwfulThread()
 
-            thread.id = row.getInt(row.getColumnIndex(ID))
-            thread.index = row.getInt(row.getColumnIndex(INDEX))
-            thread.title = row.getString(row.getColumnIndex(TITLE))
+            thread.id = row.getInt(row.getColumnIndexOrThrow(ID))
+            thread.index = row.getInt(row.getColumnIndexOrThrow(INDEX))
+            thread.title = row.getString(row.getColumnIndexOrThrow(TITLE))
 
-            thread.forumId = row.getInt(row.getColumnIndex(FORUM_ID))
+            thread.forumId = row.getInt(row.getColumnIndexOrThrow(FORUM_ID))
 
             // TODO: 03/06/2017 this column name is taken from the thread projection, but is it ever used?
 //        thread.forumTitle = row.getString(row.getColumnIndex(FORUM_TITLE));
-            thread.author = row.getString(row.getColumnIndex(AUTHOR))
-            thread.authorId = row.getInt(row.getColumnIndex(AUTHOR_ID))
-            thread.lastPoster = row.getString(row.getColumnIndex(LASTPOSTER))
-            thread.lastPostDate = row.getLong(row.getColumnIndex(LAST_POST_DATE))
-            thread.postCount = row.getInt(row.getColumnIndex(POSTCOUNT))
-            thread.unreadCount = row.getInt(row.getColumnIndex(UNREADCOUNT))
+            thread.author = row.getString(row.getColumnIndexOrThrow(AUTHOR))
+            thread.authorId = row.getInt(row.getColumnIndexOrThrow(AUTHOR_ID))
+            thread.lastPoster = row.getString(row.getColumnIndexOrThrow(LASTPOSTER))
+            thread.lastPostDate = row.getLong(row.getColumnIndexOrThrow(LAST_POST_DATE))
+            thread.postCount = row.getInt(row.getColumnIndexOrThrow(POSTCOUNT))
+            thread.unreadCount = row.getInt(row.getColumnIndexOrThrow(UNREADCOUNT))
 
-            thread.rating = row.getInt(row.getColumnIndex(RATING))
-            thread.bookmarkType = row.getInt(row.getColumnIndex(BOOKMARKED))
+            thread.rating = row.getInt(row.getColumnIndexOrThrow(RATING))
+            thread.bookmarkType = row.getInt(row.getColumnIndexOrThrow(BOOKMARKED))
 
-            thread.isLocked = row.getInt(row.getColumnIndex(LOCKED)) > 0
-            thread.archived = row.getInt(row.getColumnIndex(ARCHIVED)) > 0
-            thread.isSticky = row.getInt(row.getColumnIndex(STICKY)) > 0
-            thread.canOpenClose = row.getInt(row.getColumnIndex(CAN_OPEN_CLOSE)) > 0
-            thread.hasBeenViewed = row.getInt(row.getColumnIndex(HAS_VIEWED_THREAD)) == 1
+            thread.isLocked = row.getInt(row.getColumnIndexOrThrow(LOCKED)) > 0
+            thread.archived = row.getInt(row.getColumnIndexOrThrow(ARCHIVED)) > 0
+            thread.isSticky = row.getInt(row.getColumnIndexOrThrow(STICKY)) > 0
+            thread.canOpenClose = row.getInt(row.getColumnIndexOrThrow(CAN_OPEN_CLOSE)) > 0
+            thread.hasBeenViewed = row.getInt(row.getColumnIndexOrThrow(HAS_VIEWED_THREAD)) == 1
 
-            thread.tagUrl = row.getString(row.getColumnIndex(TAG_URL))
-            thread.tagCacheFile = row.getString(row.getColumnIndex(TAG_CACHEFILE))
-            thread.tagExtra = row.getInt(row.getColumnIndex(TAG_EXTRA))
-            thread.category = row.getInt(row.getColumnIndex(CATEGORY))
+            thread.tagUrl = row.getString(row.getColumnIndexOrThrow(TAG_URL))
+            thread.tagCacheFile = row.getString(row.getColumnIndexOrThrow(TAG_CACHEFILE))
+            thread.tagExtra = row.getInt(row.getColumnIndexOrThrow(TAG_EXTRA))
+            thread.category = row.getInt(row.getColumnIndexOrThrow(CATEGORY))
 
             return thread
         }

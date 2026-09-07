@@ -1163,13 +1163,13 @@ class PostReplyFragment : AwfulFragment() {
                 return
             }
             // if there's some quote data, deserialise it into a SavedDraft
-            val quoteData = aData.getString(aData.getColumnIndex(AwfulMessage.REPLY_CONTENT))
+            val quoteData = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.REPLY_CONTENT))
             if (TextUtils.isEmpty(quoteData)) {
                 return
             }
-            val draftType = aData.getInt(aData.getColumnIndex(AwfulMessage.TYPE))
-            val postId = aData.getInt(aData.getColumnIndex(AwfulPost.EDIT_POST_ID))
-            val draftTimestamp = aData.getLong(aData.getColumnIndex(AwfulMessage.EPOC_TIMESTAMP))
+            val draftType = aData.getInt(aData.getColumnIndexOrThrow(AwfulMessage.TYPE))
+            val postId = aData.getInt(aData.getColumnIndexOrThrow(AwfulPost.EDIT_POST_ID))
+            val draftTimestamp = aData.getLong(aData.getColumnIndexOrThrow(AwfulMessage.EPOC_TIMESTAMP))
             val draftReply = NetworkUtils.unencodeHtml(quoteData)
 
             savedDraft = SavedDraft(draftType, draftReply, postId, draftTimestamp)
@@ -1202,7 +1202,7 @@ class PostReplyFragment : AwfulFragment() {
             Log.v(Companion.TAG, "Thread title finished, populating.")
             if (aData.moveToFirst()) {
                 //threadClosed = aData.getInt(aData.getColumnIndex(AwfulThread.LOCKED))>0;
-                mThreadTitle = aData.getString(aData.getColumnIndex(AwfulThread.TITLE))
+                mThreadTitle = aData.getString(aData.getColumnIndexOrThrow(AwfulThread.TITLE))
                 updateThreadTitle()
             }
         }

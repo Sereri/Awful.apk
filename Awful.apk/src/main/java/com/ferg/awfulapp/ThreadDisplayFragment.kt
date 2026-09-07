@@ -1668,16 +1668,16 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             i("Loaded thread metadata, updating fragment state and UI")
             if (aData.count > 0 && aData.moveToFirst()) {
                 this@ThreadDisplayFragment.lastPage = AwfulPagedItem.indexToPage(
-                    aData.getInt(aData.getColumnIndex(AwfulThread.POSTCOUNT)),
+                    aData.getInt(aData.getColumnIndexOrThrow(AwfulThread.POSTCOUNT)),
                     prefs.postPerPage
                 )
-                threadLocked = aData.getInt(aData.getColumnIndex(AwfulThread.LOCKED)) > 0
+                threadLocked = aData.getInt(aData.getColumnIndexOrThrow(AwfulThread.LOCKED)) > 0
                 threadLockableUnlockable =
-                    aData.getInt(aData.getColumnIndex(AwfulThread.CAN_OPEN_CLOSE)) > 0
-                threadBookmarked = aData.getInt(aData.getColumnIndex(AwfulThread.BOOKMARKED)) > 0
-                threadArchived = aData.getInt(aData.getColumnIndex(AwfulThread.ARCHIVED)) > 0
-                mTitle = aData.getString(aData.getColumnIndex(AwfulThread.TITLE))
-                this@ThreadDisplayFragment.parentForumId = aData.getInt(aData.getColumnIndex(AwfulThread.FORUM_ID))
+                    aData.getInt(aData.getColumnIndexOrThrow(AwfulThread.CAN_OPEN_CLOSE)) > 0
+                threadBookmarked = aData.getInt(aData.getColumnIndexOrThrow(AwfulThread.BOOKMARKED)) > 0
+                threadArchived = aData.getInt(aData.getColumnIndexOrThrow(AwfulThread.ARCHIVED)) > 0
+                mTitle = aData.getString(aData.getColumnIndexOrThrow(AwfulThread.TITLE))
+                this@ThreadDisplayFragment.parentForumId = aData.getInt(aData.getColumnIndexOrThrow(AwfulThread.FORUM_ID))
                 if (this@ThreadDisplayFragment.parentForumId != 0) {
                     mThreadView?.runJavascript(
                         String.format(

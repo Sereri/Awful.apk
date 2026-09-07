@@ -37,13 +37,13 @@ class SendPrivateMessageRequest(context: Context, private val pmId: Int)
         storedDraft?.takeIf(Cursor::moveToFirst)?.apply {
             with(parameters) {
                 add(PARAM_ACTION, ACTION_DOSEND)
-                add(DESTINATION_TOUSER, getString(getColumnIndex(AwfulMessage.RECIPIENT)))
-                add(PARAM_TITLE, getString(getColumnIndex(AwfulMessage.TITLE)).run(NetworkUtils::encodeHtml))
+                add(DESTINATION_TOUSER, getString(getColumnIndexOrThrow(AwfulMessage.RECIPIENT)))
+                add(PARAM_TITLE, getString(getColumnIndexOrThrow(AwfulMessage.TITLE)).run(NetworkUtils::encodeHtml))
                 if (pmId > 0) add("prevmessageid", pmId.toString())
                 add(PARAM_PARSEURL, YES)
                 add("savecopy", YES)
-                add("iconid", getString(getColumnIndex(AwfulMessage.REPLY_ICON)))
-                add(PARAM_MESSAGE, getString(getColumnIndex(AwfulMessage.REPLY_CONTENT)).run(NetworkUtils::encodeHtml))
+                add("iconid", getString(getColumnIndexOrThrow(AwfulMessage.REPLY_ICON)))
+                add(PARAM_MESSAGE, getString(getColumnIndexOrThrow(AwfulMessage.REPLY_CONTENT)).run(NetworkUtils::encodeHtml))
             }
             failed = false
         }

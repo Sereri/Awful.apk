@@ -341,13 +341,13 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
         val favouriteForumIds = Arrays.asList<String?>(*favouriteForumIds)
         while (cursor.moveToNext()) {
             forum = Forum(
-                cursor.getInt(cursor.getColumnIndex(AwfulForum.ID)),
-                cursor.getInt(cursor.getColumnIndex(AwfulForum.PARENT_ID)),
-                cursor.getString(cursor.getColumnIndex(AwfulForum.TITLE)),
-                cursor.getString(cursor.getColumnIndex(AwfulForum.SUBTEXT))
+                cursor.getInt(cursor.getColumnIndexOrThrow(AwfulForum.ID)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(AwfulForum.PARENT_ID)),
+                cursor.getString(cursor.getColumnIndexOrThrow(AwfulForum.TITLE)),
+                cursor.getString(cursor.getColumnIndexOrThrow(AwfulForum.SUBTEXT))
             )
             // the forum might have an image tag too
-            val tagUrl = cursor.getString(cursor.getColumnIndex(AwfulForum.TAG_URL))
+            val tagUrl = cursor.getString(cursor.getColumnIndexOrThrow(AwfulForum.TAG_URL))
             forum.tagUrl = tagUrl
 
             // set favourite status by checking the favourites list

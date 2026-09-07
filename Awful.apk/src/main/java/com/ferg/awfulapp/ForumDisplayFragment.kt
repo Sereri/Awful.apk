@@ -305,9 +305,9 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         if (aMenuInfo is AdapterContextMenuInfo) {
             val inflater = requireActivity().menuInflater
             val row = mCursorAdapter?.getRow(aMenuInfo.id)
-            if (row != null && row.getInt(row.getColumnIndex(AwfulThread.BOOKMARKED)) > -1) {
+            if (row != null && row.getInt(row.getColumnIndexOrThrow(AwfulThread.BOOKMARKED)) > -1) {
                 inflater.inflate(R.menu.thread_longpress, aMenu)
-                if (row.getInt(row.getColumnIndex(AwfulThread.BOOKMARKED)) < 1 || !prefs.coloredBookmarks) {
+                if (row.getInt(row.getColumnIndexOrThrow(AwfulThread.BOOKMARKED)) < 1 || !prefs.coloredBookmarks) {
                     val bookmarkColor = aMenu.findItem(R.id.thread_bookmark_color)
                     if (bookmarkColor != null) {
                         bookmarkColor.isEnabled = false
@@ -461,16 +461,16 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         ) {
             // TODO: 04/06/2017 why is all this in a threadlist click listener? We know it's a thread! It's not a forum!
             val row = mCursorAdapter?.getRow(aId)
-            if (row != null && row.getColumnIndex(AwfulThread.BOOKMARKED) > -1) {
+            if (row != null && row.getColumnIndexOrThrow(AwfulThread.BOOKMARKED) > -1) {
                 i("Thread ID: %s", aId)
                 if (prefs.hiddenThreadIds?.contains(aId.toString()) == true) {
                     return
                 }
                 val unreadPage = AwfulPagedItem.getLastReadPage(
-                    row.getInt(row.getColumnIndex(AwfulThread.UNREADCOUNT)),
-                    row.getInt(row.getColumnIndex(AwfulThread.POSTCOUNT)),
+                    row.getInt(row.getColumnIndexOrThrow(AwfulThread.UNREADCOUNT)),
+                    row.getInt(row.getColumnIndexOrThrow(AwfulThread.POSTCOUNT)),
                     prefs.postPerPage,
-                    row.getInt(row.getColumnIndex(AwfulThread.HAS_VIEWED_THREAD))
+                    row.getInt(row.getColumnIndexOrThrow(AwfulThread.HAS_VIEWED_THREAD))
                 )
                 viewThread(aId.toInt(), unreadPage)
             } else if (row != null && row.getColumnIndex(AwfulForum.PARENT_ID) > -1) {
@@ -782,8 +782,8 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         override fun onLoadFinished(aLoader: Loader<Cursor?>, aData: Cursor?) {
             if (aData != null && !aData.isClosed && aData.moveToFirst()) {
                 i("Forum title finished, populating: %s", aData.count)
-                mTitle = aData.getString(aData.getColumnIndex(AwfulForum.TITLE))
-                this@ForumDisplayFragment.lastPage = aData.getInt(aData.getColumnIndex(AwfulForum.PAGE_COUNT))
+                mTitle = aData.getString(aData.getColumnIndexOrThrow(AwfulForum.TITLE))
+                this@ForumDisplayFragment.lastPage = aData.getInt(aData.getColumnIndexOrThrow(AwfulForum.PAGE_COUNT))
                 val activity = (activity as ForumsIndexActivity?)
                 activity?.onPageContentChanged()
             }

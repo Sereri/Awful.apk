@@ -91,15 +91,15 @@ object AwfulMessage : AwfulPagedItem() {
      */
     fun getView(current: View, aPref: AwfulPreferences?, data: Cursor, selected: Boolean): View {
         val title = current.findViewById<View?>(R.id.title) as TextView
-        val t = data.getString(data.getColumnIndex(TITLE))
+        val t = data.getString(data.getColumnIndexOrThrow(TITLE))
         current.findViewById<View>(R.id.unread_count).visibility = View.GONE
         if (t != null) {
             title.text = t
             title.setTextColor(ColorProvider.PRIMARY_TEXT.color)
         }
         val author = current.findViewById<View?>(R.id.thread_info) as TextView
-        val auth = data.getString(data.getColumnIndex(AUTHOR))
-        val date = data.getString(data.getColumnIndex(DATE))
+        val auth = data.getString(data.getColumnIndexOrThrow(AUTHOR))
+        val date = data.getString(data.getColumnIndexOrThrow(DATE))
         if (auth != null && date != null) {
             author.text = "$auth - $date"
             author.setTextColor(ColorProvider.ALT_TEXT.color)
@@ -111,7 +111,7 @@ object AwfulMessage : AwfulPagedItem() {
 
         unreadPM.visibility = View.VISIBLE
         val iconResource: Int
-        when (data.getInt(data.getColumnIndex(UNREAD))) {
+        when (data.getInt(data.getColumnIndexOrThrow(UNREAD))) {
             0 ->                //unread
                 iconResource = R.drawable.ic_drafts_dark
 
@@ -124,7 +124,7 @@ object AwfulMessage : AwfulPagedItem() {
             else ->
                 iconResource = R.drawable.ic_drafts_dark
         }
-        val icon = data.getString(data.getColumnIndex(ICON))
+        val icon = data.getString(data.getColumnIndexOrThrow(ICON))
         if (icon != null && !icon.isEmpty()) {
             val localFileName = "@drawable/" + icon.substring(icon.lastIndexOf('/') + 1, icon.lastIndexOf('.'))
                     .replace('-', '_').lowercase(Locale.getDefault())

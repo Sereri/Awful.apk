@@ -50,7 +50,7 @@ class MarkLastReadRequest(context: Context, private val threadId: Int, private v
             val threadData = query(ContentUris.withAppendedId(AwfulThread.CONTENT_URI, threadId.toLong()), AwfulProvider.ThreadProjection, null, null, null)
             threadData?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    val newPostCount = cursor.getInt(cursor.getColumnIndex(AwfulThread.POSTCOUNT)) - postIndex
+                    val newPostCount = cursor.getInt(cursor.getColumnIndexOrThrow(AwfulThread.POSTCOUNT)) - postIndex
                     cv = ContentValues().apply { put(AwfulThread.UNREADCOUNT, newPostCount) }
                     update(AwfulThread.CONTENT_URI, cv, AwfulThread.ID + "=?", arrayOf(threadId.toString()))
                 }

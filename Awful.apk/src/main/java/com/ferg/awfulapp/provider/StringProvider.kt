@@ -43,7 +43,7 @@ object StringProvider {
             null
         )
         result = if (cursor != null && cursor.moveToFirst()) {
-            cursor.getString(cursor.getColumnIndex(columnName))
+            cursor.getString(cursor.getColumnIndexOrThrow(columnName))
         } else {
             defaultPrefix + id.toString()
         }

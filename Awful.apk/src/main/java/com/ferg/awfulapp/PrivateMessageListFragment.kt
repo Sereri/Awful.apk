@@ -27,6 +27,7 @@
 package com.ferg.awfulapp
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.database.ContentObserver
 import android.database.Cursor
@@ -175,7 +176,7 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
         requireActivity().contentResolver.unregisterContentObserver(mPMDataCallback)
     }
 
-    public override fun onDetach() {
+    override fun onDetach() {
         super.onDetach()
     }
 
@@ -190,7 +191,7 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
         }
         val sendPM = menu.findItem(R.id.send_pm)
         if (null != sendPM) {
-            sendPM.isVisible = AwfulUtils.isTablet(activity)
+            sendPM.isVisible = AwfulUtils.isTablet(requireActivity())
         }
     }
 

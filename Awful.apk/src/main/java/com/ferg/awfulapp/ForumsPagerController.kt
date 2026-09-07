@@ -21,6 +21,7 @@ import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.util.AwfulUtils
 import timber.log.Timber
 import kotlin.properties.Delegates
+import androidx.core.graphics.drawable.toDrawable
 
 /**
  * Created by baka kaba on 04/11/2017.
@@ -38,7 +39,7 @@ enum class Pages(val width: Float) {
     ForumIndex(0.4f), ForumDisplay(0.6f), ThreadDisplay(1f);
 
     companion object {
-        operator fun get(index: Int) = values()[index]
+        operator fun get(index: Int) = entries[index]
     }
 }
 
@@ -222,7 +223,7 @@ class ForumsPagerController(
     fun onPreferenceChange(prefs: AwfulPreferences) {
         setSwipeEnabled(!prefs.lockScrolling)
         if (!AwfulUtils.isTablet(prefs.context) && AwfulUtils.isAtLeast(Build.VERSION_CODES.JELLY_BEAN_MR1) && prefs.transformer != "Disabled") {
-            viewPager.setPageTransformer(true, AwfulUtils.getViewPagerTransformer())
+            viewPager.setPageTransformer(true, AwfulUtils.viewPagerTransformer)
         }
     }
 
@@ -231,7 +232,7 @@ class ForumsPagerController(
         // only update if there's a change in tablet mode (also happens on init when tabletMode is null)
         if (tabletMode != isTablet) {
             viewPager.pageMargin = if (isTablet) 1 else 0
-            if (isTablet) viewPager.setPageMarginDrawable(ColorDrawable(ColorProvider.ACTION_BAR.color))
+            if (isTablet) viewPager.setPageMarginDrawable(ColorProvider.ACTION_BAR.color.toDrawable())
         }
         tabletMode = isTablet
     }

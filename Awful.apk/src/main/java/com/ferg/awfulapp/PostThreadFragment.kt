@@ -196,7 +196,7 @@ class PostThreadFragment : AwfulFragment() {
                 )
                 if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
                     this.attachmentData = data
-                    if (AwfulUtils.isTiramisu33()) {
+                    if (AwfulUtils.isTiramisu33) {
                         requestPermissions(
                             arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
                             Constants.AWFUL_PERMISSION_READ_MEDIA_IMAGES

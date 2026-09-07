@@ -177,11 +177,11 @@ class AwfulURL {
             ) {
                 if (uri.getQueryParameter(Constants.PARAM_PAGE) != null) {
                     aurl.page =
-                        AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_PAGE), 1)
+                        AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_PAGE)!!, 1)
                 }
                 if (uri.getQueryParameter(Constants.PARAM_PER_PAGE) != null) {
                     aurl.perPage = AwfulUtils.safeParseInt(
-                        uri.getQueryParameter(Constants.PARAM_PER_PAGE),
+                        uri.getQueryParameter(Constants.PARAM_PER_PAGE)!!,
                         Constants.ITEMS_PER_PAGE
                     )
                 }
@@ -190,7 +190,7 @@ class AwfulURL {
                     aurl.perPage = Constants.THREADS_PER_PAGE
                     if (uri.getQueryParameter(Constants.PARAM_FORUM_ID) != null) {
                         aurl.id = AwfulUtils.safeParseLong(
-                            uri.getQueryParameter(Constants.PARAM_FORUM_ID),
+                            uri.getQueryParameter(Constants.PARAM_FORUM_ID)!!,
                             1
                         )
                     }
@@ -202,7 +202,7 @@ class AwfulURL {
                     aurl.type = TYPE.THREAD
                     if (uri.getQueryParameter(Constants.PARAM_THREAD_ID) != null) {
                         aurl.id = AwfulUtils.safeParseLong(
-                            uri.getQueryParameter(Constants.PARAM_THREAD_ID),
+                            uri.getQueryParameter(Constants.PARAM_THREAD_ID)!!,
                             0
                         )
                     }
@@ -211,7 +211,7 @@ class AwfulURL {
                         if (Constants.VALUE_POST.equals(aurl.gotoParam, ignoreCase = true)) {
                             aurl.type = TYPE.POST
                             aurl.id = AwfulUtils.safeParseLong(
-                                uri.getQueryParameter(Constants.PARAM_POST_ID),
+                                uri.getQueryParameter(Constants.PARAM_POST_ID)!!,
                                 0
                             )
                         }
@@ -223,14 +223,14 @@ class AwfulURL {
                     ) {
                         aurl.type = TYPE.POST
                         aurl.id = AwfulUtils.safeParseLong(
-                            uri.getQueryParameter(Constants.PARAM_POST_ID),
+                            uri.getQueryParameter(Constants.PARAM_POST_ID)!!,
                             0
                         )
                     }
                 } else if (Constants.PATH_BANLIST == uri.lastPathSegment) {
                     aurl.type = TYPE.BANLIST
                     aurl.id =
-                        AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_USER_ID), 0)
+                        AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_USER_ID)!!, 0)
                 } else if ("index.php".equals(
                         uri.lastPathSegment,
                         ignoreCase = true

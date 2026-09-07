@@ -1,6 +1,7 @@
 package com.ferg.awfulapp.preferences.fragments
 
 import android.app.Dialog
+import android.content.Context
 import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
@@ -34,16 +35,16 @@ class MiscSettings : SettingsFragment() {
 
     override fun initialiseSettings() {
         super.initialiseSettings()
-        val tab = AwfulUtils.isTablet(activity, true)
-        findPrefById(R.string.pref_key_page_layout)!!.isEnabled = tab
-        findPrefById(R.string.pref_key_transformer)!!.isEnabled = !tab
+        val tab = AwfulUtils.isTablet(requireActivity(), true)
+        findPrefById(R.string.pref_key_page_layout)?.isEnabled = tab
+        findPrefById(R.string.pref_key_transformer)?.isEnabled = !tab
     }
 
 
     override fun onSetSummaries() {
         // p2r amount summary
         var summary = getString(R.string.pull_to_refresh_distance_summary)
-        summary += "\n" + (mPrefs!!.p2rDistance!! * 100f).roundToInt().toString() + "%"
+        summary += "\n" + (mPrefs?.p2rDistance!! * 100f).roundToInt().toString() + "%"
         summary += " of the screen's height"
         findPrefById(R.string.pref_key_pull_to_refresh_distance)!!.setSummary(summary)
 

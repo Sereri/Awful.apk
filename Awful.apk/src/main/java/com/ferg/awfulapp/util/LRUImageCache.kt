@@ -1,33 +1,25 @@
-package com.ferg.awfulapp.util;
+package com.ferg.awfulapp.util
 
-import android.graphics.Bitmap;
-import androidx.collection.LruCache;
+import android.graphics.Bitmap
+import androidx.collection.LruCache
+import com.android.volley.toolbox.ImageLoader
 
-import com.android.volley.toolbox.ImageLoader;
-
-public class LRUImageCache implements ImageLoader.ImageCache {
-    private LruCache<String, Bitmap> bitmapCache;
-
-    public LRUImageCache() {
-        this.bitmapCache = new LruCache<String, Bitmap>(5242880){
-            @Override
-            protected int sizeOf(String key, Bitmap value) {
-                return value.getByteCount();
-            }
-        };
+class LRUImageCache : ImageLoader.ImageCache {
+    private val bitmapCache: LruCache<String, Bitmap> = object : LruCache<String, Bitmap>(5242880) {
+        override fun sizeOf(key: String, value: Bitmap): Int {
+            return value.byteCount
+        }
     }
 
-    @Override
-    public Bitmap getBitmap(String url) {
-        return bitmapCache.get(url);
+    override fun getBitmap(url: String): Bitmap? {
+        return bitmapCache[url]
     }
 
-    @Override
-    public void putBitmap(String url, Bitmap bitmap) {
-        bitmapCache.put(url, bitmap);
+    override fun putBitmap(url: String, bitmap: Bitmap) {
+        bitmapCache.put(url, bitmap)
     }
 
-    public void clear() {
-        bitmapCache.evictAll();
+    fun clear() {
+        bitmapCache.evictAll()
     }
 }

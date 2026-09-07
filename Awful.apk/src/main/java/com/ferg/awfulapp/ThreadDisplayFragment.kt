@@ -1413,7 +1413,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
     }
 
     fun enqueueDownload(link: Uri) {
-        if (!AwfulUtils.isTiramisu33()) {
+        if (!AwfulUtils.isTiramisu33) {
             val permissionCheck = ContextCompat.checkSelfPermission(
                 this.requireContext(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE

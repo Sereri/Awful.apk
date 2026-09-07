@@ -631,13 +631,5 @@ class AwfulPreferences private constructor(
             instance.registerCallback(updateCallback)
             return instance
         }
-
-        @JvmStatic
-        fun getInstance(
-            activity: Activity,
-            updateCallback: AwfulPreferenceUpdate?
-        ): AwfulPreferences {
-            return getInstance(activity as Context, updateCallback)
-        }
     }
 }

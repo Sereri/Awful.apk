@@ -136,7 +136,6 @@ import androidx.core.net.toUri
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.core.view.isEmpty
-import com.ferg.awfulapp.popupmenu.AwfulAction
 import com.ferg.awfulapp.preferences.BooleanPreference
 import com.ferg.awfulapp.preferences.StringSetPreference
 
@@ -368,7 +367,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
 
 
     private val threadWebViewClient: WebViewClient = object : WebViewClient() {
-        override fun shouldOverrideUrlLoading(aView: WebView?, aUrl: String?): Boolean {
+        override fun shouldOverrideUrlLoading(aView: WebView, aUrl: String): Boolean {
             val aLink = AwfulURL.parse(aUrl)
             when (aLink.type) {
                 TYPE.FORUM -> navigate(
@@ -384,7 +383,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                     pushThread(
                         aLink.id.toInt(),
                         aLink.page.toInt(),
-                        aLink.fragment.replace("\\D".toRegex(), "")
+                        aLink.fragment?.replace(Regex("\\D"), "")
                     )
                 }
 
@@ -1165,7 +1164,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         )
     }
 
-    private fun populateThreadView(aPosts: ArrayList<AwfulPost?>) {
+    private fun populateThreadView(aPosts: MutableList<AwfulPost>) {
         if (mThreadView == null) {
             w("populateThreadView called with null WebView")
             return
@@ -1640,7 +1639,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                 return
             }
             if (mThreadView != null) {
-                populateThreadView(AwfulPost.fromCursor(activity, aData))
+                populateThreadView(AwfulPost.fromCursor(aData))
             }
             // TODO: 04/05/2017 sometimes you don't want this resetting, e.g. restoring fragment state
             savedScrollPosition = 0

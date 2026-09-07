@@ -49,12 +49,12 @@ class ThreadCursorAdapter(
     private val mPrefs: AwfulPreferences = getInstance(mParent)
     private val inf: LayoutInflater = LayoutInflater.from(mParent)
 
-    override fun bindView(current: View?, context: Context?, data: Cursor?) {
+    override fun bindView(current: View, context: Context?, data: Cursor) {
         AwfulThread.setDataOnThreadListItem(current, mPrefs, data, mFragment)
         mParent.setPreferredFont(current)
     }
 
-    override fun newView(context: Context?, data: Cursor?, parent: ViewGroup?): View? {
+    override fun newView(context: Context?, data: Cursor, parent: ViewGroup?): View? {
         val row = inf.inflate(R.layout.thread_item, parent, false)
         AwfulThread.setDataOnThreadListItem(row, mPrefs, data, mFragment)
         mParent.setPreferredFont(row)

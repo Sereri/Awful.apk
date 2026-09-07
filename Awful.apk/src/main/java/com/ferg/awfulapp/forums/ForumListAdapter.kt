@@ -33,7 +33,7 @@ import com.ferg.awfulapp.provider.ColorProvider
  */
 class ForumListAdapter private constructor(
     context: Context,
-    topLevelForums: MutableList<TopLevelForum?>,
+    topLevelForums: MutableList<TopLevelForum>,
     private val eventListener: EventListener,
     private val awfulPrefs: AwfulPreferences?
 ) : ExpandableRecyclerAdapter<TopLevelForumHolder, SubforumHolder>(topLevelForums) {
@@ -53,7 +53,7 @@ class ForumListAdapter private constructor(
      */
     private fun addToTopLevelForums(
         forums: MutableList<Forum>,
-        topLevelForums: MutableList<TopLevelForum?>
+        topLevelForums: MutableList<TopLevelForum>
     ) {
         for (forum in forums) {
             topLevelForums.add(TopLevelForum(forum))
@@ -67,7 +67,7 @@ class ForumListAdapter private constructor(
      * (see [.getInstance] for the list format)
      */
     fun updateForumList(forums: MutableList<Forum>) {
-        val itemList: MutableList<TopLevelForum?> = parentItemList as MutableList<TopLevelForum?>
+        val itemList: MutableList<TopLevelForum> = parentItemList as MutableList<TopLevelForum>
 
         // we can't just reassign the dataset variable, we have to mess with the contents instead
         val oldSize = itemList.size
@@ -229,7 +229,7 @@ class ForumListAdapter private constructor(
                is set to GONE so whatever's there gets vertically centred, and the space remains */
 
             // if there's a forum tag then display it, otherwise remove it
-            val hasForumTag = forum!!.tagUrl != null
+            val hasForumTag = forum?.tagUrl != null
             if (hasForumTag) {
                 TagProvider.setSquareForumTag(binding.forumTag, forum!!)
                 binding.forumTag.visibility = View.VISIBLE
@@ -318,7 +318,7 @@ class ForumListAdapter private constructor(
             listener: EventListener,
             awfulPreferences: AwfulPreferences?
         ): ForumListAdapter {
-            val topLevelForums: MutableList<TopLevelForum?> = ArrayList<TopLevelForum?>()
+            val topLevelForums: MutableList<TopLevelForum> = mutableListOf()
             val adapter = ForumListAdapter(context, topLevelForums, listener, awfulPreferences)
             // this is a stupid hack so we can supply the constructor with a list of objects we
             // can't even create without an instance... it's better than pulling TopLevelForum out

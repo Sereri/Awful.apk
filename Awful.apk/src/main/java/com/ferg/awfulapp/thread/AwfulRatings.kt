@@ -1,101 +1,100 @@
-package com.ferg.awfulapp.thread;
+package com.ferg.awfulapp.thread
 
-import android.content.res.Resources;
-import android.graphics.drawable.Drawable;
-import androidx.annotation.Nullable;
-import android.util.Log;
-
-import com.ferg.awfulapp.R;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
+import android.util.Log
+import com.ferg.awfulapp.R
+import java.util.regex.Pattern
 
 /**
- * <p>Created by baka kaba on 24/05/2015.</p>
- *
- * <p>Utility class to parse rating URLs and return a reference to a rating type.
+ * 
+ * Created by baka kaba on 24/05/2015.
+ * 
+ * 
+ * Utility class to parse rating URLs and return a reference to a rating type.
  * You can then use this reference to get drawables, check the rating category
- * (normal, FilmDump reviews) and so on.</p>
+ * (normal, FilmDump reviews) and so on.
  */
-public abstract class AwfulRatings {
-
-    private static final String TAG = Class.class.getSimpleName();
+object AwfulRatings {
+    private val TAG: String = Class::class.java.simpleName
 
     /* types for identifying the rating's... type */
-    public static final int TYPE_NO_RATING  = 0;
-    public static final int TYPE_NORMAL     = 1;
-    public static final int TYPE_FILM_DUMP  = 2;
+    const val TYPE_NO_RATING: Int = 0
+    const val TYPE_NORMAL: Int = 1
+    const val TYPE_FILM_DUMP: Int = 2
 
-    private static final ElementCollection ratings = new ElementCollection("Ratings");
-    static {
-        // normal ratings have a single number as a token, 1-5
-        ratings.add(TYPE_NORMAL, "5", R.drawable.rating_5stars);
-        ratings.add(TYPE_NORMAL, "4", R.drawable.rating_4stars);
-        ratings.add(TYPE_NORMAL, "3", R.drawable.rating_3stars);
-        ratings.add(TYPE_NORMAL, "2", R.drawable.rating_2stars);
-        ratings.add(TYPE_NORMAL, "1", R.drawable.rating_1stars);
+    private val ratings = ElementCollection("Ratings").apply {
+
+        add(TYPE_NORMAL, "5", R.drawable.rating_5stars)
+        add(TYPE_NORMAL, "4", R.drawable.rating_4stars)
+        add(TYPE_NORMAL, "3", R.drawable.rating_3stars)
+        add(TYPE_NORMAL, "2", R.drawable.rating_2stars)
+        add(TYPE_NORMAL, "1", R.drawable.rating_1stars)
 
         // film dump ratings have a 3-char token in the format #.#
-        ratings.add(TYPE_FILM_DUMP, "5.0", R.drawable.rating_5_0stars);
-        ratings.add(TYPE_FILM_DUMP, "4.5", R.drawable.rating_4_5stars);
-        ratings.add(TYPE_FILM_DUMP, "4.0", R.drawable.rating_4_0stars);
-        ratings.add(TYPE_FILM_DUMP, "3.5", R.drawable.rating_3_5stars);
-        ratings.add(TYPE_FILM_DUMP, "3.0", R.drawable.rating_3_0stars);
-        ratings.add(TYPE_FILM_DUMP, "2.5", R.drawable.rating_2_5stars);
-        ratings.add(TYPE_FILM_DUMP, "2.0", R.drawable.rating_2_0stars);
-        ratings.add(TYPE_FILM_DUMP, "1.5", R.drawable.rating_1_5stars);
-        ratings.add(TYPE_FILM_DUMP, "1.0", R.drawable.rating_1_0stars);
-        ratings.add(TYPE_FILM_DUMP, "0.5", R.drawable.rating_0_5stars);
-        ratings.add(TYPE_FILM_DUMP, "0.0", R.drawable.rating_0_0stars);
+        add(TYPE_FILM_DUMP, "5.0", R.drawable.rating_5_0stars)
+        add(TYPE_FILM_DUMP, "4.5", R.drawable.rating_4_5stars)
+        add(TYPE_FILM_DUMP, "4.0", R.drawable.rating_4_0stars)
+        add(TYPE_FILM_DUMP, "3.5", R.drawable.rating_3_5stars)
+        add(TYPE_FILM_DUMP, "3.0", R.drawable.rating_3_0stars)
+        add(TYPE_FILM_DUMP, "2.5", R.drawable.rating_2_5stars)
+        add(TYPE_FILM_DUMP, "2.0", R.drawable.rating_2_0stars)
+        add(TYPE_FILM_DUMP, "1.5", R.drawable.rating_1_5stars)
+        add(TYPE_FILM_DUMP, "1.0", R.drawable.rating_1_0stars)
+        add(TYPE_FILM_DUMP, "0.5", R.drawable.rating_0_5stars)
+        add(TYPE_FILM_DUMP, "0.0", R.drawable.rating_0_0stars)
     }
-    /** default value for missing ratings */
-    public  static final int NO_RATING = ratings.NULL_ELEMENT_ID;
 
-    private static final Pattern ratingUrlPattern = Pattern.compile("/rate/(\\w+)/(.+)stars");
+    /** default value for missing ratings  */
+    val NO_RATING: Int = ratings.NULL_ELEMENT_ID
+
+    private val ratingUrlPattern: Pattern = Pattern.compile("/rate/(\\w+)/(.+)stars")
 
 
     /**
-     * <p>Parse a rating icon URL and get an associated rating ID.</p>
+     * 
+     * Parse a rating icon URL and get an associated rating ID.
      * Pass in the URL of the rating image for a thread, and this will try
      * to identify it. The resulting ID can be passed to the other methods in this class,
      * for specific information on the rating it represents.
-     *
+     * 
      * @param ratingImageUrl    The full URL to an SA rating icon
-     * @return                  a rating ID, {@link #NO_RATING} by default
+     * @return                  a rating ID, [.NO_RATING] by default
      */
-    public static int getId(String ratingImageUrl) {
+    fun getId(ratingImageUrl: String?): Int {
         if (ratingImageUrl == null) {
-            return ratings.NULL_ELEMENT_ID;
+            return ratings.NULL_ELEMENT_ID
         }
-        Matcher matcher = ratingUrlPattern.matcher(ratingImageUrl);
+        val matcher = ratingUrlPattern.matcher(ratingImageUrl)
         if (!matcher.find()) {
-            Log.w(TAG, "Pattern doesn't match");
-            return ratings.NULL_ELEMENT_ID;
+            Log.w(TAG, "Pattern doesn't match")
+            return ratings.NULL_ELEMENT_ID
         }
-        String type         = matcher.group(1);
-        String ratingToken  = matcher.group(2);
+        val type = matcher.group(1)
+        val ratingToken = matcher.group(2)
 
         // work out what kind of rating the URL is even talking about
         // there's only two right now, but there could be more later...
-        int category = TYPE_NO_RATING;
-        if ("default".equals(type)) {
-            category = TYPE_NORMAL;
-        } else if ("reviews".equals(type)) {
-            category = TYPE_FILM_DUMP;
+        var category = TYPE_NO_RATING
+        if ("default" == type) {
+            category = TYPE_NORMAL
+        } else if ("reviews" == type) {
+            category = TYPE_FILM_DUMP
         }
-        return ratings.findElement(category, ratingToken);
+        return ratings.findElement(category, ratingToken)
     }
 
 
     /**
      * Get a rating ID's type, i.e. the rating category it belongs to.
-     * Returns {@link #TYPE_NORMAL} for standard 1-5 ratings, {@link #TYPE_FILM_DUMP}
-     * for Film Barn star ratings, or {@link #TYPE_NO_RATING} by default
-     * @param ratingId   The ID to categorise
+     * Returns [.TYPE_NORMAL] for standard 1-5 ratings, [.TYPE_FILM_DUMP]
+     * for Film Barn star ratings, or [.TYPE_NO_RATING] by default
+     * @param ratingId   The ID to categorize
      * @return           A type constant
      */
-    public static int getType(int ratingId) {
-        return ratings.getType(ratingId, TYPE_NO_RATING);
+    @JvmStatic
+    fun getType(ratingId: Int): Int {
+        return ratings.getType(ratingId, TYPE_NO_RATING)
     }
 
 
@@ -105,8 +104,8 @@ public abstract class AwfulRatings {
      * @param resources
      * @return              Any associated drawable, otherwise null
      */
-    @Nullable
-    public static Drawable getDrawable(int ratingId, Resources resources) {
-        return ratings.getDrawable(ratingId, resources);
+    @JvmStatic
+    fun getDrawable(ratingId: Int, resources: Resources?): Drawable? {
+        return ratings.getDrawable(ratingId, resources)
     }
 }

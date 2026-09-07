@@ -4,14 +4,14 @@
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -23,81 +23,77 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp.thread
 
-package com.ferg.awfulapp.thread;
+import android.content.ContentValues
+import android.database.Cursor
+import android.net.Uri
+import android.util.Log
+import android.view.View
+import android.widget.TextView
+import com.android.volley.toolbox.NetworkImageView
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.network.NetworkUtils.imageLoader
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.provider.DatabaseHelper
+import org.jsoup.nodes.Document
+import java.sql.Timestamp
+import java.util.regex.Pattern
+import androidx.core.net.toUri
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.net.Uri;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
+object AwfulEmote {
+    const val TAG: String = "AwfulEmote"
+    const val PATH: String = "/emote"
+    @JvmField
+    val CONTENT_URI: Uri = ("content://" + Constants.AUTHORITY + PATH).toUri()
 
-import com.android.volley.toolbox.NetworkImageView;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.network.NetworkUtils;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.provider.DatabaseHelper;
+    const val ID: String = "_id"
+    const val TEXT: String = "text"
+    const val SUBTEXT: String = "emote_subtext" //hover text
+    const val URL: String = "url"
+    const val INDEX: String = "emote_index"
 
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+    @JvmField
+    var fileName_regex: Pattern = Pattern.compile("/([^/]+)$")
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.regex.Pattern;
+    fun getView(current: View, aPref: AwfulPreferences?, data: Cursor) {
+        val emoteText = current.findViewById<View?>(R.id.emote_text) as TextView
+        emoteText.text = data.getString(data.getColumnIndex(TEXT))
+        emoteText.setTextColor(current.resources.getColor(R.color.default_post_font))
+        val emoteImage = current.findViewById<View?>(R.id.emote_icon) as NetworkImageView
+        emoteImage.setImageUrl(data.getString(data.getColumnIndex(URL)), imageLoader)
+    }
 
-public class AwfulEmote {
-	public static final String TAG = "AwfulEmote";
-    public static final String PATH     = "/emote";
-    public static final Uri CONTENT_URI = Uri.parse("content://" + Constants.AUTHORITY + PATH);
 
-	public static final String ID = "_id";
-	public static final String TEXT = "text";
-	public static final String SUBTEXT = "emote_subtext";//hover text
-	public static final String URL = "url";
-	public static final String INDEX = "emote_index";
-	
-	public static Pattern fileName_regex = Pattern.compile("/([^/]+)$");
-	
-	public static void getView(View current, AwfulPreferences aPref, Cursor data) {
-		TextView emoteText = (TextView) current.findViewById(R.id.emote_text);
-		emoteText.setText(data.getString(data.getColumnIndex(TEXT)));
-		emoteText.setTextColor(current.getResources().getColor(R.color.default_post_font));
-		NetworkImageView emoteImage = (NetworkImageView) current.findViewById(R.id.emote_icon);
-		emoteImage.setImageUrl(data.getString(data.getColumnIndex(URL)), NetworkUtils.getImageLoader());
-	}
-
-	
-	public static ArrayList<ContentValues> parseEmotes(Document data){
-        String update_time = new Timestamp(System.currentTimeMillis()).toString();
-		ArrayList<ContentValues> results = new ArrayList<ContentValues>();
-		int index = 1;
-		for(Element group : data.getElementsByClass("smilie_group")){
-			Log.e(TAG,"Parsing group.");
-			for(Element smilie : group.getElementsByClass("smilie")){
-				Log.e(TAG,"Parsing item.");
-				try{
-					ContentValues emote = new ContentValues();
-					Elements text = smilie.getElementsByClass("text");
-					emote.put(ID, index++);//intentional post-increment
-					emote.put(TEXT, text.text().trim());
-					Elements img = smilie.getElementsByAttribute("src");
-					emote.put(SUBTEXT, img.attr("title"));
-					String url = img.attr("src");
-					emote.put(AwfulEmote.URL, url);
-					emote.put(INDEX, index);
-		        	//timestamp for DB trimming
-					emote.put(DatabaseHelper.UPDATED_TIMESTAMP, update_time);
-					results.add(emote);
-				}catch(Exception e){
-					e.printStackTrace();
-					continue;
-				}
-			}
-		}
-		return results;
-	}
+    fun parseEmotes(data: Document): ArrayList<ContentValues?> {
+        val update_time = Timestamp(System.currentTimeMillis()).toString()
+        val results = ArrayList<ContentValues?>()
+        var index = 1
+        for (group in data.getElementsByClass("smilie_group")) {
+            Log.e(TAG, "Parsing group.")
+            for (smilie in group.getElementsByClass("smilie")) {
+                Log.e(TAG, "Parsing item.")
+                try {
+                    val emote = ContentValues()
+                    val text = smilie.getElementsByClass("text")
+                    emote.put(ID, index++) //intentional post-increment
+                    emote.put(TEXT, text.text().trim { it <= ' ' })
+                    val img = smilie.getElementsByAttribute("src")
+                    emote.put(SUBTEXT, img.attr("title"))
+                    val url = img.attr("src")
+                    emote.put(URL, url)
+                    emote.put(INDEX, index)
+                    //timestamp for DB trimming
+                    emote.put(DatabaseHelper.UPDATED_TIMESTAMP, update_time)
+                    results.add(emote)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    continue
+                }
+            }
+        }
+        return results
+    }
 }

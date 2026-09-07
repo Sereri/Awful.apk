@@ -1,117 +1,55 @@
-package com.ferg.awfulapp.thread;
+package com.ferg.awfulapp.thread
 
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.util.ArrayList;
+import com.ferg.awfulapp.thread.AwfulForum.getForumId
+import org.jsoup.nodes.Document
 
 /**
  * Created by Christoph on 29.11.2015.
  */
-public class AwfulSearch {
-    private static final String TAG = "AwfulSearch";
-
-    private String mResultNumber;
-    private String mUsername;
-    private String mThreadLink;
-    private String mThreadTitle;
-    private int mForumId;
-    private String mForumTitle;
-    private String mPostDate;
-    private String mBlurb;
+class AwfulSearch {
+    var resultNumber: String? = null
+    var username: String? = null
+    var threadLink: String? = null
+    var threadTitle: String? = null
+    var forumId: Int = 0
+    var forumTitle: String? = null
+    var postDate: String? = null
+    var blurb: String? = null
 
 
-    public static ArrayList<AwfulSearch> parseSearchResult(Document aSearchRequest){
-        ArrayList<AwfulSearch> result = new ArrayList<>();
+    companion object {
+        private const val TAG = "AwfulSearch"
 
-        Element searchResultContainer = aSearchRequest.getElementById("search_results");
-        Elements searchResults = searchResultContainer.getElementsByClass("search_result");
-        for(Element searchResult : searchResults){
-            AwfulSearch search = new AwfulSearch();
+        fun parseSearchResult(aSearchRequest: Document): MutableList<AwfulSearch> {
+            val result = mutableListOf<AwfulSearch>()
 
-            search.setResultNumber(searchResult.getElementsByClass("result_number").first().text());
-            search.setBlurb(searchResult.getElementsByClass("blurb").first().html());
+            val searchResultContainer = aSearchRequest.getElementById("search_results")
+            val searchResults = searchResultContainer?.getElementsByClass("search_result") ?: return result
+            for (searchResult in searchResults) {
+                val search = AwfulSearch()
+
+                search.resultNumber =
+                    searchResult.getElementsByClass("result_number").first()?.text()
+                search.blurb = searchResult.getElementsByClass("blurb").first()?.html()
+
+                val threadLink = searchResult.getElementsByClass("threadlink").first()
+                val threadTitle = threadLink?.getElementsByClass("threadtitle")?.first()
+                search.threadTitle = threadTitle?.text()
+                search.threadLink = threadTitle?.attr("href")
+
+                val hitInfo = searchResult.getElementsByClass("hit_info").first()
+                search.username = hitInfo?.getElementsByClass("username")?.first()?.text()
+                search.forumTitle = hitInfo?.getElementsByClass("forumtitle")?.first()?.text()
+                search.forumId = getForumId(
+                    hitInfo?.getElementsByClass("forumtitle")?.first()?.attr("href") ?: "-1"
+                )
+                search.postDate = hitInfo?.childNode(4).toString().substring(3).trim { it <= ' ' }
 
 
-            Element threadTitle = searchResult.getElementsByClass("threadlink").first().getElementsByClass("threadtitle").first();
-            search.setThreadTitle(threadTitle.text());
-            search.setThreadLink(threadTitle.attr("href"));
+                result.add(search)
+            }
 
-            Element hitInfo = searchResult.getElementsByClass("hit_info").first();
-            search.setUsername(hitInfo.getElementsByClass("username").first().text());
-            search.setForumTitle(hitInfo.getElementsByClass("forumtitle").first().text());
-            search.setForumId(AwfulForum.getForumId(hitInfo.getElementsByClass("forumtitle").first().attr("href")));
-            search.setPostDate(hitInfo.childNode(4).toString().substring(3).trim());
-
-
-            result.add(search);
+            return result
         }
-
-        return result;
-    }
-
-    public String getResultNumber() {
-        return mResultNumber;
-    }
-
-    public void setResultNumber(String aResultNumber) {
-        this.mResultNumber = aResultNumber;
-    }
-
-    public String getUsername() {
-        return mUsername;
-    }
-
-    public void setUsername(String aUsername) {
-        this.mUsername = aUsername;
-    }
-
-    public String getThreadLink() {
-        return mThreadLink;
-    }
-
-    public void setThreadLink(String aThreadLink) {
-        this.mThreadLink = aThreadLink;
-    }
-
-    public String getThreadTitle() {
-        return mThreadTitle;
-    }
-
-    public void setThreadTitle(String aThreadTitle) {
-        this.mThreadTitle = aThreadTitle;
-    }
-
-    public int getForumId() {
-        return mForumId;
-    }
-
-    public void setForumId(int aForumId) {
-        this.mForumId = aForumId;
-    }
-
-    public String getForumTitle() {
-        return mForumTitle;
-    }
-
-    public void setForumTitle(String aForumTitle) {
-        this.mForumTitle = aForumTitle;
-    }
-
-    public String getPostDate() {
-        return mPostDate;
-    }
-
-    public void setPostDate(String aPostDate) {
-        this.mPostDate = aPostDate;
-    }
-
-    public String getBlurb() {
-        return mBlurb;
-    }
-
-    public void setBlurb(String aBlurb) {
-        this.mBlurb = aBlurb;
     }
 }

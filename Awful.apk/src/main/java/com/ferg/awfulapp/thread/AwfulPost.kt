@@ -1,18 +1,18 @@
 /********************************************************************************
  * Copyright (c) 2011, Scott Ferguson
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,724 +23,598 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp.thread
 
-package com.ferg.awfulapp.thread;
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.database.Cursor
+import android.net.Uri
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.network.NetworkUtils.get
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import org.apache.commons.lang3.StringUtils
+import org.json.JSONException
+import org.json.JSONObject
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.jsoup.parser.Tag
+import timber.log.Timber.Forest.e
+import timber.log.Timber.Forest.i
+import java.sql.Timestamp
+import java.util.Collections
+import java.util.concurrent.Callable
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+import androidx.core.net.toUri
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import androidx.annotation.NonNull;
+class AwfulPost {
+    var threadId: Int = -1
+    var id: String? = ""
+    var date: String? = ""
+    var regDate: String? = ""
+    var userId: String? = ""
+    var username: String? = ""
+    var avatar: String? = ""
+    var avatarSecond: String? = ""
+    var avatarText: String? = ""
+    var content: String? = ""
+    var edited: String? = ""
 
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.network.NetworkUtils;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.parser.Tag;
-import org.jsoup.select.Elements;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import timber.log.Timber;
-
-public class AwfulPost {
-    private static final String TAG = "AwfulPost";
-
-    public static final String PATH     = "/post";
-    public static final Uri CONTENT_URI = Uri.parse("content://" + Constants.AUTHORITY + PATH);
-
-    private static final Pattern fixCharacters_regex = Pattern.compile("([\\r\\f])");
-	private static final Pattern youtubeId_regex = Pattern.compile("/v/([\\w_-]+)&?");
-	private static final Pattern youtubeHDId_regex = Pattern.compile("/embed/([\\w_-]+)&?");
-    private static final Pattern tiktokId_regex = Pattern.compile("([\\d]+)$");
-    private static final Pattern imgurId_regex = Pattern.compile("^(.*\\.imgur\\.com/)([\\w]+)(\\..*)$");
-	private static final Pattern vimeoId_regex = Pattern.compile("clip_id=(\\d+)&?");
-    private static final Pattern userid_regex = Pattern.compile("userid=(\\d+)");
-    private static final Pattern badPost_regex = Pattern.compile("^\\(USER WAS (?:BANNED|AUTOBANNED|PERMABANNED|PUT ON PROBATION) FOR THIS POST\\)$");
-
-    private static final List<String> HTTPS_SUPPORTED_DOMAINS =
-            Collections.unmodifiableList(Arrays.asList("imgur.com", "somethingawful.com", "giphy.com"));
-
-    public static final String ID                    = "_id";
-    public static final String POST_INDEX            = "post_index";
-    public static final String THREAD_ID             = "thread_id";
-    public static final String DATE                  = "date";
-	public static final String REGDATE				 = "regdate";
-    public static final String USER_ID               = "user_id";
-    public static final String USERNAME              = "username";
-    // 2022/09/21 - TODO: the disadvantage of storing this with a post is that it's not automatically refreshed if a user is unblocked
-    public static final String IS_IGNORED            = "is_ignored";
-    public static final String PREVIOUSLY_READ       = "previously_read";
-    public static final String EDITABLE              = "editable";
-    public static final String IS_OP                 = "is_op";
-    public static final String IS_PLAT               = "is_plat";
-    public static final String ROLE                  = "role";
-    public static final String ICON                  = "icon";
-    public static final String AVATAR                = "avatar";
-    // people may be using gangtags, etc. as avatars with a 1x1 primary av
-    public static final String AVATAR_SECOND         = "avatar_second";
-	public static final String AVATAR_TEXT 			 = "avatar_text";
-    public static final String CONTENT               = "content";
-    public static final String EDITED                = "edited";
-
-	public static final String FORM_KEY = "form_key";
-	public static final String FORM_COOKIE = "form_cookie";
-    public static final String FORM_BOOKMARK = "bookmark";
-    public static final String FORM_SIGNATURE = "signature";
-    public static final String FORM_DISABLE_SMILIES = "disablesmilies";
-	/** For comparing against replies to see if the user actually typed anything. **/
-	public static final String REPLY_ORIGINAL_CONTENT = "original_reply";
-	public static final String EDIT_POST_ID = "edit_id";
+    var isIgnored: Boolean = false
+    var isPreviouslyRead: Boolean = false
+    var lastReadUrl: String? = ""
+    var isEditable: Boolean = false
+    var isOp: Boolean = false
+    var isPlat: Boolean = false
+    var role: String? = ""
+    var icon: String? = ""
 
 
+    companion object {
+        private const val TAG = "AwfulPost"
+
+        const val PATH: String = "/post"
+        @JvmField
+        val CONTENT_URI: Uri = "content://${Constants.AUTHORITY}$PATH".toUri()
+
+        private val youtubeHDId_regex: Pattern = Pattern.compile("/embed/([\\w_-]+)&?")
+        private val tiktokId_regex: Pattern = Pattern.compile("([\\d]+)$")
+        private val imgurId_regex: Pattern = Pattern.compile("^(.*\\.imgur\\.com/)([\\w]+)(\\..*)$")
+        private val vimeoId_regex: Pattern = Pattern.compile("clip_id=(\\d+)&?")
+        private val badPost_regex: Pattern =
+            Pattern.compile("^\\(USER WAS (?:BANNED|AUTOBANNED|PERMABANNED|PUT ON PROBATION) FOR THIS POST\\)$")
+
+        private val HTTPS_SUPPORTED_DOMAINS: MutableList<String?> =
+            Collections.unmodifiableList<String?>(
+                mutableListOf<String?>("imgur.com", "somethingawful.com", "giphy.com")
+            )
+
+        const val ID: String = "_id"
+        const val POST_INDEX: String = "post_index"
+        const val THREAD_ID: String = "thread_id"
+        const val DATE: String = "date"
+        const val REGDATE: String = "regdate"
+        const val USER_ID: String = "user_id"
+        const val USERNAME: String = "username"
+
+        // 2022/09/21 - TODO: the disadvantage of storing this with a post is that it's not automatically refreshed if a user is unblocked
+        const val IS_IGNORED: String = "is_ignored"
+        const val PREVIOUSLY_READ: String = "previously_read"
+        const val EDITABLE: String = "editable"
+        const val IS_OP: String = "is_op"
+        const val IS_PLAT: String = "is_plat"
+        const val ROLE: String = "role"
+        const val ICON: String = "icon"
+        const val AVATAR: String = "avatar"
+
+        // people may be using gangtags, etc. as avatars with a 1x1 primary av
+        const val AVATAR_SECOND: String = "avatar_second"
+        const val AVATAR_TEXT: String = "avatar_text"
+        const val CONTENT: String = "content"
+        const val EDITED: String = "edited"
+
+        const val FORM_KEY: String = "form_key"
+        const val FORM_COOKIE: String = "form_cookie"
+        const val FORM_BOOKMARK: String = "bookmark"
+        const val FORM_SIGNATURE: String = "signature"
+        const val FORM_DISABLE_SMILIES: String = "disablesmilies"
+
+        /** For comparing against replies to see if the user actually typed anything.  */
+        const val REPLY_ORIGINAL_CONTENT: String = "original_reply"
+        const val EDIT_POST_ID: String = "edit_id"
 
 
-	private int mThreadId = -1;
-    private String mId = "";
-    private String mDate = "";
-    private String mRegDate = "";
-    private String mUserId = "";
-    private String mUsername = "";
-    private String mAvatar = "";
-    private String mAvatarSecond = "";
-    private String mAvatarText = "";
-    private String mContent = "";
-    private String mEdited = "";
+        fun fromCursor(aCursor: Cursor): MutableList<AwfulPost> {
+            val result = ArrayList<AwfulPost>()
 
-    private boolean isIgnored = false;
-	private boolean mPreviouslyRead = false;
-    private String mLastReadUrl = "";
-    private boolean mEditable;
-    private boolean isOp = false;
-    private boolean isPlat = false;
-    private String mRole = "";
-    private String mIcon = "";
+            if (aCursor.moveToFirst()) {
+                val idIndex = aCursor.getColumnIndex(ID)
+                val threadIdIndex = aCursor.getColumnIndex(THREAD_ID)
+                val postIndexIndex = aCursor.getColumnIndex(POST_INDEX) //ooh, meta
+                val dateIndex = aCursor.getColumnIndex(DATE)
+                val regdateIndex = aCursor.getColumnIndex(REGDATE)
+                val userIdIndex = aCursor.getColumnIndex(USER_ID)
+                val usernameIndex = aCursor.getColumnIndex(USERNAME)
+                val isIgnoredIndex = aCursor.getColumnIndex(IS_IGNORED)
+                val previouslyReadIndex = aCursor.getColumnIndex(PREVIOUSLY_READ)
+                val editableIndex = aCursor.getColumnIndex(EDITABLE)
+                val isOpIndex = aCursor.getColumnIndex(IS_OP)
+                val isPlatIndex = aCursor.getColumnIndex(IS_PLAT)
+                val roleIndex = aCursor.getColumnIndex(ROLE)
+                val iconIndex = aCursor.getColumnIndex(ICON)
+                val avatarIndex = aCursor.getColumnIndex(AVATAR)
+                val avatarSecondIndex = aCursor.getColumnIndex(AVATAR_SECOND)
+                val avatarTextIndex = aCursor.getColumnIndex(AVATAR_TEXT)
+                val contentIndex = aCursor.getColumnIndex(CONTENT)
+                val editedIndex = aCursor.getColumnIndex(EDITED)
 
+                var current: AwfulPost
 
-    public JSONObject toJSON() throws JSONException {
-        JSONObject result = new JSONObject();
-        result.put("id", mId);
-        result.put("date", mDate);
-        result.put("user_id", mUserId);
-        result.put("username", mUsername);
-        result.put("avatar", mAvatar);
-        result.put("avatar_second", mAvatarSecond);
-        result.put("content", mContent);
-        result.put("edited", mEdited);
-        result.put("isIgnored", Boolean.toString(isIgnored()));
-        result.put("previouslyRead", Boolean.toString(mPreviouslyRead));
-        result.put("lastReadUrl", mLastReadUrl);
-        result.put("editable", Boolean.toString(mEditable));
-        result.put("role", mRole);
-        result.put("icon", mIcon);
-        result.put("isOp", Boolean.toString(isOp()));
-        result.put("isPlat", Boolean.toString(isPlat()));
+                do {
+                    current = AwfulPost()
+                    current.id = aCursor.getString(idIndex)
+                    current.threadId = aCursor.getInt(threadIdIndex)
+                    current.date = aCursor.getString(dateIndex)
+                    current.regDate = aCursor.getString(regdateIndex)
+                    current.userId = aCursor.getString(userIdIndex)
+                    current.username = aCursor.getString(usernameIndex)
+                    current.isIgnored = aCursor.getInt(isIgnoredIndex) == 1
+                    current.isPreviouslyRead = aCursor.getInt(previouslyReadIndex) > 0
+                    current.lastReadUrl = aCursor.getInt(postIndexIndex).toString()
+                    current.isEditable = aCursor.getInt(editableIndex) == 1
+                    current.isOp = aCursor.getInt(isOpIndex) == 1
+                    current.isPlat = aCursor.getInt(isPlatIndex) > 0
+                    current.role = aCursor.getString(roleIndex)
+                    current.icon = aCursor.getString(iconIndex)
+                    current.avatar = aCursor.getString(avatarIndex)
+                    current.avatarSecond = aCursor.getString(avatarSecondIndex)
+                    current.avatarText = aCursor.getString(avatarTextIndex)
+                    current.content = aCursor.getString(contentIndex)
+                    current.edited = aCursor.getString(editedIndex)
 
-        return result;
-    }
-
-    public boolean isOp() {
-    	return isOp;
-    }
-
-    public boolean isPlat() {
-        return isPlat;
-    }
-
-    public String getId() {
-        return mId;
-    }
-
-    public void setId(String aId) {
-        mId = aId;
-    }
-
-    public String getDate() {
-        return mDate;
-    }
-
-    public void setDate(String aDate) {
-        mDate = aDate;
-    }
-
-	public String getRegDate() {
-		return mRegDate;
-	}
-
-    public void setRegDate(String aRegDate) {
-        mRegDate = aRegDate;
-    }
-
-    public String getUserId() {
-    	return mUserId;
-    }
-
-    public void setUserId(String aUserId) {
-    	mUserId = aUserId;
-    }
-
-    public String getUsername() {
-        return mUsername;
-    }
-
-    public void setUsername(String aUsername) {
-        mUsername = aUsername;
-    }
-
-    public void setThreadId(int aThreadId) {
-        mThreadId = aThreadId;
-    }
-
-    public int getThreadId() {
-        return mThreadId;
-    }
-
-    public void setIsOp(boolean aIsOp) {
-        isOp = aIsOp;
-    }
-
-    public void setIsPlat(boolean plat) { isPlat = plat;}
-
-    public String getRole() { return mRole; }
-
-    public void setRole(String role) { mRole = role; }
-
-    public String getIcon() { return mIcon; }
-
-    public void setIcon(String icon) { mIcon = icon; }
-
-    public String getAvatar() {
-        return mAvatar;
-    }
-
-    public void setAvatar(String aAvatar) {
-        mAvatar = aAvatar;
-    }
-
-    public String getAvatarSecond() {
-        return mAvatarSecond;
-    }
-
-    public void setAvatarSecond(String aAvatarSecond) { mAvatarSecond = aAvatarSecond; }
-
-    public String getContent() {
-        return mContent;
-    }
-
-    public void setContent(String aContent) {
-        mContent = aContent;
-    }
-
-    public static ArrayList<AwfulPost> fromCursor(Context aContext, Cursor aCursor) {
-        ArrayList<AwfulPost> result = new ArrayList<AwfulPost>();
-
-        if (aCursor.moveToFirst()) {
-            int idIndex = aCursor.getColumnIndex(ID);
-            int threadIdIndex = aCursor.getColumnIndex(THREAD_ID);
-            int postIndexIndex = aCursor.getColumnIndex(POST_INDEX);//ooh, meta
-            int dateIndex = aCursor.getColumnIndex(DATE);
-            int regdateIndex = aCursor.getColumnIndex(REGDATE);
-            int userIdIndex = aCursor.getColumnIndex(USER_ID);
-            int usernameIndex = aCursor.getColumnIndex(USERNAME);
-            int isIgnoredIndex = aCursor.getColumnIndex(IS_IGNORED);
-            int previouslyReadIndex = aCursor.getColumnIndex(PREVIOUSLY_READ);
-            int editableIndex = aCursor.getColumnIndex(EDITABLE);
-            int isOpIndex = aCursor.getColumnIndex(IS_OP);
-            int isPlatIndex = aCursor.getColumnIndex(IS_PLAT);
-            int roleIndex = aCursor.getColumnIndex(ROLE);
-            int iconIndex = aCursor.getColumnIndex(ICON);
-            int avatarIndex = aCursor.getColumnIndex(AVATAR);
-            int avatarSecondIndex = aCursor.getColumnIndex(AVATAR_SECOND);
-            int avatarTextIndex = aCursor.getColumnIndex(AVATAR_TEXT);
-            int contentIndex = aCursor.getColumnIndex(CONTENT);
-            int editedIndex = aCursor.getColumnIndex(EDITED);
-
-            AwfulPost current;
-
-            do {
-                current = new AwfulPost();
-                current.setId(aCursor.getString(idIndex));
-                current.setThreadId(aCursor.getInt(threadIdIndex));
-                current.setDate(aCursor.getString(dateIndex));
-                current.setRegDate(aCursor.getString(regdateIndex));
-                current.setUserId(aCursor.getString(userIdIndex));
-                current.setUsername(aCursor.getString(usernameIndex));
-                current.setIsIgnored(aCursor.getInt(isIgnoredIndex) == 1);
-                current.setPreviouslyRead(aCursor.getInt(previouslyReadIndex) > 0);
-                current.setLastReadUrl(aCursor.getInt(postIndexIndex)+"");
-                current.setEditable(aCursor.getInt(editableIndex) == 1);
-                current.setIsOp(aCursor.getInt(isOpIndex) == 1);
-                current.setIsPlat(aCursor.getInt(isPlatIndex) > 0);
-                current.setRole(aCursor.getString(roleIndex));
-                current.setIcon(aCursor.getString(iconIndex));
-                current.setAvatar(aCursor.getString(avatarIndex));
-                current.setAvatarSecond(aCursor.getString(avatarSecondIndex));
-                current.setAvatarText(aCursor.getString(avatarTextIndex));
-                current.setContent(aCursor.getString(contentIndex));
-                current.setEdited(aCursor.getString(editedIndex));
-
-                result.add(current);
-            } while (aCursor.moveToNext());
-        }else{
-            Timber.i("No posts to convert.");
-        }
-        return result;
-    }
-
-
-    /**
-     * Process any videos found within an Element's hierarchy.
-     *
-     * This will look for appropriate video elements, and rewrite or replace them as necessary so
-     * the app can display them according to the user's preferences.
-     * This mutates the supplied Element's structure.
-     * @param contentNode       the Element to search and edit
-     * @param inlineYouTubes    whether YouTube videos should be displayed inline, or replaced with a link
-     * @param inlineTiktoks     whether TikTok videos should be displayed inline, or replaced with a link
-     */
-    public static void convertVideos(Element contentNode, boolean inlineYouTubes, boolean inlineTiktoks){
-
-        Elements youtubeNodes = contentNode.getElementsByClass("youtube-player");
-
-        for (Element youTube : youtubeNodes) {
-            try {
-                String src = youTube.attr("src");
-                //int height = Integer.parseInt(youTube.attr("height"));
-                //int width = Integer.parseInt(youTube.attr("width"));
-                Matcher youtubeMatcher = youtubeHDId_regex.matcher(src);
-                if (youtubeMatcher.find()) {
-                    String videoId = youtubeMatcher.group(1);
-                    String link = "http://www.youtube.com/watch?v=" + videoId;
-                    String image = "http://img.youtube.com/vi/" + videoId + "/0.jpg";
-
-                    Element youtubeLink = new Element(Tag.valueOf("a"), "");
-                    youtubeLink.text(link);
-                    youtubeLink.attr("href", link);
-                    if (!inlineYouTubes || postElementIsNMWSOrSpoilered(youTube)) {
-                        youTube.replaceWith(youtubeLink);
-                    } else {
-                        youTube.after(youtubeLink);
-                        youtubeLink.before(new Element(Tag.valueOf("br"), ""));
-
-                        Element youtubeContainer = new Element(Tag.valueOf("div"), "");
-                        youtubeContainer.addClass("videoWrapper");
-                        youTube.before(youtubeContainer);
-                        youtubeContainer.appendChild(youTube);
-                        youTube.attr("sandbox", youTube.attr("sandbox") + " allow-top-navigation");
-                    }
-                }
-
-            } catch (Exception e) {
-                Timber.e(e, "Failed youtube conversion:");
-                continue; //if we fail to convert the video tag, we can still display the rest.
+                    result.add(current)
+                } while (aCursor.moveToNext())
+            } else {
+                i("No posts to convert.")
             }
+            return result
         }
 
-        /*
+
+        /**
+         * Process any videos found within an Element's hierarchy.
+         * 
+         * This will look for appropriate video elements, and rewrite or replace them as necessary so
+         * the app can display them according to the user's preferences.
+         * This mutates the supplied Element's structure.
+         * @param contentNode       the Element to search and edit
+         * @param inlineYouTubes    whether YouTube videos should be displayed inline, or replaced with a link
+         * @param inlineTiktoks     whether TikTok videos should be displayed inline, or replaced with a link
+         */
+        fun convertVideos(contentNode: Element, inlineYouTubes: Boolean, inlineTiktoks: Boolean) {
+            val youtubeNodes = contentNode.getElementsByClass("youtube-player")
+
+            for (youTube in youtubeNodes) {
+                try {
+                    val src = youTube.attr("src")
+                    val youtubeMatcher: Matcher = youtubeHDId_regex.matcher(src)
+                    if (youtubeMatcher.find()) {
+                        val videoId = youtubeMatcher.group(1)
+                        val link = "http://www.youtube.com/watch?v=$videoId"
+
+                        val youtubeLink = Element(Tag.valueOf("a"), "")
+                        youtubeLink.text(link)
+                        youtubeLink.attr("href", link)
+                        if (!inlineYouTubes || postElementIsNMWSOrSpoilered(youTube)) {
+                            youTube.replaceWith(youtubeLink)
+                        } else {
+                            youTube.after(youtubeLink)
+                            youtubeLink.before(Element(Tag.valueOf("br"), ""))
+                            Element("div")
+                            val youtubeContainer = Element(Tag.valueOf("div"), "")
+                            youtubeContainer.addClass("videoWrapper")
+                            youTube.before(youtubeContainer)
+                            youtubeContainer.appendChild(youTube)
+                            youTube.attr(
+                                "sandbox",
+                                youTube.attr("sandbox") + " allow-top-navigation"
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    e(e, "Failed youtube conversion:")
+                    continue  //if we fail to convert the video tag, we can still display the rest.
+                }
+            }
+
+            /*
          * TikTok URL forms seem to be:
          * https://www.tiktok.com/embed/[video id = \d+]
          * https://www.tiktok.com/@[username]/video/[video id]
          * there are more but they don't relate to embedding and don't appear to have video IDs associated
         */
-        Elements tiktokNodes = contentNode.getElementsByClass("tiktok-player");
+            val tiktokNodes = contentNode.getElementsByClass("tiktok-player")
 
-        for (Element tiktok : tiktokNodes) {
-            try {
-                String src = tiktok.attr("src");
-                Matcher tiktokMatcher = tiktokId_regex.matcher(src);
-                if (tiktokMatcher.find()) {
-                    String videoId = tiktokMatcher.group(1);
-                    // usernames aren't included in the embed link format, thankfully they don't matter
-                    String linkURLPrefix = "https://www.tiktok.com/@/video/";
-                    String link = linkURLPrefix + videoId;
+            for (tiktok in tiktokNodes) {
+                try {
+                    val src = tiktok.attr("src")
+                    val tiktokMatcher: Matcher = tiktokId_regex.matcher(src)
+                    if (tiktokMatcher.find()) {
+                        val videoId = tiktokMatcher.group(1)
+                        // usernames aren't included in the embed link format, thankfully they don't matter
+                        val linkURLPrefix = "https://www.tiktok.com/@/video/"
+                        val link = linkURLPrefix + videoId
 
-                    Element tiktokLink = new Element(Tag.valueOf("a"), "");
-                    tiktokLink.text(link);
-                    tiktokLink.attr("href", link);
-                    if (!inlineTiktoks || postElementIsNMWSOrSpoilered(tiktok)) {
-                        tiktok.replaceWith(tiktokLink);
-                    } else {
-                        tiktok.after(tiktokLink);
-                        tiktokLink.before(new Element(Tag.valueOf("br"), ""));
-                    }
-                }
-            } catch (Exception e) {
-                Timber.e(e, "Failed TikTok conversion:");
-                continue;
-            }
-        }
-
-        Elements videoNodes = contentNode.getElementsByClass("bbcode_video");
-        for (Element node : videoNodes) {
-            try {
-                String src = null;
-                int height = 0;
-                int width = 0;
-                Elements object = node.getElementsByTag("object");
-                if (object.size() > 0) {
-                    height = Integer.parseInt(object.get(0).attr("height"));
-                    width = Integer.parseInt(object.get(0).attr("width"));
-                    Elements emb = object.get(0).getElementsByTag("embed");
-                    if (emb.size() > 0) {
-                        src = emb.get(0).attr("src");
-                    }
-                }
-                if (src != null && height != 0 && width != 0) {
-                    String link = null, image = null;
-                    Matcher vimeo = vimeoId_regex.matcher(src);
-                    if (vimeo.find()) {
-                        String videoId = vimeo.group(1);
-                        Element vimeoXML;
-                        try {
-                            vimeoXML = NetworkUtils.get("http://vimeo.com/api/v2/video/" + videoId + ".xml");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-                        if (vimeoXML.getElementsByTag("mobile_url").first() != null) {
-                            link = vimeoXML.getElementsByTag("mobile_url").first().text();
+                        val tiktokLink = Element(Tag.valueOf("a"), "")
+                        tiktokLink.text(link)
+                        tiktokLink.attr("href", link)
+                        if (!inlineTiktoks || postElementIsNMWSOrSpoilered(tiktok)) {
+                            tiktok.replaceWith(tiktokLink)
                         } else {
-                            link = vimeoXML.getElementsByTag("url").first().text();
+                            tiktok.after(tiktokLink)
+                            tiktokLink.before(Element(Tag.valueOf("br"), ""))
                         }
-                        image = vimeoXML.getElementsByTag("thumbnail_large").first().text();
-                        src = link;
-                    } else {
-                        node.empty();
-                        Element ln = new Element(Tag.valueOf("a"), "");
-                        ln.attr("href", src);
-                        ln.text(src);
-                        node.replaceWith(ln);
-                        continue;
                     }
-                    node.empty();
-                    Element ln = new Element(Tag.valueOf("a"), "");
-                    ln.attr("href", link);
-                    ln.text(link);
-                    node.replaceWith(ln);
+                } catch (e: Exception) {
+                    e(e, "Failed TikTok conversion:")
+                    continue
                 }
+            }
 
-            } catch (Exception e) {
-                Timber.e(e, "Failed video conversion:");
-                continue;//if we fail to convert the video tag, we can still display the rest.
+            val videoNodes = contentNode.getElementsByClass("bbcode_video")
+            for (node in videoNodes) {
+                try {
+                    var src: String? = null
+                    var height = 0
+                    var width = 0
+                    val `object` = node.getElementsByTag("object")
+                    if (`object`.isNotEmpty()) {
+                        height = `object`[0].attr("height").toInt()
+                        width = `object`[0].attr("width").toInt()
+                        val emb = `object`[0].getElementsByTag("embed")
+                        if (emb.isNotEmpty()) {
+                            src = emb[0].attr("src")
+                        }
+                    }
+                    if (src != null && height != 0 && width != 0) {
+                        var link: String? = null
+                        val vimeo: Matcher = vimeoId_regex.matcher(src)
+                        if (vimeo.find()) {
+                            val videoId = vimeo.group(1)
+                            val vimeoXML: Element?
+                            try {
+                                vimeoXML = get("http://vimeo.com/api/v2/video/$videoId.xml")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                continue
+                            }
+                            link = if (vimeoXML?.getElementsByTag("mobile_url")?.first() != null) {
+                                vimeoXML.getElementsByTag("mobile_url").first()?.text()
+                            } else {
+                                vimeoXML?.getElementsByTag("url")?.first()?.text()
+                            }
+                        } else {
+                            node.empty()
+                            val ln = Element(Tag.valueOf("a"), "")
+                            ln.attr("href", src)
+                            ln.text(src)
+                            node.replaceWith(ln)
+                            continue
+                        }
+                        link?.let {
+                            node.empty()
+                            val ln = Element(Tag.valueOf("a"), "")
+                            ln.attr("href", it)
+                            ln.text(it)
+                            node.replaceWith(ln)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e(e, "Failed video conversion:")
+                    continue  //if we fail to convert the video tag, we can still display the rest.
+                }
             }
         }
-    }
 
-    /**
-     * Duplicates logic from embedding.js. Make changes in both locations!
-     * @param postElement Must have a containing .postbody element
-     * @return boolean
-     */
-    private static boolean postElementIsNMWSOrSpoilered(Element postElement) {
-        return (Objects.requireNonNull(postElement.closest(".postbody")).selectFirst("img[title=':nws:'], img[title=':nms:']") != null)
-                || Objects.requireNonNull(postElement.parent()).hasClass("bbc-spoiler");
-    }
-
-	public String getEdited() {
-        return mEdited;
-    }
-
-    public void setEdited(String aEdited) {
-        mEdited = aEdited;
-    }
-
-    public String getAvatarText() {
-    	return mAvatarText;
-	}
-
-    public void setAvatarText(String text) {
-    	mAvatarText = text;
-	}
-
-
-    public String getLastReadUrl() {
-        return mLastReadUrl;
-    }
-
-    public void setLastReadUrl(String aLastReadUrl) {
-        mLastReadUrl = aLastReadUrl;
-    }
-
-    public boolean isIgnored() { return isIgnored; }
-
-    public void setIsIgnored(boolean ignored) { isIgnored = ignored; }
-
-    public boolean isPreviouslyRead() {
-		return mPreviouslyRead;
-	}
-
-	public void setPreviouslyRead(boolean aPreviouslyRead) {
-		mPreviouslyRead = aPreviouslyRead;
-	}
-
-	public boolean isEditable() {
-		return mEditable;
-	}
-
-	public void setEditable(boolean aEditable) {
-		mEditable = aEditable;
-	}
-
-
-
-    /**
-     * Parse a thread page to grab its post data.
-     *
-     * @param content
-     * @param aThread
-     * @param aThreadId
-     * @param unreadIndex
-     * @param opId
-     * @param prefs
-     * @param startIndex
-     * @return the number of posts found on the page
-     */
-    public static int syncPosts(ContentResolver content, Document aThread, int aThreadId, int unreadIndex, int opId, AwfulPreferences prefs, int startIndex){
-        List<ContentValues> result = AwfulPost.parsePosts(aThread, aThreadId, unreadIndex, opId, prefs, startIndex);
-        int resultCount = content.bulkInsert(CONTENT_URI, result.toArray(new ContentValues[result.size()]));
-        Timber.i("Inserted " + resultCount + " posts into DB, threadId:" + aThreadId + " unreadIndex: " + unreadIndex);
-        return resultCount;
-    }
-
-
-    public static List<ContentValues> parsePosts(Document aThread, int aThreadId, int unreadIndex, int opId, AwfulPreferences prefs, int startIndex){
-		int index = startIndex;
-        String updateTime = new Timestamp(System.currentTimeMillis()).toString();
-
-        Elements posts = aThread.getElementsByClass("post");
-        List<Callable<ContentValues>> parseTasks = new ArrayList<>(posts.size());
-        for(Element postData : posts){
-            parseTasks.add(new PostParseTask(postData, updateTime, index, unreadIndex, aThreadId, opId, prefs));
-            index++;
+        /**
+         * Duplicates logic from embedding.js. Make changes in both locations!
+         * @param postElement Must have a containing .postbody element
+         * @return boolean
+         */
+        private fun postElementIsNMWSOrSpoilered(postElement: Element): Boolean {
+            return postElement.closest(".postbody")?.selectFirst("img[title=':nws:'], img[title=':nms:']") != null
+                    || postElement.parent()?.hasClass("bbc-spoiler") ?: false
         }
 
-        long startTime = System.currentTimeMillis();
-        // parse posts using multithreading if possible - some of the Jsoup calls (#html in particular) are very slow
-        // (#html should be a lot faster when jsoup updates to handle Windows-1252 encoding user their fast path for Entities#canEncode)
-        List<ContentValues> result = ForumParsingKt.parse(parseTasks);
-        float averageParseTime = (System.currentTimeMillis() - startTime) / (float) parseTasks.size();
-        Timber.i("%d posts found, %d posts parsed\nAverage parse time: %.3fms", posts.size(), result.size(), averageParseTime);
-        return result;
-    }
-
-
-    /**
-     * Process an img element from a post, to make it display correctly in the app.
-     * <p>
-     * This performs any necessary conversion, referring to user preferences to determine if e.g.
-     * images should be loaded or converted to a link. This mutates the supplied Element.
-     *
-     * @param img        an Element represented by an img tag
-     * @param isOldImage whether this is an old image (from a previously seen post), may be hidden
-     * @param prefs      preferences used to make decisions
-     */
-    public static void processPostImage(Element img, boolean isOldImage, AwfulPreferences prefs) {
-        //don't alter video mock buttons
-        if (img.hasClass("videoPlayButton")) {
-            return;
+        /**
+         * Parse a thread page to grab its post data.
+         * 
+         * @param content
+         * @param aThread
+         * @param aThreadId
+         * @param unreadIndex
+         * @param opId
+         * @param prefs
+         * @param startIndex
+         * @return the number of posts found on the page
+         */
+        fun syncPosts(
+            content: ContentResolver,
+            aThread: Document,
+            aThreadId: Int,
+            unreadIndex: Int,
+            opId: Int,
+            prefs: AwfulPreferences,
+            startIndex: Int
+        ): Int {
+            val result: MutableList<ContentValues> =
+                parsePosts(aThread, aThreadId, unreadIndex, opId, prefs, startIndex)
+            val resultCount = content.bulkInsert(CONTENT_URI, result.toTypedArray<ContentValues?>())
+            i("Inserted $resultCount posts into DB, threadId:$aThreadId unreadIndex: $unreadIndex")
+            return resultCount
         }
-        tryConvertToHttps(img);
-        boolean isTimg = img.hasClass("timg");
-        String originalUrl = img.attr("src");
 
-	// Fix postimg.org images
-	if (originalUrl.contains("postimg.org")) {
-		originalUrl = originalUrl.replace(".org/",".cc/");
-	}
-        // check whether images can be converted to / wrapped in a link
-        boolean alreadyLinked = img.parent() != null && img.parent().tagName().equalsIgnoreCase("a");
-        boolean linkOk = !img.hasClass("nolink");
 
-        // image is a smiley - if required, replace it with its :code: (held in the 'title' attr)
-        if (img.hasAttr("title")) {
-            if (!prefs.showSmilies) {
-                String name = img.attr("title");
-                img.replaceWith(new Element(Tag.valueOf("span"), "").text(name));
+        fun parsePosts(
+            aThread: Document,
+            aThreadId: Int,
+            unreadIndex: Int,
+            opId: Int,
+            prefs: AwfulPreferences,
+            startIndex: Int
+        ): MutableList<ContentValues> {
+            var index = startIndex
+            val updateTime = Timestamp(System.currentTimeMillis()).toString()
+
+            val posts = aThread.getElementsByClass("post")
+            val parseTasks: MutableList<Callable<ContentValues>> = ArrayList(posts.size)
+            for (postData in posts) {
+                parseTasks.add(
+                    PostParseTask(
+                        postData,
+                        updateTime,
+                        index,
+                        unreadIndex,
+                        aThreadId,
+                        opId,
+                        prefs
+                    )
+                )
+                index++
             }
-            return;
+
+            val startTime = System.currentTimeMillis()
+            // parse posts using multithreading if possible - some of the Jsoup calls (#html in particular) are very slow
+            // (#html should be a lot faster when jsoup updates to handle Windows-1252 encoding user their fast path for Entities#canEncode)
+            val result: MutableList<ContentValues> = parse(parseTasks).toMutableList()
+            val averageParseTime = (System.currentTimeMillis() - startTime) / parseTasks.size.toFloat()
+            i(
+                "%d posts found, %d posts parsed\nAverage parse time: %.3fms",
+                posts.size,
+                result.size,
+                averageParseTime
+            )
+            return result
         }
 
-        // image shouldn't be displayed - convert to link / plaintext url
-        // if image is wrapped in an <a>, make a link to image and the <a>
-        if (isOldImage && prefs.hideOldImages || !prefs.canLoadImages()) {
-            if (!linkOk) {
-                img.replaceWith(new Element(Tag.valueOf("span"), "").text(originalUrl).attr("class","link-no-ok"));
-            } else if (alreadyLinked) {
-                Element newParent = new Element(Tag.valueOf("span"), "").attr("class", "converted-to-link");
-                Element parent = img.parent();
 
-                parent.appendText(parent.attr("href")).attr("class", "a-link");
-
-                parent.parent().insertChildren(parent.elementSiblingIndex(), newParent);  // set the image as the first child of the div
-                newParent.appendChild(parent);
-                newParent.appendChild(img);
-                img.replaceWith(new Element(Tag.valueOf("a"), "")
-                        .attr("href", originalUrl)
-                        .text(originalUrl)
-                        .attr("class", "img-link"));
-            } else {
-                // switch out for a link with the url
-                img.replaceWith(new Element(Tag.valueOf("a"), "").attr("href", originalUrl).text(originalUrl));
+        /**
+         * Process an img element from a post, to make it display correctly in the app.
+         * 
+         * 
+         * This performs any necessary conversion, referring to user preferences to determine if e.g.
+         * images should be loaded or converted to a link. This mutates the supplied Element.
+         * 
+         * @param img        an Element represented by an img tag
+         * @param isOldImage whether this is an old image (from a previously seen post), may be hidden
+         * @param prefs      preferences used to make decisions
+         */
+        fun processPostImage(img: Element, isOldImage: Boolean, prefs: AwfulPreferences) {
+            //don't alter video mock buttons
+            if (img.hasClass("videoPlayButton")) {
+                return
             }
-            return;
-        }
+            tryConvertToHttps(img)
+            val isTimg = img.hasClass("timg")
+            var originalUrl = img.attr("src")
 
-        // normal image - if we can't link it (e.g. to turn into an expandable thumbnail) there's nothing else to do
-        if (!linkOk || alreadyLinked) {
-            return;
-        }
+            // Fix postimg.org images
+            if (originalUrl.contains("postimg.org")) {
+                originalUrl = originalUrl.replace(".org/", ".cc/")
+            }
+            // check whether images can be converted to / wrapped in a link
+            val alreadyLinked = img.parent()?.tagName().equals("a", ignoreCase = true)
+            val linkOk = !img.hasClass("nolink")
 
-        // handle linking, thumbnailing, gif conversion etc
+            // image is a smiley - if required, replace it with its :code: (held in the 'title' attr)
+            if (img.hasAttr("title")) {
+                if (!prefs.showSmilies) {
+                    val name = img.attr("title")
+                    img.replaceWith(Element(Tag.valueOf("span"), "").text(name))
+                }
+                return
+            }
 
-        // default to the 'thumbnail' url just being the full image
-        String thumbUrl = originalUrl;
+            // image shouldn't be displayed - convert to link / plaintext url
+            // if image is wrapped in an <a>, make a link to image and the <a>
+            if (isOldImage && prefs.hideOldImages || !prefs.canLoadImages()) {
+                if (!linkOk) {
+                    img.replaceWith(
+                        Element(Tag.valueOf("span"), "")
+                            .text(originalUrl)
+                            .attr("class", "link-no-ok")
+                    )
+                } else if (alreadyLinked) {
+                    val newParent = Element(Tag.valueOf("span"), "").attr("class", "converted-to-link")
+                    val parent = img.parent()!!
 
-        // thumbnail any imgur images according to user prefs, if set
-        if (!prefs.imgurThumbnails.equals("d") && thumbUrl.contains("i.imgur.com")) {
-            thumbUrl = imgurAsThumbnail(thumbUrl, prefs.imgurThumbnails);
-        }
+                    parent
+                        .appendText(parent.attr("href"))
+                        .attr("class", "a-link")
 
-        // handle gifs - different cases for different sites
-        if (prefs.disableGifs && StringUtils.containsIgnoreCase(thumbUrl, ".gif")) {
-            if (StringUtils.containsIgnoreCase(thumbUrl, "imgur.com")) {
-                thumbUrl = imgurAsThumbnail(thumbUrl, "h");
-            } else if (StringUtils.containsIgnoreCase(thumbUrl, "i.kinja-img.com")) {
-                thumbUrl = thumbUrl.replace(".gif", ".jpg");
-            } else if (StringUtils.containsIgnoreCase(thumbUrl, "giphy.com")) {
-                thumbUrl = thumbUrl.replace("://i.giphy.com", "://media.giphy.com/media");
-                if (thumbUrl.endsWith("giphy.gif")) {
-                    thumbUrl = thumbUrl.replace("giphy.gif", "200_s.gif");
+                    parent.parent()?.insertChildren(
+                        parent.elementSiblingIndex(),
+                        newParent
+                    ) // set the image as the first child of the div
+                    newParent.appendChild(parent)
+                    newParent.appendChild(img)
+                    img.replaceWith(
+                        Element(Tag.valueOf("a"), "")
+                            .attr("href", originalUrl)
+                            .text(originalUrl)
+                            .attr("class", "img-link")
+                    )
                 } else {
-                    thumbUrl = thumbUrl.replace(".gif", "/200_s.gif");
+                    // switch out for a link with the url
+                    img.replaceWith(
+                        Element(Tag.valueOf("a"), "").attr("href", originalUrl).text(originalUrl)
+                    )
                 }
-            } else if (StringUtils.containsIgnoreCase(thumbUrl, "giant.gfycat.com")) {
-                thumbUrl = thumbUrl.replace("giant.gfycat.com", "thumbs.gfycat.com");
-                thumbUrl = thumbUrl.replace(".gif", "-poster.jpg");
+                return
+            }
+
+            // normal image - if we can't link it (e.g. to turn into an expandable thumbnail) there's nothing else to do
+            if (!linkOk || alreadyLinked) {
+                return
+            }
+
+            // handle linking, thumbnailing, gif conversion etc
+
+            // default to the 'thumbnail' url just being the full image
+            var thumbUrl = originalUrl
+
+            // thumbnail any imgur images according to user prefs, if set
+            if (prefs.imgurThumbnails != "d" && thumbUrl.contains("i.imgur.com")) {
+                thumbUrl = imgurAsThumbnail(thumbUrl, prefs.imgurThumbnails ?: "d")
+            }
+
+            // handle GIFs - different cases for different sites
+            if (prefs.disableGifs && thumbUrl.contains(".gif", true)) {
+                if (thumbUrl.contains("imgur.com", true)) {
+                    thumbUrl = imgurAsThumbnail(thumbUrl, "h")
+                } else if (thumbUrl.contains( "i.kinja-img.com", true)) {
+                    thumbUrl = thumbUrl.replace(".gif", ".jpg")
+                } else if (thumbUrl.contains( "giphy.com", true)) {
+                    thumbUrl = thumbUrl.replace("://i.giphy.com", "://media.giphy.com/media")
+                    thumbUrl = if (thumbUrl.endsWith("giphy.gif")) {
+                        thumbUrl.replace("giphy.gif", "200_s.gif")
+                    } else {
+                        thumbUrl.replace(".gif", "/200_s.gif")
+                    }
+                } else if (thumbUrl.contains( "giant.gfycat.com", true)) {
+                    thumbUrl = thumbUrl.replace("giant.gfycat.com", "thumbs.gfycat.com")
+                    thumbUrl = thumbUrl.replace(".gif", "-poster.jpg")
+                } else {
+                    thumbUrl = "file:///android_asset/images/gif.png"
+                    img.attr("width", "200px")
+                }
+
+                // link and rewrite image, setting the link as click-to-play
+                thumbnailAndLink(img, thumbUrl).addClass("playGif")
+                return
+            }
+
+            // non-gif images - wrap them in a link, unless handling as a TIMG (to avoid breaking its click behaviour)
+            if (!isTimg || prefs.disableTimgs) {
+                // if the image hasn't been processed then thumbUrl will be the original image URL, i.e. a full-size image
+                thumbnailAndLink(img, thumbUrl)
+            }
+        }
+
+
+        /**
+         * Rewrite a Imgur image url as a thumbnailed version, if possible (e.g. not already a thumbnail).
+         * 
+         * @param imgurUrl      the image url to rewrite
+         * @param thumbnailCode the type of thumbnail, usually a single character code
+         * @return the rewritten url, or the original if it couldn't be rewritten
+         */
+        private fun imgurAsThumbnail(imgurUrl: String, thumbnailCode: String): String {
+            var imgurUrl = imgurUrl
+            val match: Matcher = imgurId_regex.matcher(imgurUrl)
+            if (match.find()) {
+                val imgurBase = match.group(1)!!
+                val imgurImageId = match.group(2)!!
+                val imgurImageEnd = match.group(3)
+
+                //check if already thumbnails
+                if (imgurImageId.length != 6 && imgurImageId.length != 8) {
+                    imgurUrl = imgurBase + imgurImageId + thumbnailCode + imgurImageEnd
+                }
+            }
+            return imgurUrl
+        }
+
+
+        /**
+         * Rewrite an image element as a thumbnail, wrapping it in a link to the original image URL.
+         * 
+         * 
+         * The image will be replaced in the DOM by the anchor element, with the image as its child, and
+         * the anchor returned. Classes on the image element are cleared.
+         * 
+         * @param img          the image element
+         * @param thumbnailUrl the URL for the wrapped image
+         * @return the link element, containing the modified image element
+         */
+        private fun thumbnailAndLink(img: Element, thumbnailUrl: String): Element {
+            val link = Element(Tag.valueOf("a"), "").attr("href", img.attr("src"))
+            // rewrite the image (new src, no classes) and wrap it with the link in the DOM
+            img.attr("src", thumbnailUrl)
+            img.classNames(mutableSetOf())
+            img.replaceWith(link)
+            link.appendChild(img)
+            return link
+        }
+
+
+        /**
+         * Converts URLs to https versions, where appropriate.
+         * 
+         * 
+         * This mutates the element directly.
+         */
+        fun tryConvertToHttps(element: Element) {
+            var url: String?
+
+            // get the element's url attribute, give up if it doesn't have one
+            val attr = if (element.hasAttr("href")) {
+                "href"
+            } else if (element.hasAttr("src")) {
+                "src"
             } else {
-                thumbUrl = "file:///android_asset/images/gif.png";
-                img.attr("width", "200px");
+                return
             }
 
-            // link and rewrite image, setting the link as click-to-play
-            thumbnailAndLink(img, thumbUrl).addClass("playGif");
-            return;
-        }
-
-        // non-gif images - wrap them in a link, unless handling as a TIMG (to avoid breaking its click behaviour)
-        if (!isTimg || prefs.disableTimgs) {
-            // if the image hasn't been processed then thumbUrl will be the original image URL, i.e. a full-size image
-            thumbnailAndLink(img, thumbUrl);
-        }
-    }
-
-
-    /**
-     * Rewrite a Imgur image url as a thumbnailed version, if possible (e.g. not already a thumbnail).
-     *
-     * @param imgurUrl      the image url to rewrite
-     * @param thumbnailCode the type of thumbnail, usually a single character code
-     * @return the rewritten url, or the original if it couldn't be rewritten
-     */
-    @NonNull
-    private static String imgurAsThumbnail(@NonNull String imgurUrl, @NonNull String thumbnailCode) {
-
-        Matcher match =  imgurId_regex.matcher(imgurUrl);
-        if(match.find()) {
-            String imgurBase = match.group(1);
-            String imgurImageId = match.group(2);
-            String imgurImageEnd = match.group(3);
-
-            //check if already thumbnails
-            if (imgurImageId.length() != 6 && imgurImageId.length() != 8) {
-                imgurUrl = imgurBase + imgurImageId + thumbnailCode + imgurImageEnd;
+            // if the element's url is for a https-able domain, rewrite it
+            for (domain in HTTPS_SUPPORTED_DOMAINS) {
+                url = element.attr(attr)
+                if (url.contains(domain.toString(), true)) {
+                    element.attr(attr, url.replace("http://", "https://"))
+                    return
+                }
             }
         }
-        return imgurUrl;
-    }
 
 
-    /**
-     * Rewrite an image element as a thumbnail, wrapping it in a link to the original image URL.
-     * <p>
-     * The image will be replaced in the DOM by the anchor element, with the image as its child, and
-     * the anchor returned. Classes on the image element are cleared.
-     *
-     * @param img          the image element
-     * @param thumbnailUrl the URL for the wrapped image
-     * @return the link element, containing the modified image element
-     */
-    @NonNull
-    private static Element thumbnailAndLink(@NonNull Element img, @NonNull String thumbnailUrl) {
-        Element link = new Element(Tag.valueOf("a"), "").attr("href", img.attr("src"));
-        // rewrite the image (new src, no classes) and wrap it with the link in the DOM
-        img.attr("src", thumbnailUrl);
-        img.classNames(Collections.emptySet());
-        img.replaceWith(link);
-        link.appendChild(img);
-        return link;
-    }
-
-
-    /**
-     * Converts URLs to https versions, where appropriate.
-     * <p>
-     * This mutates the element directly.
-     */
-    public static void tryConvertToHttps(@NonNull Element element) {
-        String attr;
-        String url;
-
-        // get the element's url attribute, give up if it doesn't have one
-        if (element.hasAttr("href")) {
-            attr = "href";
-        } else if (element.hasAttr("src")) {
-            attr = "src";
-        } else {
-            return;
-        }
-
-        // if the element's url is for a https-able domain, rewrite it
-        for (String domain : HTTPS_SUPPORTED_DOMAINS) {
-            url = element.attr(attr);
-            if (StringUtils.containsIgnoreCase(url, domain)) {
-                element.attr(attr, url.replace("http://", "https://"));
-                return;
+        /**
+         * Converts bad post markers to links, when found.
+         * 
+         * 
+         * This mutates the element directly.
+         */
+        fun setBanlistLinks(element: Element, userId: Int, postid: String) {
+            // get the element's url attribute, give up if it doesn't have one
+            val match: Matcher = badPost_regex.matcher(element.text())
+            if (match.find()) {
+                val url = Constants.FUNCTION_BANLIST + "?userid=" + userId + "#from" + postid
+                val text = element.text()
+                val link = Element(Tag.valueOf("a"), "")
+                link.attr("href", url)
+                link.text(text)
+                element.empty().appendChild(link)
             }
         }
     }
-
-
-    /**
-     * Converts bad post markers to links, when found.
-     * <p>
-     * This mutates the element directly.
-     */
-    public static void setBanlistLinks(@NonNull Element element, @NonNull int userId, @NonNull String postid) {
-        // get the element's url attribute, give up if it doesn't have one
-        Matcher match = badPost_regex.matcher(element.text());
-        if (match.find()) {
-            String url = Constants.FUNCTION_BANLIST + "?userid="+userId+"#from"+postid;
-            String text = element.text();
-            Element link = new Element(Tag.valueOf("a"), "");
-            link.attr("href", url);
-            link.text(text);
-            element.empty().appendChild(link);
-        }
-    }
-
 }

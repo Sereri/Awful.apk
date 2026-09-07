@@ -97,7 +97,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
     }
 
 
-    public override fun onActivityCreated(aSavedState: Bundle?) {
+    override fun onActivityCreated(aSavedState: Bundle?) {
         super.onActivityCreated(aSavedState)
         val context: Context = requireActivity()
         forumRepo = ForumRepository.getInstance(context)

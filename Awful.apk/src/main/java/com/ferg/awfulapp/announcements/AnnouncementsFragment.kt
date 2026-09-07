@@ -120,7 +120,7 @@ class AnnouncementsFragment : AwfulFragment() {
                             // these page params don't mean anything in the context of the announcement page
                             // we just want it to a) display ok, and b) not let the user click anything bad
                             val bodyHtml = AwfulHtmlPage.getThreadHtml(
-                                result,
+                                result.toMutableList(),
                                 AwfulPreferences.getInstance(),
                                 1,
                                 1

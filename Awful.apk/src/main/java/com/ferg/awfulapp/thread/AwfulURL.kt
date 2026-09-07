@@ -1,258 +1,261 @@
-package com.ferg.awfulapp.thread;
+package com.ferg.awfulapp.thread
 
-import android.net.Uri;
-import android.util.Log;
+import android.net.Uri
+import android.util.Log
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.util.AwfulUtils
+import kotlin.math.ceil
+import androidx.core.net.toUri
 
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.util.AwfulUtils;
+class AwfulURL {
+    enum class TYPE {
+        FORUM, THREAD, POST, EXTERNAL, NONE, INDEX, BANLIST
+    }
 
+    var id: Long = 0
+        private set
+    var page: Long = 1
+        private set
+    private var perPage = Constants.ITEMS_PER_PAGE
+    private var externalURL: String? = null
+    var type: TYPE = TYPE.NONE
+        private set
+    private var gotoParam: String? = null
+    var fragment: String? = null
+        private set
 
-public class AwfulURL {
-	
-	public enum TYPE{FORUM,THREAD,POST,EXTERNAL,NONE,INDEX,BANLIST}
-	private long id;
-	private long pageNum = 1;
-	private int perPage = Constants.ITEMS_PER_PAGE;
-	private String externalURL;
-	private TYPE type = TYPE.NONE;
-	private String gotoParam;
-	private String fragment;
-	
-	public static AwfulURL forum(long id){
-		return forum(id, 1);
-	}
-	
-	public static AwfulURL forum(long id, long pageNum){
-		AwfulURL aurl = new AwfulURL();
-		aurl.type = TYPE.FORUM;
-		aurl.id = id;
-		aurl.pageNum = pageNum;
-		aurl.perPage = Constants.THREADS_PER_PAGE;
-		return aurl;
-	}
-	
-	public static AwfulURL thread(long id){
-		return thread(id, 1, Constants.ITEMS_PER_PAGE, null);
-	}
-	
-	public static AwfulURL threadUnread(long id){
-		return thread(id, 1, Constants.ITEMS_PER_PAGE, null).setGoto(Constants.VALUE_NEWPOST);
-	}
-	
-	public static AwfulURL threadUnread(long id, int perPage){
-		return thread(id, 1, perPage, null).setGoto(Constants.VALUE_NEWPOST);
-	}
-	
-	public static AwfulURL threadLastPage(long id){
-		return thread(id, 1, Constants.ITEMS_PER_PAGE, null).setGoto(Constants.VALUE_LASTPOST);
-	}
-	
-	public static AwfulURL threadLastPage(long id, int perPage){
-		return thread(id, 1, perPage, null).setGoto(Constants.VALUE_LASTPOST);
-	}
-	
-	public static AwfulURL thread(long id, long pageNum){
-		return thread(id, pageNum, Constants.ITEMS_PER_PAGE, null);
-	}
-	
-	public static AwfulURL thread(long id, long pageNum, int perPage){
-		return thread(id, pageNum, perPage, null);
-	}
-	
-	public static AwfulURL thread(long id, long pageNum, int perPage, String goTo){
-		AwfulURL aurl = new AwfulURL();
-		aurl.type = TYPE.THREAD;
-		aurl.id = id;
-		aurl.pageNum = pageNum;
-		aurl.perPage = perPage;
-		aurl.gotoParam = goTo;
-		return aurl;
-	}
-	
-	public static AwfulURL post(long id){
-		return post(id, Constants.ITEMS_PER_PAGE);
-	}
-	
-	public static AwfulURL post(long id, int perPage){
-		AwfulURL aurl = new AwfulURL();
-		aurl.type = TYPE.POST;
-		aurl.id = id;
-        aurl.perPage = perPage;
-		aurl.gotoParam = Constants.VALUE_POST;
-		return aurl;
-	}
-	
-	public static AwfulURL parse(String url){
-		AwfulURL aurl = new AwfulURL();
-		Uri uri = Uri.parse(url);
-		if(uri.isRelative() || (uri.getHost() != null && uri.getHost().contains("forums.somethingawful.com"))){
-			if(uri.getQueryParameter(Constants.PARAM_PAGE) != null){
-				aurl.pageNum = AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_PAGE), 1);
-			}
-			if(uri.getQueryParameter(Constants.PARAM_PER_PAGE) != null){
-				aurl.perPage = AwfulUtils.safeParseInt(uri.getQueryParameter(Constants.PARAM_PER_PAGE), Constants.ITEMS_PER_PAGE);
-			}
-			if(Constants.PATH_FORUM.equals(uri.getLastPathSegment())){
-				aurl.type = TYPE.FORUM;
-				aurl.perPage = Constants.THREADS_PER_PAGE;
-				if(uri.getQueryParameter(Constants.PARAM_FORUM_ID) != null){
-					aurl.id = AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_FORUM_ID), 1);
-				}
-			}else if(Constants.PATH_BOOKMARKS.equals(uri.getLastPathSegment()) || Constants.PATH_USERCP.equals(uri.getLastPathSegment())){
-				aurl.type = TYPE.FORUM;
-				aurl.perPage = Constants.THREADS_PER_PAGE;
-				aurl.id = Constants.USERCP_ID;
-			}else if(Constants.PATH_THREAD.equals(uri.getLastPathSegment())) {
-				aurl.type = TYPE.THREAD;
-				if (uri.getQueryParameter(Constants.PARAM_THREAD_ID) != null) {
-					aurl.id = AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_THREAD_ID), 0);
-				}
-				if (uri.getQueryParameter(Constants.PARAM_GOTO) != null) {
-					aurl.gotoParam = uri.getQueryParameter(Constants.PARAM_GOTO);
-					if (Constants.VALUE_POST.equalsIgnoreCase(aurl.gotoParam)) {
-						aurl.type = TYPE.POST;
-						aurl.id = AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_POST_ID), 0);
-					}
-				}
-				if (Constants.ACTION_SHOWPOST.equalsIgnoreCase(uri.getQueryParameter(Constants.PARAM_ACTION))) {
-					aurl.type = TYPE.POST;
-					aurl.id = AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_POST_ID), 0);
-				}
-			}else if(Constants.PATH_BANLIST.equals(uri.getLastPathSegment())){
-				aurl.type = TYPE.BANLIST;
-				aurl.id = AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_USER_ID), 0);
-			}else if("index.php".equalsIgnoreCase(uri.getLastPathSegment()) || uri.getPath() == null || uri.getPath().length() < 2){
-				aurl.type = TYPE.INDEX;
-			}else{
-				aurl.type = TYPE.EXTERNAL;
-				aurl.externalURL = url;
-			}
-			aurl.fragment = uri.getFragment();
-		}else{
-			aurl.type = TYPE.EXTERNAL;
-			aurl.externalURL = url;
-		}
-		Log.i("AwfulURL","Parsed URL: "+aurl.getURL());
-		return aurl;
-	}
-	
-	/**
-	 * Returns the URL, assuming the default 40 items per page.
-	 * @return URL
-	 */
-	public String getURL(){
-		return getURL(perPage);
-	}
-	
-	public String getURL(int postPerPage){
-		Uri.Builder url = null;
-		switch(type){
-		case FORUM:
-			if(id == Constants.USERCP_ID){
-				url = Uri.parse(Constants.FUNCTION_USERCP).buildUpon();
-			}else{
-				url = Uri.parse(Constants.FUNCTION_FORUM).buildUpon();
-			}
-			url.appendQueryParameter(Constants.PARAM_FORUM_ID, Long.toString(id));
-			url.appendQueryParameter(Constants.PARAM_PAGE, Long.toString(pageNum));
-			break;
-		case THREAD:
-			url = Uri.parse(Constants.FUNCTION_THREAD).buildUpon();
-			url.appendQueryParameter(Constants.PARAM_THREAD_ID, Long.toString(id));
-			url.appendQueryParameter(Constants.PARAM_PER_PAGE, Integer.toString(postPerPage));
-			if(gotoParam != null){
-				url.appendQueryParameter(Constants.PARAM_GOTO, gotoParam);//goto=newpost, ect
-			}else{
-				url.appendQueryParameter(Constants.PARAM_PAGE, Long.toString(convertPerPage(pageNum, perPage, postPerPage)));
-			}
-			break;
-		case POST:
-			url = Uri.parse(Constants.FUNCTION_THREAD).buildUpon();
-			url.appendQueryParameter(Constants.PARAM_GOTO, Constants.VALUE_POST);
-			url.appendQueryParameter(Constants.PARAM_PER_PAGE, Integer.toString(postPerPage));
-			url.appendQueryParameter(Constants.PARAM_POST_ID, Long.toString(id));
-			break;
-		case EXTERNAL:
-			return externalURL;
-		case INDEX:
-			return Constants.BASE_URL;
-		}
-		return (url == null? "" : url.toString());
-	}
-	
-	public static long convertPerPage(long originalPageNum, long originalPerPage, long newPerPage){
-		long pageNum = originalPageNum;
-		if(originalPerPage != newPerPage){
-			pageNum = (long) Math.ceil((double)(originalPageNum*originalPerPage) / newPerPage);
-		}
-		return pageNum;
-	}
+    val uRL: String
+        /**
+         * Returns the URL, assuming the default 40 items per page.
+         * @return URL
+         */
+        get() = getURL(perPage)
 
-	public TYPE getType() {
-		return type;
-	}
-	
-	public long getId(){
-		return id;
-	}
-	
-	public long getPage(){
-		return pageNum;
-	}
-	
-	public long getPage(int postPerPage){
-		return convertPerPage(pageNum, perPage, postPerPage);
-	}
-	
-	public long getPerPage(){
-		return perPage;
-	}
-	
-	public String getFragment(){
-		return (fragment != null ? fragment : "");
-	}
+    fun getURL(postPerPage: Int): String {
+        var url: Uri.Builder? = null
+        when (type) {
+            TYPE.FORUM -> {
+                if (id == Constants.USERCP_ID.toLong()) {
+                    url = Constants.FUNCTION_USERCP.toUri().buildUpon()
+                } else {
+                    url = Constants.FUNCTION_FORUM.toUri().buildUpon()
+                }
+                url.appendQueryParameter(Constants.PARAM_FORUM_ID, id.toString())
+                url.appendQueryParameter(Constants.PARAM_PAGE, page.toString())
+            }
 
-	public boolean isRedirect() {
-		return gotoParam != null;
-	}
+            TYPE.THREAD -> {
+                url = Constants.FUNCTION_THREAD.toUri().buildUpon()
+                url.appendQueryParameter(Constants.PARAM_THREAD_ID, id.toString())
+                url.appendQueryParameter(Constants.PARAM_PER_PAGE, postPerPage.toString())
+                if (gotoParam != null) {
+                    url.appendQueryParameter(Constants.PARAM_GOTO, gotoParam) //goto=newpost, ect
+                } else {
+                    url.appendQueryParameter(
+                        Constants.PARAM_PAGE, convertPerPage(
+                            this.page, perPage.toLong(), postPerPage.toLong()
+                        ).toString()
+                    )
+                }
+            }
 
-	@Override
-	public String toString() {
-		return getURL();
-	}
-	
-	public AwfulURL setGoto(String goTo){
-		gotoParam = goTo;
-		return this;
-	}
+            TYPE.POST -> {
+                url = Constants.FUNCTION_THREAD.toUri().buildUpon()
+                url.appendQueryParameter(Constants.PARAM_GOTO, Constants.VALUE_POST)
+                url.appendQueryParameter(Constants.PARAM_PER_PAGE, postPerPage.toString())
+                url.appendQueryParameter(Constants.PARAM_POST_ID, id.toString())
+            }
 
-	public boolean isForumIndex() {
-		return type == TYPE.INDEX;
-	}
+            TYPE.EXTERNAL -> return externalURL!!
+            TYPE.INDEX -> return Constants.BASE_URL
+            else -> {}
+        }
+        return (url?.toString() ?: "")
+    }
 
-	public boolean isForum() {
-		return type == TYPE.FORUM;
-	}
+    fun getPage(postPerPage: Int): Long {
+        return convertPerPage(this.page, perPage.toLong(), postPerPage.toLong())
+    }
 
-	public boolean isThread() {
-		return type == TYPE.THREAD;
-	}
+    fun getPerPage(): Long {
+        return perPage.toLong()
+    }
 
-	public boolean isPost() {
-		return type == TYPE.POST;
-	}
+    val isRedirect: Boolean
+        get() = gotoParam != null
 
-	public boolean isExternal() {
-		return type == TYPE.EXTERNAL;
-	}
+    override fun toString(): String {
+        return this.uRL
+    }
 
-	public boolean isBanlist() {
-		return type == TYPE.BANLIST;
-	}
+    fun setGoto(goTo: String?): AwfulURL {
+        gotoParam = goTo
+        return this
+    }
 
-	public AwfulURL setPerPage(int postPerPage) {
-		perPage = postPerPage;
-		return this;
-	}
-	
+    val isForumIndex: Boolean
+        get() = type == TYPE.INDEX
+
+    val isForum: Boolean
+        get() = type == TYPE.FORUM
+
+    val isThread: Boolean
+        get() = type == TYPE.THREAD
+
+    val isPost: Boolean
+        get() = type == TYPE.POST
+
+    val isExternal: Boolean
+        get() = type == TYPE.EXTERNAL
+
+    val isBanlist: Boolean
+        get() = type == TYPE.BANLIST
+
+    fun setPerPage(postPerPage: Int): AwfulURL {
+        perPage = postPerPage
+        return this
+    }
+
+    companion object {
+        @JvmOverloads
+        fun forum(id: Long, pageNum: Long = 1): AwfulURL {
+            val aurl = AwfulURL()
+            aurl.type = TYPE.FORUM
+            aurl.id = id
+            aurl.page = pageNum
+            aurl.perPage = Constants.THREADS_PER_PAGE
+            return aurl
+        }
+
+        fun threadUnread(id: Long): AwfulURL {
+            return thread(id, 1, Constants.ITEMS_PER_PAGE, null).setGoto(Constants.VALUE_NEWPOST)
+        }
+
+        fun threadUnread(id: Long, perPage: Int): AwfulURL {
+            return thread(id, 1, perPage, null).setGoto(Constants.VALUE_NEWPOST)
+        }
+
+        fun threadLastPage(id: Long): AwfulURL {
+            return thread(id, 1, Constants.ITEMS_PER_PAGE, null).setGoto(Constants.VALUE_LASTPOST)
+        }
+
+        fun threadLastPage(id: Long, perPage: Int): AwfulURL {
+            return thread(id, 1, perPage, null).setGoto(Constants.VALUE_LASTPOST)
+        }
+
+        @JvmOverloads
+        fun thread(
+            id: Long,
+            pageNum: Long = 1,
+            perPage: Int = Constants.ITEMS_PER_PAGE,
+            goTo: String? = null
+        ): AwfulURL {
+            val aurl = AwfulURL()
+            aurl.type = TYPE.THREAD
+            aurl.id = id
+            aurl.page = pageNum
+            aurl.perPage = perPage
+            aurl.gotoParam = goTo
+            return aurl
+        }
+
+        @JvmOverloads
+        fun post(id: Long, perPage: Int = Constants.ITEMS_PER_PAGE): AwfulURL {
+            val aurl = AwfulURL()
+            aurl.type = TYPE.POST
+            aurl.id = id
+            aurl.perPage = perPage
+            aurl.gotoParam = Constants.VALUE_POST
+            return aurl
+        }
+
+        fun parse(url: String): AwfulURL {
+            val aurl = AwfulURL()
+            val uri = url.toUri()
+            if (uri.isRelative || (uri.host != null && uri.host!!
+                    .contains("forums.somethingawful.com"))
+            ) {
+                if (uri.getQueryParameter(Constants.PARAM_PAGE) != null) {
+                    aurl.page =
+                        AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_PAGE), 1)
+                }
+                if (uri.getQueryParameter(Constants.PARAM_PER_PAGE) != null) {
+                    aurl.perPage = AwfulUtils.safeParseInt(
+                        uri.getQueryParameter(Constants.PARAM_PER_PAGE),
+                        Constants.ITEMS_PER_PAGE
+                    )
+                }
+                if (Constants.PATH_FORUM == uri.lastPathSegment) {
+                    aurl.type = TYPE.FORUM
+                    aurl.perPage = Constants.THREADS_PER_PAGE
+                    if (uri.getQueryParameter(Constants.PARAM_FORUM_ID) != null) {
+                        aurl.id = AwfulUtils.safeParseLong(
+                            uri.getQueryParameter(Constants.PARAM_FORUM_ID),
+                            1
+                        )
+                    }
+                } else if (Constants.PATH_BOOKMARKS == uri.lastPathSegment || Constants.PATH_USERCP == uri.lastPathSegment) {
+                    aurl.type = TYPE.FORUM
+                    aurl.perPage = Constants.THREADS_PER_PAGE
+                    aurl.id = Constants.USERCP_ID.toLong()
+                } else if (Constants.PATH_THREAD == uri.lastPathSegment) {
+                    aurl.type = TYPE.THREAD
+                    if (uri.getQueryParameter(Constants.PARAM_THREAD_ID) != null) {
+                        aurl.id = AwfulUtils.safeParseLong(
+                            uri.getQueryParameter(Constants.PARAM_THREAD_ID),
+                            0
+                        )
+                    }
+                    if (uri.getQueryParameter(Constants.PARAM_GOTO) != null) {
+                        aurl.gotoParam = uri.getQueryParameter(Constants.PARAM_GOTO)
+                        if (Constants.VALUE_POST.equals(aurl.gotoParam, ignoreCase = true)) {
+                            aurl.type = TYPE.POST
+                            aurl.id = AwfulUtils.safeParseLong(
+                                uri.getQueryParameter(Constants.PARAM_POST_ID),
+                                0
+                            )
+                        }
+                    }
+                    if (Constants.ACTION_SHOWPOST.equals(
+                            uri.getQueryParameter(Constants.PARAM_ACTION),
+                            ignoreCase = true
+                        )
+                    ) {
+                        aurl.type = TYPE.POST
+                        aurl.id = AwfulUtils.safeParseLong(
+                            uri.getQueryParameter(Constants.PARAM_POST_ID),
+                            0
+                        )
+                    }
+                } else if (Constants.PATH_BANLIST == uri.lastPathSegment) {
+                    aurl.type = TYPE.BANLIST
+                    aurl.id =
+                        AwfulUtils.safeParseLong(uri.getQueryParameter(Constants.PARAM_USER_ID), 0)
+                } else if ("index.php".equals(
+                        uri.lastPathSegment,
+                        ignoreCase = true
+                    ) || uri.path == null || uri.path!!.length < 2
+                ) {
+                    aurl.type = TYPE.INDEX
+                } else {
+                    aurl.type = TYPE.EXTERNAL
+                    aurl.externalURL = url
+                }
+                aurl.fragment = uri.fragment
+            } else {
+                aurl.type = TYPE.EXTERNAL
+                aurl.externalURL = url
+            }
+            Log.i("AwfulURL", "Parsed URL: " + aurl.uRL)
+            return aurl
+        }
+
+        fun convertPerPage(originalPageNum: Long, originalPerPage: Long, newPerPage: Long): Long {
+            var pageNum = originalPageNum
+            if (originalPerPage != newPerPage) {
+                pageNum = ceil((originalPageNum * originalPerPage).toDouble() / newPerPage).toLong()
+            }
+            return pageNum
+        }
+    }
 }

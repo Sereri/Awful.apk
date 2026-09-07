@@ -10,7 +10,31 @@ import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.provider.DatabaseHelper
 import com.ferg.awfulapp.thread.AwfulPost.*
-import com.ferg.awfulapp.thread.AwfulThread.*
+import com.ferg.awfulapp.thread.AwfulPost.Companion.AVATAR
+import com.ferg.awfulapp.thread.AwfulPost.Companion.AVATAR_SECOND
+import com.ferg.awfulapp.thread.AwfulPost.Companion.AVATAR_TEXT
+import com.ferg.awfulapp.thread.AwfulPost.Companion.CONTENT
+import com.ferg.awfulapp.thread.AwfulPost.Companion.DATE
+import com.ferg.awfulapp.thread.AwfulPost.Companion.EDITABLE
+import com.ferg.awfulapp.thread.AwfulPost.Companion.EDITED
+import com.ferg.awfulapp.thread.AwfulPost.Companion.ICON
+import com.ferg.awfulapp.thread.AwfulPost.Companion.IS_IGNORED
+import com.ferg.awfulapp.thread.AwfulPost.Companion.IS_OP
+import com.ferg.awfulapp.thread.AwfulPost.Companion.IS_PLAT
+import com.ferg.awfulapp.thread.AwfulPost.Companion.POST_INDEX
+import com.ferg.awfulapp.thread.AwfulPost.Companion.PREVIOUSLY_READ
+import com.ferg.awfulapp.thread.AwfulPost.Companion.REGDATE
+import com.ferg.awfulapp.thread.AwfulPost.Companion.ROLE
+import com.ferg.awfulapp.thread.AwfulPost.Companion.THREAD_ID
+import com.ferg.awfulapp.thread.AwfulPost.Companion.USERNAME
+import com.ferg.awfulapp.thread.AwfulPost.Companion.USER_ID
+import com.ferg.awfulapp.thread.AwfulPost.Companion.convertVideos
+import com.ferg.awfulapp.thread.AwfulPost.Companion.processPostImage
+import com.ferg.awfulapp.thread.AwfulPost.Companion.syncPosts
+import com.ferg.awfulapp.thread.AwfulPost.Companion.tryConvertToHttps
+import com.ferg.awfulapp.thread.AwfulThread.Companion.FORUM_ID
+import com.ferg.awfulapp.thread.AwfulThread.Companion.INDEX
+import com.ferg.awfulapp.thread.AwfulThread.Companion.fromCursorRow
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import timber.log.Timber
@@ -19,6 +43,7 @@ import java.util.Locale
 import java.util.concurrent.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import androidx.core.net.toUri
 
 /**
  * Created by baka kaba on 10/11/2017.
@@ -158,7 +183,7 @@ class PostParseTask(
                 getElementsByTag("img").forEach { processPostImage(it, postHasBeenRead, prefs) }
                 getElementsByTag("a").forEach(::tryConvertToHttps)
                 userId?.let {
-                    getElementsByTag("strong").forEach { setBanlistLinks(it, userId!!, postData.id()) }
+                    getElementsByTag("strong").forEach { AwfulPost.setBanlistLinks(it, userId, postData.id()) }
                 }
                 if (this == fyadPostBody) {
                     // FYAD sigs are currently a sibling div alongside .complete_shit, so we need to stick them at the end of the content
@@ -176,7 +201,7 @@ class PostParseTask(
                 postData.selectFirst(".profilelinks [href*='userid=']")?.let {
                     with(USER_ID_REGEX.matcher(it.attr("href"))) {
                         if (find()) {
-                            userId = group(1).toInt()
+                            userId = group(1)?.toInt()
                         }
                     }
                 }
@@ -268,12 +293,12 @@ class ForumParseTask(
             forumId = this@ForumParseTask.forumId
 
             threadElement.selectFirst(".thread_title")?.let { title = it.text() }
-            threadElement.selectFirst(".author")?.let {
-                author = it.text()
-                it.selectFirst("a[href*='userid']")
+            threadElement.selectFirst(".author")?.let { tE ->
+                author = tE.text()
+                tE.selectFirst("a[href*='userid']")
                     ?.attr("href")
-                    ?.let { Uri.parse(it).getQueryParameter("userid") }
-                    ?.let { authorId = it.toInt() }
+                    ?.toUri()
+                    ?.getQueryParameter("userid")?.let { authorId = it.toInt() }
             }
             canOpenClose = author == username
 
@@ -294,8 +319,8 @@ class ForumParseTask(
                 with(THREAD_URL_ID_REGEX.matcher(it.attr("src"))) {
                     if (find()) {
                         tagUrl = group(1)
-                        category = group(2).toInt()
-                        with(AwfulEmote.fileName_regex.matcher(tagUrl)) {
+                        category = group(2)!!.toInt()
+                        with(AwfulEmote.fileName_regex.matcher(tagUrl!!)) {
                             if (find()) {
                                 tagCacheFile = group(1)
                             }
@@ -321,9 +346,9 @@ class ForumParseTask(
             hasBeenViewed = unreadCount > 0 || threadElement.selectFirst(".x") != null
 
             // Bookmarks can only be detected now by the presence of a "bmX" class - no star image
-            val star = threadElement.selectFirst(".star")
+            val star = threadElement.selectFirst(".star")!!
             bookmarkType = when {
-                star!!.hasClass("bm0") -> 1
+                star.hasClass("bm0") -> 1
                 star.hasClass("bm1") -> 2
                 star.hasClass("bm2") -> 3
                 star.hasClass("bm3") -> 4
@@ -395,7 +420,7 @@ class ThreadPageParseTask(
                 // so if the thread IS bookmarked, check if the data has an 'unbookmarked' value (i.e. 0) and give it a bookmarked one if necessary
                 bookmarkType = 1
             }
-            // The breadcrumbs display the forum hiearchy, from the top level down through forums and subforums to the thread.
+            // The breadcrumbs display the forum hierarchy, from the top level down through forums and subforums to the thread.
             // So the thread's parent forum is the last forum element in that sequence
             forumId = page.selectFirst(".breadcrumbs")
                 ?.select("[href]")

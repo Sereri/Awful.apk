@@ -65,7 +65,7 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
     private var mBackground: View? = null
     private var threadIconPicker: ThreadIconPicker? = null
 
-    private var mPrefs: AwfulPreferences? = null
+    private lateinit var mPrefs: AwfulPreferences
 
     private var mDialog: ProgressDialog? = null
 

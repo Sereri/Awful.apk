@@ -240,10 +240,10 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
     override fun onRefresh(direction: SwipyRefreshLayoutDirection) {
         Timber.i("onRefresh: %s", mMaxPageQueried)
         val preItemCount = mSearchResultList.adapter?.itemCount ?: 0
-        NetworkUtils.queueRequest(SearchResultPageRequest(this.requireContext(), mQueryId, mMaxPageQueried + 1).build(null, object : AwfulRequest.AwfulResultCallback<ArrayList<AwfulSearch>> {
+        NetworkUtils.queueRequest(SearchResultPageRequest(this.requireContext(), mQueryId, mMaxPageQueried + 1).build(null, object : AwfulRequest.AwfulResultCallback<MutableList<AwfulSearch>> {
 
             // TODO: combine this with #search since they share functionality - maybe a SearchQuery object for the current query that holds this state we're changing
-            override fun success(result: ArrayList<AwfulSearch>) {
+            override fun success(result: MutableList<AwfulSearch>) {
                 mSearchResults.addAll(result)
                 mMaxPageQueried++
                 if (mMaxPageQueried >= mQueryPages) {

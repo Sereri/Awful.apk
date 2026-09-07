@@ -1,69 +1,54 @@
-package com.ferg.awfulapp.thread;
+package com.ferg.awfulapp.thread
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.media.ThumbnailUtils;
-import android.os.Handler;
-import android.os.Looper;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.network.NetworkUtils;
-
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.util.ArrayList;
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.ColorFilter
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
+import android.media.ThumbnailUtils
+import android.os.Handler
+import android.os.Looper
+import androidx.annotation.DrawableRes
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.ImageLoader.ImageContainer
+import com.android.volley.toolbox.ImageLoader.ImageListener
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.network.NetworkUtils.imageLoader
+import org.jsoup.select.Elements
+import java.util.Locale
+import androidx.core.graphics.drawable.toDrawable
+import kotlin.math.roundToInt
+import androidx.core.graphics.createBitmap
 
 /**
  * Created by Christoph on 16.11.2016.
  */
+class AwfulPostIcon {
+    val iconId: String
+    val iconUrl: String
+    @JvmField
+    val drawableId: Int
+    @JvmField
+    var drawable: Drawable? = null
 
-public class AwfulPostIcon {
-    static final ColorFilter BACKGROUND_FILTER;
+    constructor(iconId: String, iconUrl: String, context: Context) {
+        this.iconId = iconId
+        this.iconUrl = iconUrl
+        drawableId = getIconResId(iconUrl, context)
+        if (drawableId == BLANK_ICON_DRAWABLE_ID) {
+            Handler(Looper.getMainLooper()).post {
+                imageLoader?.get(iconUrl, object : ImageListener {
+                    override fun onResponse(response: ImageContainer, isImmediate: Boolean) {
+                        drawable = getClassicIconDrawable(response.bitmap, context)
+                    }
 
-    static {
-        ColorMatrix matrix = new ColorMatrix();
-        matrix.setSaturation(0.7f);
-        BACKGROUND_FILTER = new ColorMatrixColorFilter(matrix);
-    }
-
-    @DrawableRes
-    public static final int BLANK_ICON_DRAWABLE_ID = R.drawable.empty_thread_tag;
-    public static final String BLANK_ICON_ID = "0";
-    public static final AwfulPostIcon BLANK_ICON = new AwfulPostIcon();
-    private static final int TAG_SIZE = 90;
-
-    public final String iconId;
-    public final String iconUrl;
-    public final int drawableId;
-    public Drawable drawable = null;
-
-    public AwfulPostIcon(@NonNull String iconId, @NonNull String iconUrl, @NonNull Context context) {
-        this.iconId = iconId;
-        this.iconUrl = iconUrl;
-        drawableId = getIconResId(iconUrl, context);
-        if(drawableId == BLANK_ICON_DRAWABLE_ID){
-            new Handler(Looper.getMainLooper()).post(() -> NetworkUtils.getImageLoader().get(iconUrl, new ImageLoader.ImageListener() {
-            @Override
-            public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-                drawable = AwfulPostIcon.getClassicIconDrawable(response.getBitmap(), context);
+                    override fun onErrorResponse(error: VolleyError?) {}
+                })
             }
-
-            @Override
-            public void onErrorResponse(VolleyError error) {}
-        }));
-
         }
     }
 
@@ -71,55 +56,76 @@ public class AwfulPostIcon {
     /**
      * A default empty icon, to represent 'no icon' options
      */
-    private AwfulPostIcon() {
-        iconId = BLANK_ICON_ID;
-        iconUrl = "";
-        drawableId = BLANK_ICON_DRAWABLE_ID;
-        drawable = null;
+    private constructor() {
+        iconId = BLANK_ICON_ID
+        iconUrl = ""
+        drawableId = BLANK_ICON_DRAWABLE_ID
+        drawable = null
     }
 
 
-    @DrawableRes
-    private static int getIconResId(@NonNull String iconUrl, @NonNull Context context) {
-        String localFileName = "@drawable/"+iconUrl.substring(iconUrl.lastIndexOf('/') + 1, iconUrl.lastIndexOf('.')).replace('-','_').toLowerCase();
-        int imageID = context.getResources().getIdentifier(localFileName, null, context.getPackageName());
-        return imageID == 0 ? BLANK_ICON_DRAWABLE_ID : imageID;
-    }
+    companion object {
+        val BACKGROUND_FILTER: ColorFilter
 
-    public static Drawable getClassicIconDrawable(@NonNull Bitmap bitmap, @NonNull Context context) {
-        if(bitmap == null) {
-            return context.getDrawable(R.drawable.empty_thread_tag);
-        }
-        // make a zoomed version of the tag bitmap that fills the view, and set it as the background
-        Bitmap backgroundBitmap = ThumbnailUtils.extractThumbnail(bitmap, TAG_SIZE, TAG_SIZE);
-        BitmapDrawable backgroundDrawable = new BitmapDrawable(context.getResources(), backgroundBitmap);
-        backgroundDrawable.setColorFilter(BACKGROUND_FILTER);
-        backgroundDrawable.setAlpha(128);
-
-        BitmapDrawable foregroundDrawable = new BitmapDrawable(context.getResources(), bitmap);
-        int newHeight = Math.round(((float) TAG_SIZE / (float)foregroundDrawable.getIntrinsicWidth()) * (float)foregroundDrawable.getIntrinsicHeight());
-        int verticalInset = (TAG_SIZE - newHeight) / 2;
-
-        LayerDrawable mashDrawable = new LayerDrawable(new Drawable[] {backgroundDrawable, foregroundDrawable});
-        mashDrawable.setLayerInset(0,0,0,0, 0);
-        mashDrawable.setLayerInset(1, 0 , verticalInset, 0, verticalInset);
-
-        final Bitmap finalBitmap = Bitmap.createBitmap(TAG_SIZE, TAG_SIZE, Bitmap.Config.ARGB_8888);
-        mashDrawable.setBounds(0, 0, TAG_SIZE, TAG_SIZE);
-        mashDrawable.draw(new Canvas(finalBitmap));
-        return new BitmapDrawable(context.getResources(), finalBitmap);
-    }
-
-    public static ArrayList<AwfulPostIcon> parsePostIcons (Elements icons, @NonNull Context context){
-        ArrayList<AwfulPostIcon> result = new ArrayList<>();
-
-        for (Element icon: icons) {
-            String iconUrl = icon.child(1).attr("src");
-            String iconId = icon.child(0).val();
-            AwfulPostIcon postIcon = new AwfulPostIcon(iconId, iconUrl, context);
-            result.add(postIcon);
+        init {
+            val matrix = ColorMatrix()
+            matrix.setSaturation(0.7f)
+            BACKGROUND_FILTER = ColorMatrixColorFilter(matrix)
         }
 
-        return result;
+        @DrawableRes
+        val BLANK_ICON_DRAWABLE_ID: Int = R.drawable.empty_thread_tag
+        const val BLANK_ICON_ID: String = "0"
+        @JvmField
+        val BLANK_ICON: AwfulPostIcon = AwfulPostIcon()
+        private const val TAG_SIZE = 90
+
+        @DrawableRes
+        private fun getIconResId(iconUrl: String, context: Context): Int {
+            val localFileName = "@drawable/" + iconUrl.substring(
+                iconUrl.lastIndexOf('/') + 1,
+                iconUrl.lastIndexOf('.')
+            ).replace('-', '_').lowercase(
+                Locale.getDefault()
+            )
+            val imageID = context.resources.getIdentifier(localFileName, null, context.packageName)
+            return if (imageID == 0) BLANK_ICON_DRAWABLE_ID else imageID
+        }
+
+        @JvmStatic
+        fun getClassicIconDrawable(bitmap: Bitmap, context: Context): Drawable {
+            // make a zoomed version of the tag bitmap that fills the view, and set it as the background
+            val backgroundBitmap = ThumbnailUtils.extractThumbnail(bitmap, TAG_SIZE, TAG_SIZE)
+            val backgroundDrawable = BitmapDrawable(context.resources, backgroundBitmap)
+            backgroundDrawable.colorFilter = BACKGROUND_FILTER
+            backgroundDrawable.alpha = 128
+
+            val foregroundDrawable = bitmap.toDrawable(context.resources)
+            val newHeight = ((TAG_SIZE.toFloat() / foregroundDrawable.intrinsicWidth.toFloat()) * foregroundDrawable.intrinsicHeight.toFloat()).roundToInt()
+            val verticalInset: Int = (TAG_SIZE - newHeight) / 2
+
+            val mashDrawable =
+                LayerDrawable(arrayOf<Drawable>(backgroundDrawable, foregroundDrawable))
+            mashDrawable.setLayerInset(0, 0, 0, 0, 0)
+            mashDrawable.setLayerInset(1, 0, verticalInset, 0, verticalInset)
+
+            val finalBitmap = createBitmap(TAG_SIZE, TAG_SIZE)
+            mashDrawable.setBounds(0, 0, TAG_SIZE, TAG_SIZE)
+            mashDrawable.draw(Canvas(finalBitmap))
+            return finalBitmap.toDrawable(context.resources)
+        }
+
+        fun parsePostIcons(icons: Elements, context: Context): ArrayList<AwfulPostIcon> {
+            val result = ArrayList<AwfulPostIcon>()
+
+            for (icon in icons) {
+                val iconUrl = icon.child(1).attr("src")
+                val iconId = icon.child(0).`val`()
+                val postIcon = AwfulPostIcon(iconId, iconUrl, context)
+                result.add(postIcon)
+            }
+
+            return result
+        }
     }
 }

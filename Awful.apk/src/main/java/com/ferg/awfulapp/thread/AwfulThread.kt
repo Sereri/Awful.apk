@@ -1,18 +1,18 @@
 /********************************************************************************
  * Copyright (c) 2011, Scott Ferguson
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the software nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of the software nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ * 
  * THIS SOFTWARE IS PROVIDED BY SCOTT FERGUSON ''AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,435 +23,492 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+ */
+package com.ferg.awfulapp.thread
 
-package com.ferg.awfulapp.thread;
+import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.ContentValues
+import android.database.Cursor
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.net.Uri
+import android.text.TextUtils
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.ImageLoader.ImageContainer
+import com.android.volley.toolbox.ImageLoader.ImageListener
+import com.ferg.awfulapp.AwfulFragment
+import com.ferg.awfulapp.ForumDisplayFragment
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.constants.Constants
+import com.ferg.awfulapp.network.NetworkUtils.imageLoader
+import com.ferg.awfulapp.network.NetworkUtils.unencodeHtml
+import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
+import com.ferg.awfulapp.provider.ColorProvider
+import com.ferg.awfulapp.provider.ColorProvider.Companion.getBookmarkColor
+import com.ferg.awfulapp.provider.DatabaseHelper
+import com.ferg.awfulapp.thread.AwfulPostIcon.Companion.getClassicIconDrawable
+import com.ferg.awfulapp.thread.AwfulRatings.getDrawable
+import com.ferg.awfulapp.thread.AwfulRatings.getType
+import org.jsoup.nodes.Document
+import timber.log.Timber.Forest.i
+import timber.log.Timber.Forest.v
+import timber.log.Timber.Forest.w
+import java.sql.Timestamp
+import java.util.Locale
+import androidx.core.net.toUri
 
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.res.Resources;
-import android.database.Cursor;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
-import com.ferg.awfulapp.AwfulFragment;
-import com.ferg.awfulapp.ForumDisplayFragment;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.network.NetworkUtils;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.provider.ColorProvider;
-import com.ferg.awfulapp.provider.DatabaseHelper;
-
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import timber.log.Timber;
-
-import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
-import static android.view.View.VISIBLE;
-
-public class AwfulThread extends AwfulPagedItem  {
-
-    public static final String PATH         = "/thread";
-    public static final String UCP_PATH     = "/ucpthread";
-    public static final Uri CONTENT_URI     = Uri.parse("content://" + Constants.AUTHORITY + PATH);
-	public static final Uri CONTENT_URI_UCP = Uri.parse("content://" + Constants.AUTHORITY + UCP_PATH);
-
-    public static final String ID 		            = "_id";
-    public static final String INDEX 		        = "thread_index";
-    public static final String FORUM_ID 	        = "forum_id";
-    public static final String TITLE 		        = "title";
-    public static final String POSTCOUNT 	        = "post_count";
-    public static final String UNREADCOUNT          = "unread_count";
-    public static final String AUTHOR 		        = "author";
-    public static final String AUTHOR_ID 	        = "author_id";
-    public static final String LOCKED               = "locked";
-    public static final String CAN_OPEN_CLOSE       = "can_open_close";
-	public static final String BOOKMARKED           = "bookmarked";
-	public static final String STICKY               = "sticky";
-	public static final String CATEGORY             = "category";
-	public static final String LASTPOSTER           = "killedby";
-	public static final String LAST_POST_DATE       = "last_post_date";
-	public static final String FORUM_TITLE          = "forum_title";
-	public static final String HAS_NEW_POSTS        = "has_new_posts";
-    public static final String HAS_VIEWED_THREAD    = "has_viewed_thread";
-    public static final String ARCHIVED             = "archived";
-	public static final String RATING               = "rating";
-    public static final String TAG_URL 		        = "tag_url";
-    public static final String TAG_CACHEFILE 	    = "tag_cachefile";
-    public static final String TAG_EXTRA            = "tag_extra";
-
-
+class AwfulThread : AwfulPagedItem() {
     // TODO: 04/06/2017 explicit default values, nulls where parsed data doesn't set values (i.e. never added to the ContentValues)?
-    public int id;
-    public int index;
-    public String title;
+    var id: Int = 0
+    var index: Int = 0
+    var title: String? = null
 
-    public int forumId;
-//  public   String forumTitle;
+    var forumId: Int = 0
 
-    public String author;
-    public int authorId;
-    public String lastPoster;
-    public long lastPostDate;
-    public int postCount;
-    public int unreadCount;
+    //  public   String forumTitle;
+    var author: String? = null
+    var authorId: Int = 0
+    var lastPoster: String? = null
+    var lastPostDate: Long = 0
+    var postCount: Int = 0
+    var unreadCount: Int = 0
 
-    public int rating;
-    public int bookmarkType;
+    var rating: Int = 0
+    var bookmarkType: Int = 0
 
-    public boolean isLocked;
-    public boolean isSticky;
-    public boolean canOpenClose;
-    public boolean hasBeenViewed;
-    public boolean archived;
+    var isLocked: Boolean = false
+    var isSticky: Boolean = false
+    var canOpenClose: Boolean = false
+    var hasBeenViewed: Boolean = false
+    var archived: Boolean = false
 
-    public String tagUrl;
-    public String tagCacheFile;
-    public int tagExtra;
-    public int category;
+    var tagUrl: String? = null
+    var tagCacheFile: String? = null
+    var tagExtra: Int = 0
+    var category: Int = 0
 
 
-    @Nullable
-    public static AwfulThread fromCursorRow(@NonNull Cursor row) {
-        if (row.isBeforeFirst() || row.isAfterLast()) {
-            Timber.w("fromCursor: passed empty row");
-            return null;
+    fun toContentValues(): ContentValues {
+        val cv = ContentValues().apply {
+            put(ID, id)
+            put(INDEX, index)
+            put(FORUM_ID, forumId)
+            put(TITLE, title)
+            put(AUTHOR, author)
+            put(AUTHOR_ID, authorId)
+
+            put(CAN_OPEN_CLOSE, asSqlBoolean(canOpenClose))
+
+            put(LASTPOSTER, lastPoster)
+            put(LAST_POST_DATE, lastPostDate)
+            put(LOCKED, asSqlBoolean(isLocked))
+            put(STICKY, asSqlBoolean(isSticky))
+            put(RATING, rating)
+            put(TAG_URL, tagUrl)
+            put(CATEGORY, category)
+            put(TAG_CACHEFILE, tagCacheFile)
+
+            put(TAG_EXTRA, tagExtra)
+            put(POSTCOUNT, postCount)
+
+            put(UNREADCOUNT, unreadCount)
+            put(HAS_VIEWED_THREAD, asSqlBoolean(hasBeenViewed))
+            put(BOOKMARKED, bookmarkType)
         }
-        AwfulThread thread = new AwfulThread();
+        return cv
+    }
 
-        thread.id = row.getInt(row.getColumnIndex(ID));
-        thread.index = row.getInt(row.getColumnIndex(INDEX));
-        thread.title = row.getString(row.getColumnIndex(TITLE));
+    fun hasNewPosts(): Boolean {
+        return unreadCount > 0
+    }
 
-        thread.forumId = row.getInt(row.getColumnIndex(FORUM_ID));
-        // TODO: 03/06/2017 this column name is taken from the thread projection, but is it ever used?
+    fun getPageCount(postsPerPage: Int): Int {
+        return indexToPage(postCount, postsPerPage)
+    }
+
+    val readCount: Int
+        get() = postCount - unreadCount
+
+
+    companion object {
+        const val PATH: String = "/thread"
+        const val UCP_PATH: String = "/ucpthread"
+        @JvmField
+        val CONTENT_URI: Uri = "content://${Constants.AUTHORITY}$PATH".toUri()
+        @JvmField
+        val CONTENT_URI_UCP: Uri = "content://${Constants.AUTHORITY}$UCP_PATH".toUri()
+
+        const val ID: String = "_id"
+        const val INDEX: String = "thread_index"
+        const val FORUM_ID: String = "forum_id"
+        const val TITLE: String = "title"
+        const val POSTCOUNT: String = "post_count"
+        const val UNREADCOUNT: String = "unread_count"
+        const val AUTHOR: String = "author"
+        const val AUTHOR_ID: String = "author_id"
+        const val LOCKED: String = "locked"
+        const val CAN_OPEN_CLOSE: String = "can_open_close"
+        const val BOOKMARKED: String = "bookmarked"
+        const val STICKY: String = "sticky"
+        const val CATEGORY: String = "category"
+        const val LASTPOSTER: String = "killedby"
+        const val LAST_POST_DATE: String = "last_post_date"
+        const val FORUM_TITLE: String = "forum_title"
+        const val HAS_NEW_POSTS: String = "has_new_posts"
+        const val HAS_VIEWED_THREAD: String = "has_viewed_thread"
+        const val ARCHIVED: String = "archived"
+        const val RATING: String = "rating"
+        const val TAG_URL: String = "tag_url"
+        const val TAG_CACHEFILE: String = "tag_cachefile"
+        const val TAG_EXTRA: String = "tag_extra"
+
+
+        fun fromCursorRow(row: Cursor): AwfulThread? {
+            if (row.isBeforeFirst || row.isAfterLast) {
+                w("fromCursor: passed empty row")
+                return null
+            }
+            val thread = AwfulThread()
+
+            thread.id = row.getInt(row.getColumnIndex(ID))
+            thread.index = row.getInt(row.getColumnIndex(INDEX))
+            thread.title = row.getString(row.getColumnIndex(TITLE))
+
+            thread.forumId = row.getInt(row.getColumnIndex(FORUM_ID))
+
+            // TODO: 03/06/2017 this column name is taken from the thread projection, but is it ever used?
 //        thread.forumTitle = row.getString(row.getColumnIndex(FORUM_TITLE));
+            thread.author = row.getString(row.getColumnIndex(AUTHOR))
+            thread.authorId = row.getInt(row.getColumnIndex(AUTHOR_ID))
+            thread.lastPoster = row.getString(row.getColumnIndex(LASTPOSTER))
+            thread.lastPostDate = row.getLong(row.getColumnIndex(LAST_POST_DATE))
+            thread.postCount = row.getInt(row.getColumnIndex(POSTCOUNT))
+            thread.unreadCount = row.getInt(row.getColumnIndex(UNREADCOUNT))
 
-        thread.author = row.getString(row.getColumnIndex(AUTHOR));
-        thread.authorId = row.getInt(row.getColumnIndex(AUTHOR_ID));
-        thread.lastPoster = row.getString(row.getColumnIndex(LASTPOSTER));
-        thread.lastPostDate = row.getLong(row.getColumnIndex(LAST_POST_DATE));
-        thread.postCount = row.getInt(row.getColumnIndex(POSTCOUNT));
-        thread.unreadCount = row.getInt(row.getColumnIndex(UNREADCOUNT));
+            thread.rating = row.getInt(row.getColumnIndex(RATING))
+            thread.bookmarkType = row.getInt(row.getColumnIndex(BOOKMARKED))
 
-        thread.rating = row.getInt(row.getColumnIndex(RATING));
-        thread.bookmarkType = row.getInt(row.getColumnIndex(BOOKMARKED));
+            thread.isLocked = row.getInt(row.getColumnIndex(LOCKED)) > 0
+            thread.archived = row.getInt(row.getColumnIndex(ARCHIVED)) > 0
+            thread.isSticky = row.getInt(row.getColumnIndex(STICKY)) > 0
+            thread.canOpenClose = row.getInt(row.getColumnIndex(CAN_OPEN_CLOSE)) > 0
+            thread.hasBeenViewed = row.getInt(row.getColumnIndex(HAS_VIEWED_THREAD)) == 1
 
-        thread.isLocked = row.getInt(row.getColumnIndex(LOCKED)) > 0;
-        thread.archived = row.getInt(row.getColumnIndex(ARCHIVED)) > 0;
-        thread.isSticky = row.getInt(row.getColumnIndex(STICKY)) > 0;
-        thread.canOpenClose = row.getInt(row.getColumnIndex(CAN_OPEN_CLOSE)) > 0;
-        thread.hasBeenViewed = row.getInt(row.getColumnIndex(HAS_VIEWED_THREAD)) == 1;
+            thread.tagUrl = row.getString(row.getColumnIndex(TAG_URL))
+            thread.tagCacheFile = row.getString(row.getColumnIndex(TAG_CACHEFILE))
+            thread.tagExtra = row.getInt(row.getColumnIndex(TAG_EXTRA))
+            thread.category = row.getInt(row.getColumnIndex(CATEGORY))
 
-        thread.tagUrl = row.getString(row.getColumnIndex(TAG_URL));
-        thread.tagCacheFile = row.getString(row.getColumnIndex(TAG_CACHEFILE));
-        thread.tagExtra = row.getInt(row.getColumnIndex(TAG_EXTRA));
-        thread.category = row.getInt(row.getColumnIndex(CATEGORY));
-
-        return thread;
-    }
-
-
-    public ContentValues toContentValues() {
-        ContentValues cv = new ContentValues();
-        cv.put(ID, id);
-        cv.put(INDEX, index);
-        cv.put(FORUM_ID, forumId);
-        cv.put(TITLE, title);
-        cv.put(AUTHOR, author);
-        cv.put(AUTHOR_ID, authorId);
+            return thread
+        }
 
 
-        cv.put(CAN_OPEN_CLOSE, asSqlBoolean(canOpenClose));
+        private fun asSqlBoolean(value: Boolean): Int {
+            return if (value) 1 else 0
+        }
 
-        cv.put(LASTPOSTER, lastPoster);
-        cv.put(LAST_POST_DATE, lastPostDate);
-        cv.put(LOCKED, asSqlBoolean(isLocked));
-        cv.put(STICKY, asSqlBoolean(isSticky));
-        cv.put(RATING, rating);
-        cv.put(TAG_URL, tagUrl);
-        cv.put(CATEGORY, category);
-        cv.put(TAG_CACHEFILE, tagCacheFile);
+        /**
+         * Parse a list of threads in a forum and generate their metadata.
+         * 
+         * 
+         * This doesn't write to the database, you need to do this with the returned data.
+         * 
+         * @param forumPage  the page to parse
+         * @param forumId    the ID of the forum this page is from
+         * @param startIndex the threads' positions in the forum will start from this index
+         * @return the list of all the threads' metadata objects, ready for storage
+         */
+        fun parseForumThreads(
+            forumPage: Document,
+            forumId: Int,
+            startIndex: Int
+        ): List<ContentValues> {
+            var startIndex = startIndex
+            val startTime = System.currentTimeMillis()
+            val update_time = Timestamp(startTime).toString()
+            v("Update time: %s", update_time)
+            val username = getInstance().username
 
-        cv.put(TAG_EXTRA, tagExtra);
-        cv.put(POSTCOUNT, postCount);
-
-        cv.put(UNREADCOUNT, unreadCount);
-        cv.put(HAS_VIEWED_THREAD, asSqlBoolean(hasBeenViewed));
-        cv.put(BOOKMARKED, bookmarkType);
-        return cv;
-    }
-
-    private static int asSqlBoolean(boolean value) {
-        return value ? 1 : 0;
-    }
-
-    public boolean hasNewPosts() {
-        return unreadCount > 0;
-    }
-
-    public int getPageCount(int postsPerPage) {
-        return AwfulPagedItem.indexToPage(postCount, postsPerPage);
-    }
-
-    public int getReadCount() {
-        return postCount - unreadCount;
-    }
-
-
-    /**
-     * Parse a list of threads in a forum and generate their metadata.
-     * <p>
-     * This doesn't write to the database, you need to do this with the returned data.
-     *
-     * @param forumPage  the page to parse
-     * @param forumId    the ID of the forum this page is from
-     * @param startIndex the threads' positions in the forum will start from this index
-     * @return the list of all the threads' metadata objects, ready for storage
-     */
-    static List<ContentValues> parseForumThreads(Document forumPage, int forumId, int startIndex) {
-        long startTime = System.currentTimeMillis();
-        String update_time = new Timestamp(startTime).toString();
-        Timber.v("Update time: %s", update_time);
-        String username = AwfulPreferences.getInstance().username;
-
-        List<ForumParseTask> parseTasks = new ArrayList<>();
-        for (Element threadElement : forumPage.select("#forum .thread")) {
-            if (TextUtils.isEmpty(threadElement.id())) {
-                //skip the table header
-                continue;
+            val parseTasks: MutableList<ForumParseTask> = mutableListOf()
+            for (threadElement in forumPage.select("#forum .thread")) {
+                if (TextUtils.isEmpty(threadElement.id())) {
+                    //skip the table header
+                    continue
+                }
+                parseTasks.add(
+                    ForumParseTask(
+                        threadElement,
+                        forumId,
+                        startIndex,
+                        username!!,
+                        update_time
+                    )
+                )
+                startIndex++
             }
-            parseTasks.add(new ForumParseTask(threadElement, forumId, startIndex, username, update_time));
-            startIndex++;
-        }
-        List<ContentValues> result = ForumParsingKt.parse(parseTasks);
+            val result: List<ContentValues> = parse(parseTasks)
 
-        float averageParseTime = (System.currentTimeMillis() - startTime) / (float) result.size();
-        Timber.i("%d threads parsed\nAverage parse time: %.3fms", result.size(), averageParseTime);
-        return result;
-    }
-
-
-    /**
-     * Parse a page from a thread, updating metadata and parsing the contained posts.
-     * <p>
-     * This will update the current read/unread counts, estimating the total number of posts
-     * if the last recorded total is too low (by the current number of pages) and this isn't the last page
-     * (meaning we only know how many full pages there are, not how many posts are on the last page).
-     * Defaults to a minimum estimate, i.e. a single post on the last page.
-     * <p>
-     * Also stores/updates the rest of the thread metadata - title, locked status etc., and passes
-     * the page to {@link AwfulPost} for parsing and syncing.
-     *  @param resolver     a ContentResolver used to access the database
-     * @param page         the thread page's HTML document
-     * @param threadId     the ID of this thread
-     * @param pageNumber   which page of the thread this document represents
-     * @param lastPageNumber the number of the last page in this thread
-     * @param postsPerPage used to calculate post counts
-     * @param prefs        a preferences instance
-     * @param filterUserId if this page is for a thread filtered by user, this should be set to the user's ID, otherwise 0
-     */
-    public static void parseThreadPage(ContentResolver resolver, Document page, int threadId, int pageNumber, int lastPageNumber, int postsPerPage, AwfulPreferences prefs, int filterUserId) {
-        long startTime = System.currentTimeMillis();
-        // TODO: 03/06/2017 see issue #503 on GitHub - filtering by user means the thread data gets overwritten by the pages from this new, shorter thread containing their posts
-        final int BLANK_USER_ID = 0;
-        // TODO: 05/01/2018 this filtering on userID thing isn't actually doing anything...
-        final boolean filteringOnUserId = filterUserId > BLANK_USER_ID;
-
-        // finally write new thread data to the database
-        ContentValues cv = new ThreadPageParseTask(resolver, page, threadId, pageNumber, lastPageNumber, postsPerPage, prefs).call();
-        // TODO: 04/06/2017 this should be handled in the database-management classes
-        String update_time = new Timestamp(startTime).toString();
-        cv.put(DatabaseHelper.UPDATED_TIMESTAMP, update_time);
-        if (resolver.update(ContentUris.withAppendedId(CONTENT_URI, threadId), cv, null, null) < 1) {
-            resolver.insert(CONTENT_URI, cv);
-        }
-
-        Timber.i("Thread parse time: %dms", System.currentTimeMillis() - startTime);
-    }
-
-
-    @SuppressWarnings("deprecation")
-	public static void setDataOnThreadListItem(View item, AwfulPreferences prefs, Cursor data, AwfulFragment parent) {
-        AwfulThread thread = fromCursorRow(data);
-        if (thread == null) {
-            Timber.w("setDataOnThreadView: unable to get data for thread!");
-            return;
-        }
-
-        if (prefs.hiddenThreadIds.contains(String.valueOf(thread.id))) {
-            markThreadAsHidden(item, thread, prefs.threadInfo_Tag);
-            return;
-        }
-
-        Resources resources = item.getResources();
-        Context context = item.getContext();
-        // get the forum ID for getting themed resources
-        Integer forumId = null;
-        if (parent instanceof ForumDisplayFragment) {
-            forumId = ((ForumDisplayFragment) parent).getForumId();
+            val averageParseTime = (System.currentTimeMillis() - startTime) / result.size.toFloat()
+            i("%d threads parsed\nAverage parse time: %.3fms", result.size, averageParseTime)
+            return result
         }
 
 
-        // highlight threads authored by the current user
-        if (prefs.highlightYourThreads && prefs.userId > 0 && thread.authorId == prefs.userId) {
-            item.setBackgroundColor(ColorProvider.SELF_THREAD_BACKGROUND.getColor(forumId));
-        } else {
-            item.setBackgroundColor(ColorProvider.BACKGROUND.getColor(forumId));
+        /**
+         * Parse a page from a thread, updating metadata and parsing the contained posts.
+         * 
+         * 
+         * This will update the current read/unread counts, estimating the total number of posts
+         * if the last recorded total is too low (by the current number of pages) and this isn't the last page
+         * (meaning we only know how many full pages there are, not how many posts are on the last page).
+         * Defaults to a minimum estimate, i.e. a single post on the last page.
+         * 
+         * 
+         * Also stores/updates the rest of the thread metadata - title, locked status etc., and passes
+         * the page to [AwfulPost] for parsing and syncing.
+         * @param resolver     a ContentResolver used to access the database
+         * @param page         the thread page's HTML document
+         * @param threadId     the ID of this thread
+         * @param pageNumber   which page of the thread this document represents
+         * @param lastPageNumber the number of the last page in this thread
+         * @param postsPerPage used to calculate post counts
+         * @param prefs        a preferences instance
+         * @param filterUserId if this page is for a thread filtered by user, this should be set to the user's ID, otherwise 0
+         */
+        fun parseThreadPage(
+            resolver: ContentResolver,
+            page: Document,
+            threadId: Int,
+            pageNumber: Int,
+            lastPageNumber: Int,
+            postsPerPage: Int,
+            prefs: AwfulPreferences,
+            filterUserId: Int
+        ) {
+            val startTime = System.currentTimeMillis()
+            // TODO: 03/06/2017 see issue #503 on GitHub - filtering by user means the thread data gets overwritten by the pages from this new, shorter thread containing their posts
+            val BLANK_USER_ID = 0
+            // TODO: 05/01/2018 this filtering on userID thing isn't actually doing anything...
+            val filteringOnUserId = filterUserId > BLANK_USER_ID
+
+            // finally write new thread data to the database
+            val cv = ThreadPageParseTask(
+                resolver,
+                page,
+                threadId,
+                pageNumber,
+                lastPageNumber,
+                postsPerPage,
+                prefs
+            ).call()
+            // TODO: 04/06/2017 this should be handled in the database-management classes
+            val update_time = Timestamp(startTime).toString()
+            cv.put(DatabaseHelper.UPDATED_TIMESTAMP, update_time)
+            if (resolver.update(
+                    ContentUris.withAppendedId(CONTENT_URI, threadId.toLong()),
+                    cv,
+                    null,
+                    null
+                ) < 1
+            ) {
+                resolver.insert(CONTENT_URI, cv)
+            }
+
+            i("Thread parse time: %dms", System.currentTimeMillis() - startTime)
         }
 
-        // thread title
-        TextView title  = item.findViewById(R.id.title);
-        title.setText(thread.title != null ? thread.title : "UNKNOWN");
-        title.setTextColor(ColorProvider.PRIMARY_TEXT.getColor(forumId));
+
+        @Suppress("deprecation")
+        fun setDataOnThreadListItem(
+            item: View,
+            prefs: AwfulPreferences,
+            data: Cursor,
+            parent: AwfulFragment?
+        ) {
+            val thread: AwfulThread? = fromCursorRow(data)
+            if (thread == null) {
+                w("setDataOnThreadView: unable to get data for thread!")
+                return
+            }
+
+            if (prefs.hiddenThreadIds!!.contains(thread.id.toString())) {
+                markThreadAsHidden(item, thread, prefs.threadInfo_Tag)
+                return
+            }
+
+            val resources = item.resources
+            val context = item.context
+            // get the forum ID for getting themed resources
+            var forumId: Int? = null
+            if (parent is ForumDisplayFragment) {
+                forumId = parent.forumId
+            }
 
 
-        // main thread tag
-        final ImageView threadTag = item.findViewById(R.id.thread_tag);
-        threadTag.setVisibility(GONE);
-        if (prefs.threadInfo_Tag) {
-			if (!TextUtils.isEmpty(thread.tagCacheFile)) {
-                threadTag.setVisibility(VISIBLE);
-                String url = thread.tagUrl;
-                String localFileName = "@drawable/"+url.substring(url.lastIndexOf('/') + 1,url.lastIndexOf('.')).replace('-','_').toLowerCase();
+            // highlight threads authored by the current user
+            if (prefs.highlightYourThreads && prefs.userId > 0 && thread.authorId == prefs.userId) {
+                item.setBackgroundColor(ColorProvider.SELF_THREAD_BACKGROUND.getColor(forumId))
+            } else {
+                item.setBackgroundColor(ColorProvider.BACKGROUND.getColor(forumId))
+            }
 
-                int imageID = resources.getIdentifier(localFileName, null, context.getPackageName());
-                if (imageID == 0) {
-                    NetworkUtils.getImageLoader().get(url, new ImageLoader.ImageListener() {
-                        @Override
-                        public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-                            Drawable classicTag = AwfulPostIcon.getClassicIconDrawable(response.getBitmap(), threadTag.getContext());
-                            threadTag.setImageDrawable(classicTag);
-                        }
+            // thread title
+            val title = item.findViewById<TextView>(R.id.title)
+            title.text = if (thread.title != null) thread.title else "UNKNOWN"
+            title.setTextColor(ColorProvider.PRIMARY_TEXT.getColor(forumId))
 
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            threadTag.setImageResource(R.drawable.empty_thread_tag);
-                        }
-                    });
-                } else {
-                    threadTag.setImageResource(imageID);
+
+            // main thread tag
+            val threadTag = item.findViewById<ImageView>(R.id.thread_tag)
+            threadTag.visibility = View.GONE
+            if (prefs.threadInfo_Tag) {
+                if (!TextUtils.isEmpty(thread.tagCacheFile)) {
+                    threadTag.visibility = View.VISIBLE
+                    val url = thread.tagUrl!!
+                    val localFileName =
+                        "@drawable/" + url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('.'))
+                            .replace('-', '_').lowercase(
+                                Locale.getDefault()
+                            )
+
+                    val imageID = resources.getIdentifier(localFileName, null, context.packageName)
+                    if (imageID == 0) {
+                        imageLoader?.get(url, object : ImageListener {
+                            override fun onResponse(
+                                response: ImageContainer,
+                                isImmediate: Boolean
+                            ) {
+                                val classicTag = if (response.bitmap == null) {
+                                    getDrawable(R.drawable.empty_thread_tag, resources)
+                                } else {
+                                    getClassicIconDrawable(
+                                        response.bitmap,
+                                        threadTag.context
+                                    )
+                                }
+                                threadTag.setImageDrawable(classicTag)
+
+                            }
+
+                            override fun onErrorResponse(error: VolleyError?) {
+                                threadTag.setImageResource(R.drawable.empty_thread_tag)
+                            }
+                        })
+                    } else {
+                        threadTag.setImageResource(imageID)
+                    }
                 }
             }
-		}
 
 
-        // tag overlay (secondary tags etc)
-        ImageView forumTagOverlay = item.findViewById(R.id.thread_tag_overlay);
-        ImageView inlineForumTagOverlay = item.findViewById(R.id.thread_tag_overlay_optional);
-        forumTagOverlay.setVisibility(GONE);
-        inlineForumTagOverlay.setVisibility(GONE);
-        if (ExtraTags.getType(thread.tagExtra) != ExtraTags.TYPE_NO_TAG) {
-            Drawable tagIcon = ExtraTags.getDrawable(thread.tagExtra, resources);
-            if (tagIcon != null) {
-                if(prefs.threadInfo_Tag) {
-                    showImage(forumTagOverlay, tagIcon);
-                }else {
-                    showImage(inlineForumTagOverlay, tagIcon);
+            // tag overlay (secondary tags etc)
+            val forumTagOverlay = item.findViewById<ImageView>(R.id.thread_tag_overlay)
+            val inlineForumTagOverlay =
+                item.findViewById<ImageView>(R.id.thread_tag_overlay_optional)
+            forumTagOverlay.visibility = View.GONE
+            inlineForumTagOverlay.visibility = View.GONE
+            if (ExtraTags.getType(thread.tagExtra) != ExtraTags.TYPE_NO_TAG) {
+                val tagIcon = ExtraTags.getDrawable(thread.tagExtra, resources)
+                if (tagIcon != null) {
+                    if (prefs.threadInfo_Tag) {
+                        showImage(forumTagOverlay, tagIcon)
+                    } else {
+                        showImage(inlineForumTagOverlay, tagIcon)
+                    }
                 }
             }
-        }
 
 
-        // page count / author / last poster info line
-        TextView info   = item.findViewById(R.id.thread_info);
-        info.setVisibility(VISIBLE);
-        String tmp = String.format(Locale.US, "%d pgs | %s: %s",
+            // page count / author / last poster info line
+            val info = item.findViewById<TextView>(R.id.thread_info)
+            info.visibility = View.VISIBLE
+            val tmp = String.format(
+                Locale.US, "%d pgs | %s: %s",
                 thread.getPageCount(prefs.postPerPage),
-                thread.hasBeenViewed ? "Last" : "OP",
-                NetworkUtils.unencodeHtml(thread.hasBeenViewed ? thread.lastPoster : thread.author));
-        info.setText(tmp.trim());
-        info.setTextColor(ColorProvider.ALT_TEXT.getColor(forumId));
+                if (thread.hasBeenViewed) "Last" else "OP",
+                unencodeHtml(if (thread.hasBeenViewed) thread.lastPoster else thread.author)
+            )
+            info.text = tmp.trim { it <= ' ' }
+            info.setTextColor(ColorProvider.ALT_TEXT.getColor(forumId))
 
 
-        // ratings
-        ImageView threadRating = item.findViewById(R.id.thread_rating);
-        ImageView inlineThreadRating = item.findViewById(R.id.thread_rating_optional);
-        threadRating.setVisibility(GONE);
-        inlineThreadRating.setVisibility(GONE);
-        // if we're showing ratings...
-        if (prefs.threadInfo_Rating) {
-            Drawable ratingIcon = AwfulRatings.getDrawable(thread.rating, resources);
+            // ratings
+            val threadRating = item.findViewById<ImageView>(R.id.thread_rating)
+            val inlineThreadRating = item.findViewById<ImageView>(R.id.thread_rating_optional)
+            threadRating.visibility = View.GONE
+            inlineThreadRating.visibility = View.GONE
+            // if we're showing ratings...
+            if (prefs.threadInfo_Rating) {
+                val ratingIcon = getDrawable(thread.rating, resources)
                 // Film Dump replaces the actual thread tag, instead of using the separate rating view
-                if (AwfulRatings.getType(thread.rating) == AwfulRatings.TYPE_FILM_DUMP) {
-                    showImage(threadTag, ratingIcon);
+                if (getType(thread.rating) == AwfulRatings.TYPE_FILM_DUMP) {
+                    showImage(threadTag, ratingIcon)
                 } else {
-                    showImage(prefs.threadInfo_Tag ? threadRating : inlineThreadRating, ratingIcon);
+                    showImage(
+                        if (prefs.threadInfo_Tag) threadRating else inlineThreadRating,
+                        ratingIcon
+                    )
                 }
-        }
+            }
 
 
-        // locked and sticky status
-        ImageView threadLocked = item.findViewById(R.id.thread_locked);
-        ImageView threadSticky = item.findViewById(R.id.thread_sticky);
-        threadSticky.setVisibility(thread.isSticky ? VISIBLE : GONE);
-        threadLocked.setVisibility(thread.isLocked && !thread.isSticky ? VISIBLE : GONE);
+            // locked and sticky status
+            val threadLocked = item.findViewById<ImageView>(R.id.thread_locked)
+            val threadSticky = item.findViewById<ImageView>(R.id.thread_sticky)
+            threadSticky.visibility = if (thread.isSticky) View.VISIBLE else View.GONE
+            threadLocked.visibility = if (thread.isLocked && !thread.isSticky) View.VISIBLE else View.GONE
 
-        // unread counter
-        TextView unread = item.findViewById(R.id.unread_count);
-        unread.setVisibility(GONE);
-        if(thread.hasBeenViewed) {
-            unread.setVisibility(VISIBLE);
-            unread.setTextColor(ColorProvider.UNREAD_TEXT.getColor(forumId));
-            unread.setText(Integer.toString(thread.unreadCount));
-            GradientDrawable counter = (GradientDrawable) resources.getDrawable(R.drawable.unread_counter);
-            if (counter != null) {
-                counter.mutate();
-                boolean dim = !thread.hasNewPosts();
-                if (thread.bookmarkType > 0 && prefs.coloredBookmarks) {
-                    counter.setColor(ColorProvider.getBookmarkColor(thread.bookmarkType, dim));
-                } else {
-                    ColorProvider colorAttr = dim ? ColorProvider.UNREAD_BACKGROUND_DIM : ColorProvider.UNREAD_BACKGROUND;
-                    counter.setColor(colorAttr.getColor(forumId));
+            // unread counter
+            val unread = item.findViewById<TextView>(R.id.unread_count)
+            unread.visibility = View.GONE
+            if (thread.hasBeenViewed) {
+                unread.visibility = View.VISIBLE
+                unread.setTextColor(ColorProvider.UNREAD_TEXT.getColor(forumId))
+                unread.text = thread.unreadCount.toString()
+                val counter = resources.getDrawable(R.drawable.unread_counter) as GradientDrawable?
+                if (counter != null) {
+                    counter.mutate()
+                    val dim = !thread.hasNewPosts()
+                    if (thread.bookmarkType > 0 && prefs.coloredBookmarks) {
+                        counter.setColor(getBookmarkColor(thread.bookmarkType, dim))
+                    } else {
+                        val colorAttr =
+                            if (dim) ColorProvider.UNREAD_BACKGROUND_DIM else ColorProvider.UNREAD_BACKGROUND
+                        counter.setColor(colorAttr.getColor(forumId))
+                    }
+                    unread.setBackgroundDrawable(counter)
                 }
-                unread.setBackgroundDrawable(counter);
             }
         }
 
-	}
-
-    private static void markThreadAsHidden(View item, AwfulThread thread, boolean showTags) {
-        TextView title = item.findViewById(R.id.title);
-        title.setText(R.string.thread_hidden);
-        ImageView threadTag = item.findViewById(R.id.thread_tag);
-        if (showTags) {
-            threadTag.setImageResource(R.drawable.empty_thread_tag);
-        } else {
-            threadTag.setVisibility(GONE);
+        private fun markThreadAsHidden(item: View, thread: AwfulThread, showTags: Boolean) {
+            val title = item.findViewById<TextView>(R.id.title)
+            title.setText(R.string.thread_hidden)
+            val threadTag = item.findViewById<ImageView>(R.id.thread_tag)
+            if (showTags) {
+                threadTag.setImageResource(R.drawable.empty_thread_tag)
+            } else {
+                threadTag.visibility = View.GONE
+            }
+            item.findViewById<View?>(R.id.thread_tag_overlay).visibility = View.GONE
+            item.findViewById<View?>(R.id.thread_tag_overlay_optional).visibility = View.GONE
+            item.findViewById<View?>(R.id.thread_info).visibility = View.INVISIBLE
+            item.findViewById<View?>(R.id.thread_rating).visibility = View.GONE
+            item.findViewById<View?>(R.id.thread_rating_optional).visibility = View.GONE
+            item.findViewById<View?>(R.id.thread_sticky).visibility = if (thread.isSticky) View.VISIBLE else View.GONE
+            item.findViewById<View?>(R.id.thread_locked).visibility = if (thread.isLocked && !thread.isSticky) View.VISIBLE else View.GONE
+            item.findViewById<View?>(R.id.unread_count).visibility = View.GONE
         }
-        item.findViewById(R.id.thread_tag_overlay).setVisibility(GONE);
-        item.findViewById(R.id.thread_tag_overlay_optional).setVisibility(GONE);
-        item.findViewById(R.id.thread_info).setVisibility(INVISIBLE);
-        item.findViewById(R.id.thread_rating).setVisibility(GONE);
-        item.findViewById(R.id.thread_rating_optional).setVisibility(GONE);
-        item.findViewById(R.id.thread_sticky).setVisibility(thread.isSticky ? VISIBLE : GONE);
-        item.findViewById(R.id.thread_locked).setVisibility(thread.isLocked && !thread.isSticky ? VISIBLE : GONE);
-        item.findViewById(R.id.unread_count).setVisibility(GONE);
-    }
 
-	/** Utility method to set and show an imageview */
-    private static void showImage(ImageView imageView, Drawable drawable) {
-        imageView.setVisibility(VISIBLE);
-        imageView.setImageDrawable(drawable);
+        /** Utility method to set and show an imageview  */
+        private fun showImage(imageView: ImageView, drawable: Drawable?) {
+            imageView.visibility = View.VISIBLE
+            imageView.setImageDrawable(drawable)
+        }
     }
-
 }

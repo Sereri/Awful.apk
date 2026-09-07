@@ -410,7 +410,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         }
         mThreadView?.let {
             it.webViewClient = threadWebViewClient
-            it.webChromeClient = object : LoggingWebChromeClient(mThreadView) {
+            it.webChromeClient = object : LoggingWebChromeClient(it) {
                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
                     super.onProgressChanged(view, newProgress)
                     setProgress(newProgress / 2 + 50) //second half of progress bar
@@ -1261,15 +1261,15 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             postActions.show(mSelf.requireFragmentManager(), "Post Actions")
         }
 
-        override fun setCustomPreferences(preferences: MutableMap<String?, String?>) {
+        override fun setCustomPreferences(preferences: MutableMap<String, String>) {
             // TODO: 23/01/2017 add methods so you can't mess with the map directly
-            preferences.put("postjumpid", postJump)
-            preferences.put("scrollPosition", savedScrollPosition.toString())
+            preferences["postjumpid"] = postJump
+            preferences["scrollPosition"] = savedScrollPosition.toString()
         }
 
         @JavascriptInterface
         fun getIgnorePostHtml(id: String?): String? {
-            return ignorePostsHtml.get(id)
+            return ignorePostsHtml[id]
         }
 
         @JavascriptInterface

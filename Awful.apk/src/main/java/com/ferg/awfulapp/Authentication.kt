@@ -27,11 +27,11 @@ class LogOutDialog : DialogFragment() {
             AlertDialog.Builder(requireActivity())
                     .setTitle(R.string.logout)
                     .setMessage(R.string.logout_message)
-                    .setPositiveButton(R.string.logout, { _, _ ->
+                    .setPositiveButton(R.string.logout) { _, _ ->
                         activity?.let(::reAuthenticate) ?: logOut()
-                    })
-                    .setNegativeButton(R.string.cancel, { _, _ -> Unit })
-                    .create()
+                    }
+                .setNegativeButton(R.string.cancel) { _, _ -> }
+                .create()
 
 }
 

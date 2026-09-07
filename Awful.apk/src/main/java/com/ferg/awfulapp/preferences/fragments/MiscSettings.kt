@@ -1,7 +1,6 @@
 package com.ferg.awfulapp.preferences.fragments
 
 import android.app.Dialog
-import android.content.Context
 import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
@@ -87,11 +86,11 @@ class MiscSettings : SettingsFragment() {
                     progress: Int,
                     fromUser: Boolean
                 ) {
-                    mP2RDistanceText.text = progress.toString() + "%" + (if (progress < 20 || progress > 75) " (not recommended)" else "")
+                    mP2RDistanceText.text = "${progress}%${if (progress !in 20..75) " (not recommended)" else ""}"
                 }
             })
             bar.progress = (mPrefs?.p2rDistance!! * 100).roundToInt()
-            mP2RDistanceText.text = bar.progress.toString() + "%" + (if (bar.progress < 20 || bar.progress > 75) " (not recommended)" else "")
+            mP2RDistanceText.text = "${bar.progress}%${if (bar.progress !in 20..75) " (not recommended)" else ""}"
             mP2RDistanceDialog.show()
             return true
         }

@@ -5,7 +5,6 @@ import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.text.TextUtils
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.Preference
@@ -62,7 +61,7 @@ class AccountSettings : SettingsFragment() {
     private inner class FeaturesListener : Preference.OnPreferenceClickListener {
         override fun onPreferenceClick(preference: Preference): Boolean {
             val dialog: Dialog = ProgressDialog.show(activity, "Loading", "Fetching Account Features", true)
-            (activity as AwfulActivity).setPreferredFont(dialog.findViewById<View?>(android.R.id.title))
+            (activity as AwfulActivity).setPreferredFont(dialog.findViewById(android.R.id.title))
             queueRequest(
                 FeatureRequest(requireActivity())
                     .build(null, object : AwfulResultCallback<Void?> {

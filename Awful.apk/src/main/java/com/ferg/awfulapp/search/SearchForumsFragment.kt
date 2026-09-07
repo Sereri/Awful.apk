@@ -131,11 +131,11 @@ class SearchForumsFragment : AwfulDialogFragment {
     }
 
 
-    public override fun getTitle(): String {
+    override fun getTitle(): String {
         return getString(R.string.search_forums_select_forums)
     }
 
-    public override fun volumeScroll(event: KeyEvent?): Boolean {
+    override fun volumeScroll(event: KeyEvent?): Boolean {
         return false
     }
 

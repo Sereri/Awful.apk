@@ -139,7 +139,7 @@ class AwfulLoginActivity : AwfulActivity() {
         val password = NetworkUtils.encodeHtml(mPassword?.text.toString())
 
         mDialog = ProgressDialog.show(this@AwfulLoginActivity, "Logging In", "Hold on...", true)
-        setPreferredFont(mDialog?.findViewById<View?>(android.R.id.title))
+        setPreferredFont(mDialog?.findViewById(android.R.id.title))
         val self = this
         NetworkUtils.queueRequest(
             LoginRequest(this, username, password).build(

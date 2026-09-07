@@ -15,7 +15,7 @@ class BookmarkColorRequest(context: Context, threadId: Int)
     init {
         with (parameters) {
             add(PARAM_ACTION, "cat_toggle")
-            add(PARAM_THREAD_ID, Integer.toString(threadId))
+            add(PARAM_THREAD_ID, threadId.toString())
         }
     }
 

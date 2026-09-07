@@ -136,6 +136,7 @@ import androidx.core.net.toUri
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.core.view.isEmpty
+import androidx.fragment.app.FragmentActivity
 import com.ferg.awfulapp.preferences.BooleanPreference
 import com.ferg.awfulapp.preferences.StringSetPreference
 
@@ -236,11 +237,11 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         aContainer: ViewGroup?,
         aSavedState: Bundle?
     ): View? {
-        try {
-            return inflateView(R.layout.thread_display, aContainer, aInflater)
+        return try {
+            inflateView(R.layout.thread_display, aContainer, aInflater)
         } catch (e: InflateException) {
             if (webViewIsMissing(e)) {
-                return null
+                null
             } else {
                 throw e
             }
@@ -451,12 +452,12 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
     }
 
 
-    public override fun setAsFocusedPage() {
+    override fun setAsFocusedPage() {
         mThreadView?.onResume()
         mThreadView?.keepScreenOn = keepScreenOn
     }
 
-    public override fun setAsBackgroundPage() {
+    override fun setAsBackgroundPage() {
         mThreadView?.keepScreenOn = false
         mThreadView?.onPause()
     }
@@ -474,7 +475,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
     }
 
 
-    public override fun onDestroy() {
+    override fun onDestroy() {
         super.onDestroy()
         loaderManager.destroyLoader(Constants.POST_LOADER_ID)
     }
@@ -619,7 +620,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             builder.appendQueryParameter(Constants.PARAM_USER_ID, userId.toString())
         }
         if (postId != null) {
-            builder.fragment("post" + postId)
+            builder.fragment("post$postId")
         }
         return builder.toString()
     }
@@ -683,27 +684,27 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         AlertDialog.Builder(activity)
             .setTitle("Rate this thread")
             .setItems(
-                items,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, item: Int ->
-                    queueRequest(
-                        VoteRequest(
-                            requireActivity(),
-                            this.threadId, item + 1
-                        )
-                            .build(this@ThreadDisplayFragment, object : AwfulResultCallback<Void?> {
-                                override fun success(result: Void?) {
-                                    alertView.setTitle(R.string.vote_succeeded)
-                                        .setSubtitle(R.string.vote_succeeded_sub)
-                                        .setIcon(R.drawable.ic_mood)
-                                        .show()
-                                }
-
-
-                                override fun failure(error: VolleyError?) {
-                                }
-                            })
+                items
+            ) { _: DialogInterface?, item: Int ->
+                queueRequest(
+                    VoteRequest(
+                        requireActivity(),
+                        this.threadId, item + 1
                     )
-                }).show()
+                        .build(this@ThreadDisplayFragment, object : AwfulResultCallback<Void?> {
+                            override fun success(result: Void?) {
+                                alertView.setTitle(R.string.vote_succeeded)
+                                    .setSubtitle(R.string.vote_succeeded_sub)
+                                    .setIcon(R.drawable.ic_mood)
+                                    .show()
+                            }
+
+
+                            override fun failure(error: VolleyError?) {
+                            }
+                        })
+                )
+            }.show()
     }
 
 
@@ -795,7 +796,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                             } else {
                                 showReportDialog(
                                     postId,
-                                    if (result.warning != null) result.warning else ""
+                                    result.warning ?: ""
                                 )
                             }
                         }
@@ -831,25 +832,25 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             .setMessage(message)
             .setView(reportReason)
             .setPositiveButton(
-                "Report",
-                DialogInterface.OnClickListener { dialog: DialogInterface?, whichButton: Int ->
-                    val reason = reportReason.text.toString()
-                    queueRequest(
-                        ReportRequest(
-                            requireActivity(),
-                            postId,
-                            reason
-                        ).build(this@ThreadDisplayFragment, object : AwfulResultCallback<String> {
-                            override fun success(result: String) {
-                                alertView.setTitle(result).setIcon(R.drawable.ic_mood).show()
-                            }
+                "Report"
+            ) { dialog: DialogInterface?, whichButton: Int ->
+                val reason = reportReason.text.toString()
+                queueRequest(
+                    ReportRequest(
+                        requireActivity(),
+                        postId,
+                        reason
+                    ).build(this@ThreadDisplayFragment, object : AwfulResultCallback<String> {
+                        override fun success(result: String) {
+                            alertView.setTitle(result).setIcon(R.drawable.ic_mood).show()
+                        }
 
-                            override fun failure(error: VolleyError?) {
-                                alertView.setTitle(error?.message).setIcon(R.drawable.ic_mood).show()
-                            }
-                        })
-                    )
-                })
+                        override fun failure(error: VolleyError?) {
+                            alertView.setTitle(error?.message).setIcon(R.drawable.ic_mood).show()
+                        }
+                    })
+                )
+            }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
@@ -863,7 +864,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         if (TextUtils.isEmpty(avatarUrl)) {
             return
         }
-        val blocked = prefs.getPreference(StringSetPreference.BLOCKED_AVATAR_URLS, mutableSetOf<String?>())
+        val blocked = prefs.getPreference(StringSetPreference.BLOCKED_AVATAR_URLS, mutableSetOf())
         val newSet: MutableSet<String?> =
             HashSet(blocked) // not allowed to mutate original set
 
@@ -1045,10 +1046,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
      * Show the page picker dialog, and handle user input and navigation.
      */
     private fun displayPagePicker() {
-        val activity: Activity? = getActivity()
-        if (activity == null) {
-            return
-        }
+        val activity: FragmentActivity = activity ?: return
 
         PagePicker(
             activity,
@@ -1134,8 +1132,8 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         AlertDialog.Builder(activity)
             .setTitle(getString(if (threadLocked) R.string.thread_unlock else R.string.thread_lock) + "?")
             .setPositiveButton(
-                R.string.alert_ok,
-                DialogInterface.OnClickListener { dialogInterface: DialogInterface?, i: Int -> toggleThreadLock() })
+                R.string.alert_ok
+            ) { dialogInterface: DialogInterface?, i: Int -> toggleThreadLock() }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
@@ -1240,7 +1238,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             )
 
             postActions.setTargetFragment(this@ThreadDisplayFragment, -1)
-            postActions.setOnActionClickedListener(object : OnActionClickedListener<PostContextMenu.PostMenuAction?> {
+            postActions.setOnActionClickedListener(object : OnActionClickedListener<PostMenuAction?> {
                 override fun onActionClicked(action: PostMenuAction?) {
                     when(action) {
                         PostMenuAction.HIDE_AVATAR -> mThreadView?.evaluateJavascript(
@@ -1301,7 +1299,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                         }
 
                         override fun failure(error: VolleyError?) {
-                            w("Failed to load ignored post #" + ignorePost)
+                            w("Failed to load ignored post #$ignorePost")
                         }
                     })
             )
@@ -1478,14 +1476,14 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
 
     fun displayImage(url: String?) {
         val intent =
-            BasicActivity.Companion.intentFor(ZoomViewFragment::class.java, requireActivity(), "")
+            BasicActivity.intentFor(ZoomViewFragment::class.java, requireActivity(), "")
         intent.putExtra(ZoomViewFragment.EXTRA_IMAGE_URL, url)
         startActivity(intent)
     }
 
-    public override fun onPreferenceChange(mPrefs: AwfulPreferences, key: String?) {
-        super.onPreferenceChange(mPrefs, key)
-        i("onPreferenceChange" + (if (key != null) ":" + key else ""))
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(preferences, key)
+        i("onPreferenceChange" + (if (key != null) ":$key" else ""))
         if (null != awfulActivity && pageBar != null) {
             awfulActivity?.setPreferredFont(pageBar?.textView)
             pageBar?.setTextColour(ColorProvider.ACTION_BAR_TEXT.color)
@@ -1494,22 +1492,22 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         mThreadView?.let {
 
             it.setBackgroundColor(Color.TRANSPARENT)
-            it.runJavascript(String.format("changeFontFace('%s')", mPrefs.preferredFont))
-            it.settings.defaultFontSize = mPrefs.postFontSizeSp
-            it.settings.defaultFixedFontSize = mPrefs.postFixedFontSizeSp
+            it.runJavascript(String.format("changeFontFace('%s')", preferences.preferredFont))
+            it.settings.defaultFontSize = preferences.postFontSizeSp
+            it.settings.defaultFixedFontSize = preferences.postFixedFontSizeSp
 
             if ("marked_users" == key) {
                 it.runJavascript(
                     String.format(
                         "updateMarkedUsers('%s')",
-                        TextUtils.join(",", mPrefs.markedUsers!!)
+                        TextUtils.join(",", preferences.markedUsers!!)
                     )
                 )
             }
         }
         clickInterface.updatePreferences()
         if (mFAB != null) {
-            if (mPrefs.noFAB) {
+            if (preferences.noFAB) {
                 mFAB?.hide()
             } else {
                 mFAB?.show()
@@ -1759,7 +1757,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
     }
 
 
-    public override fun getTitle(): String? {
+    override fun getTitle(): String? {
         return mTitle
     }
 
@@ -1770,11 +1768,10 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             if (!isAdded) {
                 deferNavigation(event)
             } else {
-                val thread = event
                 // if we're currently displaying this thread, and no page was specified (i.e. it's
                 // a "show this thread" navigation) then we don't need to do anything
-                if (thread.id != currentThreadId || thread.page != null) {
-                    openThread(thread.id, thread.page, thread.postJump)
+                if (event.id != currentThreadId || event.page != null) {
+                    openThread(event.id, event.page, event.postJump)
                 }
             }
             return true
@@ -1782,8 +1779,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             if (!isAdded) {
                 deferNavigation(event)
             } else {
-                val url = event
-                openThread(url.url)
+                openThread(event.url)
             }
             return true
         }
@@ -1811,7 +1807,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             this.threadId, id, this.pageNumber, page, getPostJump(), postJump
         )
         clearBackStack()
-        val threadPage = if (page == null) FIRST_PAGE else page
+        val threadPage = page ?: FIRST_PAGE
         loadThread(id, threadPage, postJump, true)
     }
 
@@ -1858,7 +1854,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
     private fun loadThread(id: Int, page: Int, postJump: String?, fullSync: Boolean) {
         this.threadId = id
         this.pageNumber = page
-        this.setPostJump(if (postJump != null) postJump else "")
+        this.setPostJump(postJump ?: "")
         setPostFiltering(null, null)
         this.lastPage = FIRST_PAGE
         updateUiElements()
@@ -1903,7 +1899,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         return backStack.size
     }
 
-    public override fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         if (backStackCount() > 0) {
             popThread()
             return true
@@ -1946,7 +1942,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         when (requestCode) {
             Constants.AWFUL_PERMISSION_WRITE_EXTERNAL_STORAGE -> {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (downloadLink != null) enqueueDownload(downloadLink!!)
                 } else {
                     Toast.makeText(

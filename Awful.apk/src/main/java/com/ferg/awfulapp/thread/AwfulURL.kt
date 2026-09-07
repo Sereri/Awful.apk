@@ -35,10 +35,10 @@ class AwfulURL {
         var url: Uri.Builder? = null
         when (type) {
             TYPE.FORUM -> {
-                if (id == Constants.USERCP_ID.toLong()) {
-                    url = Constants.FUNCTION_USERCP.toUri().buildUpon()
+                url = if (id == Constants.USERCP_ID.toLong()) {
+                    Constants.FUNCTION_USERCP.toUri().buildUpon()
                 } else {
-                    url = Constants.FUNCTION_FORUM.toUri().buildUpon()
+                    Constants.FUNCTION_FORUM.toUri().buildUpon()
                 }
                 url.appendQueryParameter(Constants.PARAM_FORUM_ID, id.toString())
                 url.appendQueryParameter(Constants.PARAM_PAGE, page.toString())

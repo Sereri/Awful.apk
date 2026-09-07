@@ -30,12 +30,10 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
+import androidx.core.net.toUri
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils.get
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import org.apache.commons.lang3.StringUtils
-import org.json.JSONException
-import org.json.JSONObject
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.parser.Tag
@@ -46,7 +44,6 @@ import java.util.Collections
 import java.util.concurrent.Callable
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import androidx.core.net.toUri
 
 class AwfulPost {
     var threadId: Int = -1
@@ -278,7 +275,7 @@ class AwfulPost {
                         }
                     }
                     if (src != null && height != 0 && width != 0) {
-                        var link: String? = null
+                        var link: String?
                         val vimeo: Matcher = vimeoId_regex.matcher(src)
                         if (vimeo.find()) {
                             val videoId = vimeo.group(1)

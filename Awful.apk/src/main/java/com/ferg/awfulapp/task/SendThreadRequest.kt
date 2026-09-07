@@ -27,7 +27,7 @@ class SendThreadRequest(context: Context, reply: ContentValues)
     init {
         with(parameters) {
             add(PARAM_ACTION, "postthread")
-            add(PARAM_FORUM_ID, Integer.toString(reply.getAsInteger(AwfulMessage.ID)!!))
+            add(PARAM_FORUM_ID, reply.getAsInteger(AwfulMessage.ID).toString())
             add(PARAM_FORMKEY, reply.getAsString(AwfulPost.FORM_KEY))
             add(PARAM_FORM_COOKIE, reply.getAsString(AwfulPost.FORM_COOKIE))
             add(PARAM_SUBJECT, NetworkUtils.encodeHtml(reply.getAsString(AwfulMessage.POST_SUBJECT)))

@@ -94,6 +94,7 @@ import timber.log.Timber.Forest.w
 import java.io.File
 import java.util.Locale
 import androidx.core.net.toUri
+import androidx.fragment.app.FragmentActivity
 
 class PostReplyFragment : AwfulFragment() {
     // UI components
@@ -146,7 +147,7 @@ class PostReplyFragment : AwfulFragment() {
         return view
     }
 
-    public override fun onActivityCreated(aSavedState: Bundle?) {
+    override fun onActivityCreated(aSavedState: Bundle?) {
         super.onActivityCreated(aSavedState)
         v("onActivityCreated")
         val activity: Activity? = getActivity()
@@ -202,12 +203,12 @@ class PostReplyFragment : AwfulFragment() {
                     this.attachmentData = data
                     if (AwfulUtils.isTiramisu33) {
                         requestPermissions(
-                            arrayOf<String>(Manifest.permission.READ_MEDIA_IMAGES),
+                            arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
                             Constants.AWFUL_PERMISSION_READ_MEDIA_IMAGES
                         )
                     } else {
                         requestPermissions(
-                            arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE),
+                            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                             Constants.AWFUL_PERMISSION_READ_EXTERNAL_STORAGE
                         )
                     }
@@ -265,7 +266,7 @@ class PostReplyFragment : AwfulFragment() {
     */
     private fun loadReply(mReplyType: Int, mThreadId: Int, mPostId: Int) {
         progressDialog = ProgressDialog.show(activity, "Loading", "Fetching Message...", true, true)
-        awfulActivity!!.setPreferredFont(progressDialog!!.findViewById<View?>(android.R.id.title))
+        awfulActivity!!.setPreferredFont(progressDialog!!.findViewById(android.R.id.title))
         // create a callback to handle the reply data from the site
         val loadCallback: AwfulResultCallback<ContentValues> =
             object : AwfulResultCallback<ContentValues> {
@@ -298,7 +299,7 @@ class PostReplyFragment : AwfulFragment() {
                 override fun failure(error: VolleyError?) {
                     dismissProgressDialog()
                     //allow time for the error to display, then close the window
-                    handler.postDelayed(Runnable { leave(RESULT_CANCELLED) }, 3000)
+                    handler.postDelayed({ leave(RESULT_CANCELLED) }, 3000)
                 }
             }
         when (mReplyType) {
@@ -329,7 +330,7 @@ class PostReplyFragment : AwfulFragment() {
                 // TODO: 13/04/2017 make an enum/intdef for reply types and just fail early if necessary, shouldn't need to keep checking for bad values everywhere
                 Toast.makeText(
                     activity,
-                    "Unknown reply type: " + mReplyType,
+                    "Unknown reply type: $mReplyType",
                     Toast.LENGTH_LONG
                 ).show()
                 leave(RESULT_CANCELLED)
@@ -385,23 +386,18 @@ class PostReplyFragment : AwfulFragment() {
      * @param draft a draft message relevant to this post
      */
     private fun displayDraftAlert(draft: SavedDraft) {
-        val activity: Activity? = getActivity()
-        if (activity == null) {
-            return
-        }
+        val activity: FragmentActivity = activity ?: return
 
         val template = "You have a %s:" +
                 "<br/><br/>" +
                 "<i>%s</i>" +
                 "<br/><br/>" +
                 "Saved %s ago"
-
-        val type: String?
-        when (draft.type) {
-            AwfulMessage.TYPE_EDIT -> type = "Saved Edit"
-            AwfulMessage.TYPE_QUOTE -> type = "Saved Quote"
-            AwfulMessage.TYPE_NEW_REPLY -> type = "Saved Reply"
-            else -> type = "Saved Reply"
+        val type = when (draft.type) {
+            AwfulMessage.TYPE_EDIT -> "Saved Edit"
+            AwfulMessage.TYPE_QUOTE -> "Saved Quote"
+            AwfulMessage.TYPE_NEW_REPLY -> "Saved Reply"
+            else -> "Saved Reply"
         }
 
         val MAX_PREVIEW_LENGTH = 140
@@ -423,25 +419,25 @@ class PostReplyFragment : AwfulFragment() {
             .setTitle(type)
             .setMessage(Html.fromHtml(message))
             .setPositiveButton(
-                positiveLabel,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                    var newContent = draft.content
-                    // If we're quoting something, stick it after the draft reply (and add some whitespace too)
-                    if (mReplyType == AwfulMessage.TYPE_QUOTE) {
-                        newContent += "\n\n" + messageComposer!!.text
-                    }
-                    messageComposer!!.setText(newContent, true)
-                })
+                positiveLabel
+            ) { dialog: DialogInterface?, which: Int ->
+                var newContent = draft.content
+                // If we're quoting something, stick it after the draft reply (and add some whitespace too)
+                if (mReplyType == AwfulMessage.TYPE_QUOTE) {
+                    newContent += "\n\n" + messageComposer!!.text
+                }
+                messageComposer!!.setText(newContent, true)
+            }
             .setNegativeButton(
-                R.string.discard,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> deleteSavedReply() }) // avoid accidental draft losses by forcing a decision
+                R.string.discard
+            ) { dialog: DialogInterface?, which: Int -> deleteSavedReply() } // avoid accidental draft losses by forcing a decision
             .setCancelable(false)
             .show()
 
-        awfulActivity!!.setPreferredFont(use.findViewById<View?>(androidx.appcompat.R.id.alertTitle))
-        awfulActivity!!.setPreferredFont(use.findViewById<View?>(android.R.id.message))
-        awfulActivity!!.setPreferredFont(use.findViewById<View?>(android.R.id.button1))
-        awfulActivity!!.setPreferredFont(use.findViewById<View?>(android.R.id.button2))
+        awfulActivity!!.setPreferredFont(use.findViewById(androidx.appcompat.R.id.alertTitle))
+        awfulActivity!!.setPreferredFont(use.findViewById(android.R.id.message))
+        awfulActivity!!.setPreferredFont(use.findViewById(android.R.id.button1))
+        awfulActivity!!.setPreferredFont(use.findViewById(android.R.id.button2))
     }
 
 
@@ -460,38 +456,38 @@ class PostReplyFragment : AwfulFragment() {
                 )
             )
             .setPositiveButton(
-                R.string.submit,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int ->
-                    if (progressDialog == null && activity != null) {
-                        progressDialog = ProgressDialog.show(
-                            activity,
-                            "Posting",
-                            "Hopefully it didn't suck...",
-                            true,
-                            true
+                R.string.submit
+            ) { dialog: DialogInterface?, button: Int ->
+                if (progressDialog == null && activity != null) {
+                    progressDialog = ProgressDialog.show(
+                        activity,
+                        "Posting",
+                        "Hopefully it didn't suck...",
+                        true,
+                        true
+                    )
+                    awfulActivity!!.setPreferredFont(
+                        progressDialog!!.findViewById(
+                            android.R.id.title
                         )
-                        awfulActivity!!.setPreferredFont(
-                            progressDialog!!.findViewById<View?>(
-                                android.R.id.title
-                            )
-                        )
-                    }
-                    saveReply()
-                    submitPost()
-                })
+                    )
+                }
+                saveReply()
+                submitPost()
+            }
             .setNeutralButton(
-                R.string.preview,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int -> previewPost() })
+                R.string.preview
+            ) { dialog: DialogInterface?, button: Int -> previewPost() }
             .setNegativeButton(
-                R.string.cancel,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int -> })
+                R.string.cancel
+            ) { dialog: DialogInterface?, button: Int -> }
             .show()
 
-        awfulActivity!!.setPreferredFont(submit.findViewById<View?>(androidx.appcompat.R.id.alertTitle))
-        awfulActivity!!.setPreferredFont(submit.findViewById<View?>(android.R.id.message))
-        awfulActivity!!.setPreferredFont(submit.findViewById<View?>(android.R.id.button1))
-        awfulActivity!!.setPreferredFont(submit.findViewById<View?>(android.R.id.button2))
-        awfulActivity!!.setPreferredFont(submit.findViewById<View?>(android.R.id.button3))
+        awfulActivity!!.setPreferredFont(submit.findViewById(androidx.appcompat.R.id.alertTitle))
+        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.message))
+        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.button1))
+        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.button2))
+        awfulActivity!!.setPreferredFont(submit.findViewById(android.R.id.button3))
     }
 
 
@@ -499,10 +495,7 @@ class PostReplyFragment : AwfulFragment() {
      * Actually submit the post/edit to the site.
      */
     private fun submitPost() {
-        val cv = prepareCV()
-        if (cv == null) {
-            return
-        }
+        val cv = prepareCV() ?: return
         val postCallback: AwfulResultCallback<Void?> = object : AwfulResultCallback<Void?> {
             override fun success(result: Void?) {
                 dismissProgressDialog()
@@ -573,7 +566,7 @@ class PostReplyFragment : AwfulFragment() {
                 }
                 if (view != null) {
                     Snackbar.make(view!!, "Preview failed.", Snackbar.LENGTH_LONG)
-                        .setAction("Retry", View.OnClickListener { v: View? -> previewPost() })
+                        .setAction("Retry") { v: View? -> previewPost() }
                         .show()
                 }
             }
@@ -701,30 +694,30 @@ class PostReplyFragment : AwfulFragment() {
                 )
             )
             .setPositiveButton(
-                R.string.save,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int ->
-                    // let #autoSave handle it on leaving
-                    saveRequired = true
-                    leave(RESULT_CANCELLED)
-                })
+                R.string.save
+            ) { dialog: DialogInterface?, button: Int ->
+                // let #autoSave handle it on leaving
+                saveRequired = true
+                leave(RESULT_CANCELLED)
+            }
             .setNegativeButton(
-                R.string.discard,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                    deleteSavedReply()
-                    saveRequired = false
-                    leave(RESULT_CANCELLED)
-                })
+                R.string.discard
+            ) { dialog: DialogInterface?, which: Int ->
+                deleteSavedReply()
+                saveRequired = false
+                leave(RESULT_CANCELLED)
+            }
             .setNeutralButton(
-                R.string.cancel,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> })
+                R.string.cancel
+            ) { dialog: DialogInterface?, which: Int -> }
             .setCancelable(true)
             .show()
 
-        awfulActivity!!.setPreferredFont(save.findViewById<View?>(androidx.appcompat.R.id.alertTitle))
-        awfulActivity!!.setPreferredFont(save.findViewById<View?>(android.R.id.message))
-        awfulActivity!!.setPreferredFont(save.findViewById<View?>(android.R.id.button1))
-        awfulActivity!!.setPreferredFont(save.findViewById<View?>(android.R.id.button2))
-        awfulActivity!!.setPreferredFont(save.findViewById<View?>(android.R.id.button3))
+        awfulActivity!!.setPreferredFont(save.findViewById(androidx.appcompat.R.id.alertTitle))
+        awfulActivity!!.setPreferredFont(save.findViewById(android.R.id.message))
+        awfulActivity!!.setPreferredFont(save.findViewById(android.R.id.button1))
+        awfulActivity!!.setPreferredFont(save.findViewById(android.R.id.button2))
+        awfulActivity!!.setPreferredFont(save.findViewById(android.R.id.button3))
     }
 
 
@@ -770,7 +763,7 @@ class PostReplyFragment : AwfulFragment() {
             // don't save if the message is empty/whitespace
             // not trimming the actual content, so we retain any whitespace e.g. blank lines after quotes
             if (!content.trim { it <= ' ' }.isEmpty()) {
-                Log.i(Companion.TAG, "Saving reply! " + content)
+                Log.i(Companion.TAG, "Saving reply! $content")
                 val post = if (replyData == null) ContentValues() else ContentValues(replyData)
                 post.put(AwfulMessage.ID, mThreadId)
                 post.put(AwfulMessage.TYPE, mReplyType)
@@ -847,7 +840,7 @@ class PostReplyFragment : AwfulFragment() {
                 }
                 val removeToast = Toast.makeText(
                     awfulActivity,
-                    awfulActivity!!.getResources().getText(R.string.file_removed),
+                    awfulActivity!!.resources.getText(R.string.file_removed),
                     Toast.LENGTH_SHORT
                 )
                 removeToast.show()
@@ -871,8 +864,8 @@ class PostReplyFragment : AwfulFragment() {
     }
 
 
-    public override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
-        super.onPreferenceChange(prefs, key)
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(preferences, key)
         //refresh the menu to show/hide attach option (plat only)
         invalidateOptionsMenu()
     }
@@ -972,16 +965,20 @@ class PostReplyFragment : AwfulFragment() {
                 val type = split[0]
 
                 var contentUri: Uri? = null
-                if ("image" == type) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                } else if ("video" == type) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                } else if ("audio" == type) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                when (type) {
+                    "image" -> {
+                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    }
+                    "video" -> {
+                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    }
+                    "audio" -> {
+                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    }
                 }
 
                 val selection = "_id=?"
-                val selectionArgs = arrayOf<String?>(
+                val selectionArgs = arrayOf(
                     split[1]
                 )
 
@@ -1128,12 +1125,12 @@ class PostReplyFragment : AwfulFragment() {
         awfulActivity!!.setPreferredFont(threadTitleView)
     }
 
-    public override fun getTitle(): String? {
-        when (mReplyType) {
-            AwfulMessage.TYPE_EDIT -> return "Editing"
-            AwfulMessage.TYPE_QUOTE -> return "Quote"
-            AwfulMessage.TYPE_NEW_REPLY -> return "Reply"
-            else -> return "Reply"
+    override fun getTitle(): String {
+        return when (mReplyType) {
+            AwfulMessage.TYPE_EDIT -> "Editing"
+            AwfulMessage.TYPE_QUOTE -> "Quote"
+            AwfulMessage.TYPE_NEW_REPLY -> "Reply"
+            else -> "Reply"
         }
     }
 
@@ -1146,7 +1143,7 @@ class PostReplyFragment : AwfulFragment() {
     */
     private inner class DraftReplyLoaderCallback : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(aId: Int, aArgs: Bundle?): Loader<Cursor?> {
-            Log.i(Companion.TAG, "Create Reply Cursor: " + mThreadId)
+            Log.i(Companion.TAG, "Create Reply Cursor: $mThreadId")
             return CursorLoader(
                 activity!!,
                 ContentUris.withAppendedId(AwfulMessage.CONTENT_URI_REPLY, mThreadId.toLong()),

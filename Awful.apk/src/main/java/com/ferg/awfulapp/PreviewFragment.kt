@@ -55,8 +55,8 @@ class PreviewFragment : AwfulDialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         val dialogView = inflater.inflate(R.layout.post_preview, container)
-        progressBar = dialogView.findViewById<ProgressBar>(R.id.preview_progress)
-        postPreView = dialogView.findViewById<AwfulWebView>(R.id.preview_webview)
+        progressBar = dialogView.findViewById(R.id.preview_progress)
+        postPreView = dialogView.findViewById(R.id.preview_webview)
         configureWebView()
 
         dialog?.setCanceledOnTouchOutside(true)
@@ -99,7 +99,7 @@ class PreviewFragment : AwfulDialogFragment() {
         postPreView?.setJavascriptHandler(jsInterface)
     }
 
-    public override fun getTitle(): String {
+    override fun getTitle(): String {
         return "Preview"
     }
 }

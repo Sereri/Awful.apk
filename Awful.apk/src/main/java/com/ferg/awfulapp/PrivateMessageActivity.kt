@@ -54,7 +54,7 @@ class PrivateMessageActivity : AwfulActivity(), PrivateMessageCallbacks {
             pmIntentID = data.getQueryParameter(Constants.PARAM_PRIVATE_MESSAGE_ID)
         }
 
-        paneTwo = findViewById<View?>(R.id.fragment_pane_two)
+        paneTwo = findViewById(R.id.fragment_pane_two)
         setContentPane()
     }
 

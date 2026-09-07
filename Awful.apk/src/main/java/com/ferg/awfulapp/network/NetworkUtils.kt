@@ -71,7 +71,7 @@ object NetworkUtils {
         mImageLoader = AwfulImageLoader(mNetworkQueue, mImageCache)
 
         try {
-            HttpResponseCache.install(File(context.getCacheDir(), "httpcache"), 5242880)
+            HttpResponseCache.install(File(context.cacheDir, "httpcache"), 5242880)
         } catch (e: Exception) {
             e.printStackTrace()
         }

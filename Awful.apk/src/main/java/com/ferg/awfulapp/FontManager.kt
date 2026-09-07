@@ -95,7 +95,7 @@ class FontManager private constructor(preferredFont: String?, assets: AssetManag
     }
 
     private var currentFont: Typeface? = null
-    private val fonts: MutableMap<String?, Typeface?> = HashMap<String?, Typeface?>()
+    private val fonts: MutableMap<String?, Typeface?> = hashMapOf()
 
     init {
         /**
@@ -156,16 +156,18 @@ class FontManager private constructor(preferredFont: String?, assets: AssetManag
      * [Typeface.ITALIC], or [Typeface.BOLD_ITALIC],
      */
     fun setTypefaceToCurrentFont(view: View?, flags: Int) {
-        if (view is TextView) {
-            setTextViewTypefaceToCurrentFont(view, flags)
-        } else if (view is TextInputLayout) {
-            setTextViewTypefaceToCurrentFont(view)
-        } else if (view is ViewGroup) {
+        when (view) {
+            is TextView -> setTextViewTypefaceToCurrentFont(view, flags)
 
-            for (i in 0..<view.childCount) setTypefaceToCurrentFont(
-                view.getChildAt(i),
-                flags
-            )
+            is TextInputLayout -> setTextViewTypefaceToCurrentFont(view)
+
+
+            is ViewGroup -> {
+                for (i in 0..<view.childCount) setTypefaceToCurrentFont(
+                    view.getChildAt(i),
+                    flags
+                )
+            }
         }
     }
 

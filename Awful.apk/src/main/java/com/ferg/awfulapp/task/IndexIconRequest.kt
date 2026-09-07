@@ -30,7 +30,7 @@ class IndexIconRequest(context: Context) : AwfulRequest<Void?>(context, BASE_URL
         // TODO: this has nothing to do with parsing forum icons - if we need to update the username, do it separately. Also it's broken when there's an apostrophe in the username?
         val pmBlock = doc.getElementsByAttributeValue("id", "pm")
         try {
-            if (pmBlock.size > 0) {
+            if (pmBlock.isNotEmpty()) {
                 val bolded = pmBlock.first()?.getElementsByTag("b")
                 if (bolded != null && bolded.size > 1) {
                     val name = bolded.first()?.text()?.split("'".toRegex())?.dropLastWhile { it.isEmpty() }?.toTypedArray()?.get(0)
@@ -39,10 +39,10 @@ class IndexIconRequest(context: Context) : AwfulRequest<Void?>(context, BASE_URL
                     val matchUnread = findUnread.matcher(unread)
                     var unreadCount = -1
                     if (matchUnread.find()) {
-                        unreadCount = Integer.parseInt(matchUnread.group(1))
+                        unreadCount = Integer.parseInt(matchUnread.group(1)!!)
                     }
                     Timber.v("text: $name - $unreadCount")
-                    if (name != null && name.isNotEmpty()) {
+                    if (!name.isNullOrEmpty()) {
                         preferences.setPreference(StringPreference.USERNAME, name)
                     }
                 }

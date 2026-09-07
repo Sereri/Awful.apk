@@ -142,7 +142,7 @@ class AwfulError @JvmOverloads constructor(
                 var probTimestamp = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1)
                 val m: Matcher = PROBATION_MESSAGE_REGEX.matcher(probation.text())
                 if (m.find()) {
-                    val date = m.group(2)
+                    val date = m.group(2)!!
 
                     // Jan 11, 2013 10:35 AM  vs  Jan 11, 2013 22:35
                     val pattern = if (StringUtils.endsWithIgnoreCase(
@@ -152,7 +152,7 @@ class AwfulError @JvmOverloads constructor(
                     ) "MMM d, yyyy hh:mm a" else "MMM d, yyyy HH:mm"
                     val probationFormat = SimpleDateFormat(pattern, Locale.US)
                     try {
-                        probTimestamp = probationFormat.parse(date).getTime()
+                        probTimestamp = probationFormat.parse(date)?.time!!
                     } catch (e: ParseException) {
                         w(e, "checkPageErrors: couldn't parse probation date text: %s", date)
                     }

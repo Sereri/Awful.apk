@@ -30,7 +30,6 @@ import android.util.Log
 import com.ferg.awfulapp.constants.Constants
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import java.util.regex.Pattern
 import kotlin.math.max
 
 abstract class AwfulPagedItem {

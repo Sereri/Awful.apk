@@ -26,7 +26,7 @@ class SendPostRequest(context: Context, reply: ContentValues)
     init {
         with(parameters) {
             add(PARAM_ACTION, "postreply")
-            add(PARAM_THREAD_ID, Integer.toString(reply.getAsInteger(AwfulMessage.ID)!!))
+            add(PARAM_THREAD_ID, reply.getAsInteger(AwfulMessage.ID).toString())
             add(PARAM_FORMKEY, reply.getAsString(AwfulPost.FORM_KEY))
             add(PARAM_FORM_COOKIE, reply.getAsString(AwfulPost.FORM_COOKIE))
             add(PARAM_MESSAGE, NetworkUtils.encodeHtml(reply.getAsString(AwfulMessage.REPLY_CONTENT)))

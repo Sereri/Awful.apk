@@ -182,7 +182,7 @@ sealed class NavigationEvent(private val extraTypeId: String) {
             return when (getStringExtra(EVENT_EXTRA_KEY)) {
             //TODO: handle behaviour for missing data, e.g. can't navigate to a thread with no thread ID
             // TODO: might be better to default to null? And let the caller decide what to do when parsing fails - can use the elvis ?: to supply a default event
-                TYPE_RE_AUTHENTICATE -> NavigationEvent.ReAuthenticate
+                TYPE_RE_AUTHENTICATE -> ReAuthenticate
                 TYPE_SETTINGS -> Settings(
                         page = getStringExtra(Constants.SETTINGS_PAGE)
                 )

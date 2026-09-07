@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.webkit.CookieManager
-import android.webkit.ValueCallback
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.android.volley.VolleyError
@@ -43,23 +42,23 @@ class CaptchaActivity : AwfulActivity() /* truly */ {
                     // whether we received a successful response. A workaround is checking
                     // whether markup that should be present on the index is there.
                     view.evaluateJavascript(
-                        "(function() { return (document.body && document.body.id == 'something_awful'); })();",
-                        ValueCallback { s: String? ->
-                            if (s == "true") {
-                                Log.d(TAG, "captcha finished successfully")
-                                val allCookies =
-                                    CookieManager.getInstance().getCookie(Constants.BASE_URL)
-                                val captchaCookie: String? = parseCaptchaCookie(allCookies)
+                        "(function() { return (document.body && document.body.id == 'something_awful'); })();"
+                    ) { s: String? ->
+                        if (s == "true") {
+                            Log.d(TAG, "captcha finished successfully")
+                            val allCookies =
+                                CookieManager.getInstance().getCookie(Constants.BASE_URL)
+                            val captchaCookie: String? = parseCaptchaCookie(allCookies)
 
-                                if (captchaCookie != null) {
-                                    CookieController.setCaptchaCookie(captchaCookie)
-                                } else {
-                                    Log.w(TAG, "captcha finished, but captcha cookie not set")
-                                }
-
-                                activity.finish()
+                            if (captchaCookie != null) {
+                                CookieController.setCaptchaCookie(captchaCookie)
+                            } else {
+                                Log.w(TAG, "captcha finished, but captcha cookie not set")
                             }
-                        })
+
+                            activity.finish()
+                        }
+                    }
                 }
             }
         }

@@ -71,7 +71,7 @@ import java.util.Locale.getDefault
 
 class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout.OnRefreshListener {
 
-    private val mSearchQuery by lazy { requireView().findViewById(R.id.search_query) as EditText }
+    private val mSearchQuery by lazy { requireView().findViewById<EditText>(R.id.search_query)!! }
 
     private var mQueryId: Int = 0
     private var mMaxPageQueried: Int = 0
@@ -81,7 +81,7 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
 
     private var mDialog: ProgressDialog? = null
     private val mSearchResultList: RecyclerView by lazy {
-        (requireView().findViewById(R.id.search_results) as RecyclerView)
+        (requireView().findViewById<RecyclerView>(R.id.search_results)!!)
                 .apply {
                     adapter = SearchResultAdapter()
                     layoutManager =
@@ -91,7 +91,7 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
     private var mSearchResults: MutableList<AwfulSearch> = mutableListOf()
 
     private val mSRL: SwipyRefreshLayout by lazy {
-        (requireView().findViewById(R.id.search_srl) as SwipyRefreshLayout)
+        (requireView().findViewById<SwipyRefreshLayout>(R.id.search_srl)!!)
                 .apply {
                     setOnRefreshListener(this@SearchFragment)
                     setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
@@ -107,7 +107,7 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
         retainInstance = false
     }
 
-    override fun onCreateView(aInflater: LayoutInflater, aContainer: ViewGroup?, aSavedState: Bundle?): View? {
+    override fun onCreateView(aInflater: LayoutInflater, aContainer: ViewGroup?, aSavedState: Bundle?): View {
         super.onCreateView(aInflater, aContainer, aSavedState)
         Timber.v("onCreateView")
         val result = inflateView(R.layout.search, aContainer, aInflater)
@@ -181,18 +181,17 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater!!.inflate(R.menu.search, menu)
+        inflater.inflate(R.menu.search, menu)
         val fm = FontManager.getInstance()
-        val filterMenu = menu?.findItem(R.id.search_terms)!!.subMenu
-        SearchFilter.FilterType.values().forEach { filterMenu?.add(it.label) }
+        val filterMenu = menu.findItem(R.id.search_terms)!!.subMenu
+        SearchFilter.FilterType.entries.forEach { filterMenu?.add(it.label) }
         filterMenu?.forEach { fm.setMenuItemFont(it) }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         Timber.v("onOptionsItemSelected")
-        if (item == null) return super.onOptionsItemSelected(item)
         // check if it's one of our filters
-        SearchFilter.FilterType.values().firstOrNull { it.label == item.title.toString() }?.run {
+        SearchFilter.FilterType.entries.firstOrNull { it.label == item.title.toString() }?.run {
             showDialog(this@SearchFragment)
             return true
         }
@@ -260,11 +259,11 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
         }))
     }
 
-    private inner class SearchResultHolder internal constructor(internal val self: View) : RecyclerView.ViewHolder(self) {
-        internal val threadName: TextView = itemView.findViewById(R.id.search_result_threadname)
-        internal val hitInfo: TextView = itemView.findViewById(R.id.search_result_hit_info)
-        internal val blurb: TextView = itemView.findViewById(R.id.search_result_blurb)
-        internal val timestamp: TextView = itemView.findViewById(R.id.search_result_timestamp)
+    private class SearchResultHolder(val self: View) : RecyclerView.ViewHolder(self) {
+        val threadName: TextView = itemView.findViewById(R.id.search_result_threadname)
+        val hitInfo: TextView = itemView.findViewById(R.id.search_result_hit_info)
+        val blurb: TextView = itemView.findViewById(R.id.search_result_blurb)
+        val timestamp: TextView = itemView.findViewById(R.id.search_result_timestamp)
 
     }
 
@@ -284,7 +283,6 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
                 timestamp.text = result.postDate
 
                 val threadLink = result.threadLink
-                val forumId = result.forumId
                 self.setOnClickListener {
                     AwfulURL.parse(Constants.BASE_URL + threadLink).let(NavigationEvent::Url).let(::navigate)
                 }

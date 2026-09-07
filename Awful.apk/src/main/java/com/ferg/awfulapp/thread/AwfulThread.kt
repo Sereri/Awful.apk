@@ -323,7 +323,6 @@ class AwfulThread : AwfulPagedItem() {
         }
 
 
-        @Suppress("deprecation")
         fun setDataOnThreadListItem(
             item: View,
             prefs: AwfulPreferences,

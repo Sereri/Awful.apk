@@ -72,10 +72,6 @@ class PostThreadActivity : AwfulActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> onLeaveActivity()

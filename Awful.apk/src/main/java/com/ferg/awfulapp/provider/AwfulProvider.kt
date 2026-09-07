@@ -37,14 +37,13 @@ import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import android.util.Log
+import androidx.core.database.sqlite.transaction
 import com.ferg.awfulapp.constants.Constants
-import com.ferg.awfulapp.provider.DatabaseHelper
 import com.ferg.awfulapp.thread.AwfulEmote
 import com.ferg.awfulapp.thread.AwfulForum
 import com.ferg.awfulapp.thread.AwfulMessage
 import com.ferg.awfulapp.thread.AwfulPost
 import com.ferg.awfulapp.thread.AwfulThread
-import androidx.core.database.sqlite.transaction
 
 class AwfulProvider : ContentProvider() {
     companion object {

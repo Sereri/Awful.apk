@@ -102,7 +102,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
     companion object {
         const val KEY_FORUM_ID: String = "forum ID"
         const val KEY_PAGE_NUMBER: String = "page number"
-        const val KEY_SKIP_LOAD: kotlin.String = "skip load"
+        const val KEY_SKIP_LOAD: String = "skip load"
         const val NULL_FORUM_ID: Int = 0
         const val FIRST_PAGE: Int = 1
         fun getInstance(forumId: Int, pageNum: Int, skipLoad: Boolean): ForumDisplayFragment {
@@ -178,7 +178,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         super.onViewCreated(view, savedInstanceState)
 
         // TODO: move P2R stuff into AwfulFragment
-        swipyLayout = view.findViewById<SwipyRefreshLayout?>(R.id.forum_swipe)
+        swipyLayout = view.findViewById(R.id.forum_swipe)
         swipyLayout?.let {
             it.setOnRefreshListener(this)
             it.setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
@@ -186,7 +186,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         }
     }
 
-    public override fun onActivityCreated(aSavedState: Bundle?) {
+    override fun onActivityCreated(aSavedState: Bundle?) {
         super.onActivityCreated(aSavedState)
 
         if (aSavedState != null) {
@@ -228,7 +228,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         refreshInfo()
     }
 
-    public override fun setAsFocusedPage() {
+    override fun setAsFocusedPage() {
         // TODO: find out how this relates to onResume / onStart , it's the same code
         // TODO: this can be called before the fragment's views have been inflated, e.g. bookmark widget -> viewpager#onPageSelected -> (create fragment) -> onPageVisible
         updateColors()
@@ -253,11 +253,6 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
     override fun cancelNetworkRequests() {
         super.cancelNetworkRequests()
         NetworkUtils.cancelRequests(REQUEST_TAG)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // TODO: cancel network reqs?
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -288,14 +283,15 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
             .setTitle("Warning")
             .setMessage(R.string.post_warning)
             .setPositiveButton(
-                "I accept",
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                    displayPostThreadDialog(this.forumId)
-                    AwfulPreferences.getInstance().setPreference(BooleanPreference.POST_WARNING_ACCEPTED, true)
-                })
+                "I accept"
+            ) { _: DialogInterface?, _: Int ->
+                displayPostThreadDialog(this.forumId)
+                AwfulPreferences.getInstance()
+                    .setPreference(BooleanPreference.POST_WARNING_ACCEPTED, true)
+            }
             .setNegativeButton(
-                "Nope",
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> dialog?.dismiss() })
+                "Nope"
+            ) { dialog: DialogInterface?, _: Int -> dialog?.dismiss() }
             .setCancelable(false)
             .show()
     }
@@ -459,7 +455,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
             aPosition: Int,
             aId: Long
         ) {
-            // TODO: 04/06/2017 why is all this in a threadlist click listener? We know it's a thread! It's not a forum!
+            // TODO: 04/06/2017 why is all this in a thread list click listener? We know it's a thread! It's not a forum!
             val row = mCursorAdapter?.getRow(aId)
             if (row != null && row.getColumnIndexOrThrow(AwfulThread.BOOKMARKED) > -1) {
                 i("Thread ID: %s", aId)
@@ -493,7 +489,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         get() = currentForumId
         /**
          * Set the current Forum ID.
-         * 
+         *
          * Falls back to the Bookmarks forum for invalid ID values
          * @param forumId   the ID to switch to
          */
@@ -536,8 +532,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
             openForum(Constants.USERCP_ID, null)
             return true
         } else if (event is NavigationEvent.Forum) {
-            val forum = event
-            openForum(forum.id, forum.page)
+            openForum(event.id, event.page)
             return true
         }
         return false
@@ -697,12 +692,9 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
             val nextPageIndex = AwfulPagedItem.forumPageToIndex(this@ForumDisplayFragment.page + 1)
 
             // set up some cursor query stuff, depending on whether this is a normal forum or the bookmarks one
-            val contentUri =
-                if (isBookmarks) AwfulThread.CONTENT_URI_UCP else AwfulThread.CONTENT_URI
-
-            var selection: String?
-            if (isBookmarks) {
-                selection = String.format(
+            val contentUri = if (isBookmarks) AwfulThread.CONTENT_URI_UCP else AwfulThread.CONTENT_URI
+            var selection = if (isBookmarks) {
+                String.format(
                     "%s.%s>=? AND %s.%s<?",
                     DatabaseHelper.TABLE_UCP_THREADS,
                     AwfulThread.INDEX,
@@ -710,7 +702,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
                     AwfulThread.INDEX
                 )
             } else {
-                selection = String.format(
+                String.format(
                     "%s=? AND %s>=? AND %s<?",
                     AwfulThread.FORUM_ID, AwfulThread.INDEX, AwfulThread.INDEX
                 )
@@ -730,7 +722,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
             }
             val sortNewFirst =
                 (isBookmarks && prefs.newThreadsFirstUCP) || (!isBookmarks && prefs.newThreadsFirstForum)
-            val sortOrder: kotlin.String?
+            val sortOrder: String?
             if (sortNewFirst) {
                 val secondarySort =
                     if (isBookmarks) AwfulThread.LAST_POST_DATE + " DESC" else AwfulThread.INDEX
@@ -804,7 +796,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
     }
 
 
-    public override fun getTitle(): kotlin.String? {
+    override fun getTitle(): String? {
         return mTitle
     }
 

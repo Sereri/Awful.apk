@@ -110,19 +110,11 @@ object AwfulMessage : AwfulPagedItem() {
         overlay.visibility = View.GONE
 
         unreadPM.visibility = View.VISIBLE
-        val iconResource: Int
-        when (data.getInt(data.getColumnIndexOrThrow(UNREAD))) {
-            0 ->                //unread
-                iconResource = R.drawable.ic_drafts_dark
-
-            1 ->                //read
-                iconResource = R.drawable.ic_mail_dark
-
-            2 ->                //replied
-                iconResource = R.drawable.ic_reply_dark
-
-            else ->
-                iconResource = R.drawable.ic_drafts_dark
+        val iconResource: Int = when (data.getInt(data.getColumnIndexOrThrow(UNREAD))) {
+            0 -> R.drawable.ic_drafts_dark //unread
+            1 -> R.drawable.ic_mail_dark //read
+            2 -> R.drawable.ic_reply_dark //replied
+            else -> R.drawable.ic_drafts_dark
         }
         val icon = data.getString(data.getColumnIndexOrThrow(ICON))
         if (icon != null && !icon.isEmpty()) {

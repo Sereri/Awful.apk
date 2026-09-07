@@ -36,7 +36,7 @@ class AwfulImageLoader
             Bitmap.Config.RGB_565,
             Response.ErrorListener { error: VolleyError? -> onGetImageError(cacheKey, error) }) {
             override fun getHeaders(): MutableMap<String?, String?> {
-                val headers: MutableMap<String?, String?> = HashMap<String?, String?>()
+                val headers: MutableMap<String?, String?> = HashMap()
                 headers["User-Agent"] = getAwfulUserAgent()
 
                 val captchaCookie = CookieController.captchaCookie

@@ -2,6 +2,7 @@ package com.ferg.awfulapp.network
 
 import android.content.Context
 import android.text.TextUtils
+import androidx.core.content.edit
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.constants.Constants.COOKIE_DOMAIN_CAPTCHA
 import com.ferg.awfulapp.constants.Constants.COOKIE_NAME_CAPTCHA
@@ -17,11 +18,9 @@ import java.net.HttpCookie
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.Optional
 import java.util.TimeZone
-import androidx.core.content.edit
 
 /**
  * Handles all interactions with cookies

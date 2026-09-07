@@ -75,11 +75,7 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
      * Represents parameters to be added to the final request.
      * The concrete type depends on whether this is a GET or POST request.
      */
-    protected val parameters: Parameters
-
-    init {
-        parameters = if (isPostRequest) PostParams() else GetParams()
-    }
+    protected val parameters: Parameters = if (isPostRequest) PostParams() else GetParams()
 
 
     protected sealed class Parameters {
@@ -217,11 +213,11 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
     protected open fun parseAsHtml(response: NetworkResponse): Document {
         val jsoupParseStart = System.currentTimeMillis()
         val contentType = response.headers?.get("content-type")
-        var charset = SITE_HTML_ENCODING;
+        var charset = SITE_HTML_ENCODING
         if (contentType != null) {
-            val requestCharset = cz.msebera.android.httpclient.entity.ContentType.parse(contentType).charset.toString().lowercase();
+            val requestCharset = cz.msebera.android.httpclient.entity.ContentType.parse(contentType).charset.toString().lowercase()
             if (requestCharset == "utf-8") {
-                charset = requestCharset;
+                charset = requestCharset
             }
         }
         val doc = Jsoup.parse(ByteArrayInputStream(response.data), charset, BASE_URL)
@@ -245,7 +241,7 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
             val importantCookies = arrayOf(COOKIE_PREF_USERID, COOKIE_NAME_PASSWORD, COOKIE_NAME_SESSIONID, COOKIE_NAME_SESSIONHASH)
             headers.forEach {
                 if (it.name != "Set-Cookie") { return@forEach; }
-                val cookie = HttpCookie.parse(it.value).first();
+                val cookie = HttpCookie.parse(it.value).first()
                 if (importantCookies.contains(cookie.name)){
                     cookieMap[cookie.name] = it.value
                 }
@@ -272,12 +268,12 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
      * the constructor here, we can't just make AwfulRequest a subclass of this, since its subclasses
      * add their GET parameters in the init blocks
      */
-    private inner class ActualRequest internal constructor(
+    private inner class ActualRequest(
             url: String,
             private val success: Response.Listener<T>?,
             errorListener: Response.ErrorListener
     ) : Request<T>(
-            if (isPostRequest) Request.Method.POST else Request.Method.GET,
+            if (isPostRequest) Method.POST else Method.GET,
             url,
             errorListener
     ) {
@@ -302,7 +298,7 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
 
                 val result = handleResponseDocument(doc)
                 Timber.d("Successful parse: $url\nTook ${System.currentTimeMillis() - startTime}ms")
-                updateCookies(context, response.allHeaders);
+                updateCookies(context, response.allHeaders)
                 return Response.success(result, HttpHeaderParser.parseCacheHeaders(response))
             } catch (ae: AwfulError) {
                 return Response.error(ae)
@@ -357,9 +353,9 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
 
         @Throws(AuthFailureError::class)
         override fun getHeaders(): Map<String, String> {
-            return mutableMapOf<String, String>("User-Agent" to AwfulApplication.getAwfulUserAgent())
+            return mutableMapOf("User-Agent" to AwfulApplication.getAwfulUserAgent())
                 .apply(CookieController::setCookieHeaders)
-                .also { Timber.i("getHeaders: %s", this) };
+                .also { Timber.i("getHeaders: %s", this) }
         }
 
         @Throws(AuthFailureError::class)

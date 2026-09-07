@@ -3,7 +3,6 @@ package com.ferg.awfulapp.util
 import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Point
-import android.net.Uri
 import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
@@ -107,7 +106,7 @@ object AwfulUtils {
 
     fun trimDbEntries(cr: ContentResolver) {
         var rowCount = 0
-        for (uri in arrayOf<Uri>(
+        for (uri in arrayOf(
             AwfulThread.CONTENT_URI,
             AwfulThread.CONTENT_URI_UCP,
             AwfulPost.CONTENT_URI,
@@ -119,7 +118,7 @@ object AwfulUtils {
                 null
             )
         }
-        Log.i("AwfulTrimDB", "Trimming DB older than 7 days, culled: " + rowCount)
+        Log.i("AwfulTrimDB", "Trimming DB older than 7 days, culled: $rowCount")
     }
 
     private val transformerMap = mapOf(

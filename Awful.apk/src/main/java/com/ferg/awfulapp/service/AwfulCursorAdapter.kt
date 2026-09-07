@@ -28,7 +28,6 @@ package com.ferg.awfulapp.service
 
 import android.content.Context
 import android.database.Cursor
-import android.os.Messenger
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

@@ -26,8 +26,6 @@
  */
 package com.ferg.awfulapp
 
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.database.ContentObserver
 import android.database.Cursor
@@ -39,9 +37,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.ListView
+import androidx.core.view.isEmpty
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
@@ -61,7 +59,6 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import timber.log.Timber.Forest.tag
 import timber.log.Timber.Forest.w
-import androidx.core.view.isEmpty
 
 
 class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListener {
@@ -87,10 +84,6 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-    }
-
-    override fun onAttach(aActivity: Activity) {
-        super.onAttach(aActivity)
     }
 
     override fun onCreateView(
@@ -124,7 +117,7 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
         }
     }
 
-    public override fun onActivityCreated(aSavedState: Bundle?) {
+    override fun onActivityCreated(aSavedState: Bundle?) {
         super.onActivityCreated(aSavedState)
 
 
@@ -166,18 +159,10 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun onStop() {
         super.onStop()
         requireActivity().supportLoaderManager.destroyLoader(Constants.PRIVATE_MESSAGE_THREAD)
         requireActivity().contentResolver.unregisterContentObserver(mPMDataCallback)
-    }
-
-    override fun onDetach() {
-        super.onDetach()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -223,22 +208,20 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
         }
     }
 
-    private val onButtonClick: View.OnClickListener = object : View.OnClickListener {
-        override fun onClick(aView: View) {
-            when (aView.id) {
-                R.id.just_pm -> if (activity is PrivateMessageActivity) {
-                    (activity as PrivateMessageActivity).showMessage(null, 0)
-                }
-
-                R.id.new_pm -> startActivity(
-                    Intent().setClass(
-                        requireActivity(),
-                        MessageDisplayActivity::class.java
-                    )
-                )
-
-                R.id.refresh -> syncPMs()
+    private val onButtonClick: View.OnClickListener = View.OnClickListener { aView ->
+        when (aView.id) {
+            R.id.just_pm -> if (activity is PrivateMessageActivity) {
+                (activity as PrivateMessageActivity).showMessage(null, 0)
             }
+
+            R.id.new_pm -> startActivity(
+                Intent().setClass(
+                    requireActivity(),
+                    MessageDisplayActivity::class.java
+                )
+            )
+
+            R.id.refresh -> syncPMs()
         }
     }
 
@@ -255,7 +238,7 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
             }
         }
 
-    public override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
+    override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
         super.onPreferenceChange(prefs, key)
         if ("no_fab" == key) {
             mFAB?.setVisibility((if (prefs.noFAB) View.GONE else View.VISIBLE))

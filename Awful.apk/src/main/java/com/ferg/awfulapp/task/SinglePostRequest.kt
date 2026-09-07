@@ -31,7 +31,7 @@ class SinglePostRequest(context: Context, private val postId: String)
     }
 
     override fun handleResponse(doc: Document): String {
-        val prefs = AwfulPreferences.getInstance();
+        val prefs = AwfulPreferences.getInstance()
         val postBody = doc.selectFirst(".postbody")
         val fyadPostBody = postBody?.selectFirst(".complete_shit")
         (fyadPostBody ?: postBody ?: throw AwfulError("Couldn't find post content")).apply {

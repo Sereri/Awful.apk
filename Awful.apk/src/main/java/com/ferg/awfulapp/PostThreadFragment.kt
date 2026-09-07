@@ -143,7 +143,7 @@ class PostThreadFragment : AwfulFragment() {
         return view
     }
 
-    public override fun onActivityCreated(aSavedState: Bundle?) {
+    override fun onActivityCreated(aSavedState: Bundle?) {
         super.onActivityCreated(aSavedState)
         v("onActivityCreated")
         val activity: Activity? = getActivity()
@@ -279,7 +279,7 @@ class PostThreadFragment : AwfulFragment() {
                 override fun failure(error: VolleyError?) {
                     dismissProgressDialog()
                     //allow time for the error to display, then close the window
-                    handler.postDelayed(Runnable { leave(RESULT_CANCELLED) }, 3000)
+                    handler.postDelayed({ leave(RESULT_CANCELLED) }, 3000)
                 }
             }
         queueRequest(ThreadRequest(requireActivity(), mForumId).build(this, loadCallback))
@@ -358,19 +358,17 @@ class PostThreadFragment : AwfulFragment() {
             .setTitle(type)
             .setMessage(Html.fromHtml(message))
             .setPositiveButton(
-                "Use",
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                    val newContent = draft.content
-                    // If we're quoting something, stick it after the draft thread (and add some whitespace too)
-                    messageComposer!!.setText(newContent, true)
-                    subject!!.setText(draft.subject)
-                    if (draft.iconId != null && draft.iconUrl != null && draft.iconUrl.length > 0) {
-                        threadIconPicker!!.useIcon(draft.iconId, draft.iconUrl)
-                    }
-                })
-            .setNegativeButton(
-                R.string.discard,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> deleteSavedThread() }) // avoid accidental draft losses by forcing a decision
+                "Use"
+            ) { dialog: DialogInterface?, which: Int ->
+                val newContent = draft.content
+                // If we're quoting something, stick it after the draft thread (and add some whitespace too)
+                messageComposer?.setText(newContent, true)
+                subject?.setText(draft.subject)
+                if (draft.iconId != null && !draft.iconUrl.isNullOrEmpty()) {
+                    threadIconPicker?.useIcon(draft.iconId, draft.iconUrl)
+                }
+            }
+            .setNegativeButton(R.string.discard) { _: DialogInterface?, _: Int -> deleteSavedThread() } // avoid accidental draft losses by forcing a decision
             .setCancelable(false)
             .show()
 
@@ -391,31 +389,31 @@ class PostThreadFragment : AwfulFragment() {
         val submit = AlertDialog.Builder(requireActivity())
             .setTitle("Confirm Post?")
             .setPositiveButton(
-                R.string.submit,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int ->
-                    if (progressDialog == null && activity != null) {
-                        progressDialog = ProgressDialog.show(
-                            activity,
-                            "Posting",
-                            "Hopefully it didn't suck...",
-                            true,
-                            true
+                R.string.submit
+            ) { dialog: DialogInterface?, button: Int ->
+                if (progressDialog == null && activity != null) {
+                    progressDialog = ProgressDialog.show(
+                        activity,
+                        "Posting",
+                        "Hopefully it didn't suck...",
+                        true,
+                        true
+                    )
+                    awfulActivity?.setPreferredFont(
+                        progressDialog!!.findViewById(
+                            android.R.id.title
                         )
-                        awfulActivity?.setPreferredFont(
-                            progressDialog!!.findViewById(
-                                android.R.id.title
-                            )
-                        )
-                    }
-                    saveThread()
-                    submitThread()
-                })
+                    )
+                }
+                saveThread()
+                submitThread()
+            }
             .setNeutralButton(
-                R.string.preview,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int -> previewPost() })
+                R.string.preview
+            ) { dialog: DialogInterface?, button: Int -> previewPost() }
             .setNegativeButton(
-                R.string.cancel,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int -> }).show()
+                R.string.cancel
+            ) { dialog: DialogInterface?, button: Int -> }.show()
         awfulActivity?.let {
             it.setPreferredFont(submit.findViewById(androidx.appcompat.R.id.alertTitle))
             it.setPreferredFont(submit.findViewById(android.R.id.message))
@@ -487,7 +485,7 @@ class PostThreadFragment : AwfulFragment() {
                 }
                 if (view != null) {
                     Snackbar.make(view!!, "Preview failed.", Snackbar.LENGTH_LONG)
-                        .setAction("Retry", View.OnClickListener { v: View? -> previewPost() })
+                        .setAction("Retry") { v: View? -> previewPost() }
                         .show()
                 }
             }
@@ -606,22 +604,22 @@ class PostThreadFragment : AwfulFragment() {
             .setIcon(R.drawable.ic_reply_dark)
             .setMessage("Save this thread?")
             .setPositiveButton(
-                R.string.save,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, button: Int ->
-                    // let #autoSave handle it on leaving
-                    saveRequired = true
-                    leave(RESULT_CANCELLED)
-                })
+                R.string.save
+            ) { dialog: DialogInterface?, button: Int ->
+                // let #autoSave handle it on leaving
+                saveRequired = true
+                leave(RESULT_CANCELLED)
+            }
             .setNegativeButton(
-                R.string.discard,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                    deleteSavedThread()
-                    saveRequired = false
-                    leave(RESULT_CANCELLED)
-                })
+                R.string.discard
+            ) { dialog: DialogInterface?, which: Int ->
+                deleteSavedThread()
+                saveRequired = false
+                leave(RESULT_CANCELLED)
+            }
             .setNeutralButton(
-                R.string.cancel,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> })
+                R.string.cancel
+            ) { dialog: DialogInterface?, which: Int -> }
             .setCancelable(true)
             .show()
 
@@ -678,7 +676,7 @@ class PostThreadFragment : AwfulFragment() {
             // don't save if the message is empty/whitespace
             // not trimming the actual content, so we retain any whitespace e.g. blank lines after quotes
             if (!content.trim { it <= ' ' }.isEmpty()) {
-                Log.i(Companion.TAG, "Saving thread! " + content)
+                Log.i(Companion.TAG, "Saving thread! $content")
                 val post = if (threadData == null) ContentValues() else ContentValues(threadData)
                 post.put(AwfulMessage.ID, mForumId)
                 post.put(AwfulMessage.POST_CONTENT, content)
@@ -710,19 +708,19 @@ class PostThreadFragment : AwfulFragment() {
         inflater.inflate(R.menu.post_thread, menu)
 
         val attach = menu.findItem(R.id.add_attachment)
-        if (attach != null && prefs != null) {
+        if (attach != null) {
             attach.isEnabled = prefs.hasPlatinum
             attach.isVisible = prefs.hasPlatinum
         }
         val remove = menu.findItem(R.id.remove_attachment)
-        if (remove != null && prefs != null && this.mFileAttachment != null) {
+        if (remove != null && this.mFileAttachment != null) {
             remove.isEnabled = prefs.hasPlatinum
             remove.isVisible = prefs.hasPlatinum
             val filepath: Array<String?> =
                 this.mFileAttachment!!.split("/".toRegex()).dropLastWhile { it.isEmpty() }
                     .toTypedArray()
             val filename = filepath[filepath.size - 1]
-            remove.title = "Remove " + filename
+            remove.title = "Remove $filename"
         }
         val disableEmoticons = menu.findItem(R.id.disableEmots)
         if (disableEmoticons != null) {
@@ -754,7 +752,7 @@ class PostThreadFragment : AwfulFragment() {
                 this.mFileAttachment = null
                 val removeToast = Toast.makeText(
                     awfulActivity,
-                    awfulActivity!!.getResources().getText(R.string.file_removed),
+                    awfulActivity!!.resources.getText(R.string.file_removed),
                     Toast.LENGTH_SHORT
                 )
                 removeToast.show()
@@ -778,7 +776,7 @@ class PostThreadFragment : AwfulFragment() {
     }
 
 
-    public override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
+    override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
         super.onPreferenceChange(prefs, key)
         //refresh the menu to show/hide attach option (plat only)
         invalidateOptionsMenu()
@@ -876,12 +874,16 @@ class PostThreadFragment : AwfulFragment() {
                 val type = split[0]
 
                 var contentUri: Uri? = null
-                if ("image" == type) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                } else if ("video" == type) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                } else if ("audio" == type) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                when (type) {
+                    "image" -> {
+                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    }
+                    "video" -> {
+                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                    }
+                    "audio" -> {
+                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    }
                 }
 
                 val selection = "_id=?"
@@ -1020,7 +1022,7 @@ class PostThreadFragment : AwfulFragment() {
         }
     }
 
-    public override fun getTitle(): String {
+    override fun getTitle(): String {
         return "Post Thread"
     }
 
@@ -1033,7 +1035,7 @@ class PostThreadFragment : AwfulFragment() {
     */
     private inner class DraftThreadLoaderCallback : LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(aId: Int, aArgs: Bundle?): Loader<Cursor> {
-            Log.i(Companion.TAG, "Create Thread Cursor: " + mForumId)
+            Log.i(Companion.TAG, "Create Thread Cursor: $mForumId")
             return CursorLoader(
                 activity!!,
                 ContentUris.withAppendedId(AwfulMessage.CONTENT_URI_THREAD, mForumId.toLong()),
@@ -1063,7 +1065,7 @@ class PostThreadFragment : AwfulFragment() {
 
             savedDraft = SavedDraft(draftThread, subject, draftIconId, draftIconUrl, draftTimestamp)
             if (Constants.DEBUG) {
-                Log.i(Companion.TAG, "Saved thread message: " + draftThread)
+                Log.i(Companion.TAG, "Saved thread message: $draftThread")
             }
         }
 

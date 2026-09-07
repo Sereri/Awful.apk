@@ -111,14 +111,14 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
 
         val result = aInflater.inflate(R.layout.private_message_fragment, aContainer, false)
 
-        messageWebView = result.findViewById<AwfulWebView?>(R.id.messagebody)
-        mHideButton = result.findViewById<ImageButton>(R.id.hide_message)
+        messageWebView = result.findViewById(R.id.messagebody)
+        mHideButton = result.findViewById(R.id.hide_message)
         mHideButton?.setOnClickListener(this)
-        mRecipient = result.findViewById<EditText>(R.id.message_user)
-        mSubject = result.findViewById<EditText>(R.id.message_subject)
-        mUsername = result.findViewById<TextView>(R.id.username)
-        mPostdate = result.findViewById<TextView>(R.id.post_date)
-        mTitle = result.findViewById<TextView>(R.id.message_title)
+        mRecipient = result.findViewById(R.id.message_user)
+        mSubject = result.findViewById(R.id.message_subject)
+        mUsername = result.findViewById(R.id.username)
+        mPostdate = result.findViewById(R.id.post_date)
+        mTitle = result.findViewById(R.id.message_title)
 
         messageComposer =
             getChildFragmentManager().findFragmentById(R.id.message_composer_fragment) as MessageComposer?
@@ -201,7 +201,7 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
         }
     }
 
-    public override fun onActivityCreated(aSavedState: Bundle?) {
+    override fun onActivityCreated(aSavedState: Bundle?) {
         super.onActivityCreated(aSavedState)
         restartLoader(pmId, null, mPMDataCallback)
         requireActivity().contentResolver
@@ -274,23 +274,21 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
 
     fun sendPM() {
         queueRequest(
-            SendPrivateMessageRequest(requireActivity(), pmId).build(
-                this,
-                object : AwfulResultCallback<Void?> {
-                    override fun success(result: Void?) {
-						mDialog?.dismiss()
-						mDialog = null
-                        alertView.setTitle("Message Sent!").setIcon(R.drawable.ic_check_circle)
-                            .show()
-                        closeMessage()
-                    }
+            SendPrivateMessageRequest(requireActivity(), pmId).build(this,object : AwfulResultCallback<Void?> {
+                override fun success(result: Void?) {
+                    mDialog?.dismiss()
+                    mDialog = null
+                    alertView.setTitle("Message Sent!").setIcon(R.drawable.ic_check_circle)
+                        .show()
+                    closeMessage()
+                }
 
-                    override fun failure(error: VolleyError?) {
-						mDialog?.dismiss()
-						mDialog = null
-                        alertView.setTitle("Failed to send!").setSubtitle("Draft Saved").show()
-                    }
-                })
+                override fun failure(error: VolleyError?) {
+                    mDialog?.dismiss()
+                    mDialog = null
+                    alertView.setTitle("Failed to send!").setSubtitle("Draft Saved").show()
+                }
+            })
         )
     }
 
@@ -326,7 +324,7 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
 
     override fun onResume() {
         super.onResume()
-		messageWebView?.onResume()
+        messageWebView?.onResume()
     }
 
     override fun onPause() {
@@ -334,17 +332,17 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
         if (pmId > 0) {
             saveReply()
         }
-		messageWebView?.onPause()
+        messageWebView?.onPause()
     }
 
-    public override fun onDestroy() {
+    override fun onDestroy() {
         super.onDestroy()
         loaderManager.destroyLoader(pmId)
         requireActivity().contentResolver.unregisterContentObserver(mPMDataCallback)
         requireActivity().contentResolver.unregisterContentObserver(pmReplyObserver)
     }
 
-    public override fun onDetach() {
+    override fun onDetach() {
         super.onDetach()
         mDialog?.dismiss()
         mDialog = null
@@ -385,7 +383,7 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
         LoaderManager.LoaderCallbacks<Cursor> {
         override fun onCreateLoader(aId: Int, aArgs: Bundle?): Loader<Cursor?> {
             // TODO: 05/05/2017 if pmId is negative (i.e. an invalid number) the load will fail - try and avoid doing it?
-            Log.i(Companion.TAG, "Create PM Cursor:" + pmId)
+            Log.i(Companion.TAG, "Create PM Cursor:$pmId")
             return CursorLoader(
                 requireActivity(),
                 ContentUris.withAppendedId(AwfulMessage.CONTENT_URI, pmId.toLong()),
@@ -401,7 +399,7 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
             // the Cursor will be null if pmId is negative
             if (aData != null && aData.moveToFirst()) {
                 Log.v(Companion.TAG, "PM load finished, populating: " + aData.count)
-				messageWebView?.setBodyHtml(null)
+                messageWebView?.setBodyHtml(null)
                 val title = aData.getString(aData.getColumnIndexOrThrow(AwfulMessage.TITLE))
                 mTitle?.text = title
                 messageWebView?.setBodyHtml(
@@ -457,7 +455,7 @@ class MessageFragment : AwfulFragment, View.OnClickListener {
     }
 
 
-    public override fun getTitle(): String {
+    override fun getTitle(): String {
         return mTitle?.text.toString()
     }
 

@@ -38,7 +38,7 @@ class AlertView(private val activity: FragmentActivity?) {
     @DrawableRes
     private var iconResId = 0
     private var animation: Animation? = null
-    private var displayLength = Toast.LENGTH_SHORT;
+    private var displayLength = Toast.LENGTH_SHORT
 
 
     fun setTitle(@StringRes title: Int): AlertView {

@@ -1,124 +1,132 @@
-package com.ferg.awfulapp.widget;
+package com.ferg.awfulapp.widget
 
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.graphics.Insets;
-import android.os.Build;
-import androidx.annotation.ColorInt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.WindowInsets;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.TextView;
-
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.databinding.PageBarBinding;
-import com.ferg.awfulapp.util.AwfulUtils;
-
-import java.util.Locale;
+import android.annotation.TargetApi
+import android.content.Context
+import android.os.Build
+import android.util.AttributeSet
+import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowInsets
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.TextView
+import androidx.annotation.ColorInt
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.databinding.PageBarBinding
+import com.ferg.awfulapp.util.AwfulUtils.isAtLeast
+import java.util.Locale
 
 /**
  * Created by baka kaba on 25/05/2016.
- * <p/>
+ * 
+ * 
  * A navigation/refresh widget used for paged views.
- * <p/>
- * Add a listener through {@link #setListener(PageBarCallbacks)} to respond to user interactions.
+ * 
+ * 
+ * Add a listener through [.setListener] to respond to user interactions.
  */
-public class PageBar extends FrameLayout {
+class PageBar : FrameLayout {
+    lateinit var binding: PageBarBinding
 
-    public static final int FIRST_PAGE = 1;
-    PageBarBinding binding;
+    private var listener: PageBarCallbacks? = null
 
-    private PageBarCallbacks listener = null;
-
-    public PageBar(Context context) {
-        super(context);
-        init();
+    constructor(context: Context) : super(context) {
+        init()
     }
 
-    public PageBar(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+        init()
     }
 
-    public PageBar(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public PageBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init();
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    ) {
+        init()
     }
 
 
-    private void init() {
-        binding = PageBarBinding.inflate(LayoutInflater.from(getContext()), this, true);
-        updatePagePosition(FIRST_PAGE, FIRST_PAGE);
-        onRefreshClicked(binding.refresh);
-        onRefreshClicked(binding.refreshAlt);
-        onNavButtonClicked(binding.nextPage);
-        onNavButtonClicked(binding.prevPage);
-        onPageNumberClicked(binding.pageCountText);
-        binding.pageBarContainer.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener(){
-            @Override
-            public void onViewAttachedToWindow(@NonNull View view) {
-                checkPadding();
+    private fun init() {
+        binding = PageBarBinding.inflate(LayoutInflater.from(context), this, true)
+        updatePagePosition(FIRST_PAGE, FIRST_PAGE)
+        onRefreshClicked(binding.refresh)
+        onRefreshClicked(binding.refreshAlt)
+        onNavButtonClicked(binding.nextPage)
+        onNavButtonClicked(binding.prevPage)
+        onPageNumberClicked(binding.pageCountText)
+        binding.pageBarContainer.addOnAttachStateChangeListener(object :
+            OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                checkPadding()
             }
-            @Override
-            public void onViewDetachedFromWindow(@NonNull View view) {}
-        });
+
+            override fun onViewDetachedFromWindow(view: View) {}
+        })
     }
 
-    public void checkPadding() {
+    fun checkPadding() {
         //check edge-to-edge
-        if(AwfulUtils.isAtLeast(Build.VERSION_CODES.VANILLA_ICE_CREAM)){
-            Insets inset = binding.getRoot().getRootWindowInsets().getInsets(WindowInsets.Type.systemGestures());
+        if (isAtLeast(Build.VERSION_CODES.VANILLA_ICE_CREAM)) {
+            val inset = binding.getRoot().rootWindowInsets
+                .getInsets(WindowInsets.Type.systemGestures())
             // check navigation buttons
             if (inset.left <= 0) {
-                View container = binding.pageBarContainer;
-                int buttonSpacing = (int) ((20 * getResources().getDisplayMetrics().density) + container.getPaddingBottom());
-                container.setPadding(container.getPaddingLeft(), container.getPaddingTop(), container.getPaddingRight(), buttonSpacing);
+                val container: View = binding.pageBarContainer
+                val buttonSpacing =
+                    ((20 * resources.displayMetrics.density) + container.paddingBottom).toInt()
+                container.setPadding(
+                    container.paddingLeft,
+                    container.paddingTop,
+                    container.paddingRight,
+                    buttonSpacing
+                )
             }
         }
     }
 
     /**
      * Update the page bar to reflect the current position in a range of pages.
-     * <p/>
+     * 
+     * 
      * This will affect the layout of the navigation buttons, depending on where the current page is
      * in the range. Previous and next page buttons only appear when there's a page to go to, and
      * if only the previous page button is visible, the refresh button will move to the right side.
-     * <p/>
+     * 
+     * 
      * This widget does no page number validity checks, except for ignoring numbers below
-     * {@link #FIRST_PAGE} when displaying the lastPage value.
-     *
+     * [.FIRST_PAGE] when displaying the lastPage value.
+     * 
      * @param currentPage the number of the current page
      * @param lastPage    the number of last page in the page range
      */
-    public void updatePagePosition(int currentPage, int lastPage) {
-        PageType type;
-        if (currentPage == FIRST_PAGE) {
-            type = (currentPage == lastPage) ? PageType.SINGLE : PageType.FIRST_OF_MANY;
+    fun updatePagePosition(currentPage: Int, lastPage: Int) {
+        val type = if (currentPage == FIRST_PAGE) {
+            if (currentPage == lastPage) PageType.SINGLE else PageType.FIRST_OF_MANY
         } else if (currentPage == lastPage) {
-            type = PageType.LAST_OF_MANY;
+            PageType.LAST_OF_MANY
         } else {
-            type = PageType.ONE_OF_MANY;
+            PageType.ONE_OF_MANY
         }
         // if currentPage is greater than lastPage, then lastPage isn't a meaningful page count (-1 is passed in when we don't have that data anyway)
-        boolean hasPageCount = lastPage >= currentPage;
-        updateDisplay(currentPage, lastPage, type, hasPageCount);
+        val hasPageCount = lastPage >= currentPage
+        updateDisplay(currentPage, lastPage, type, hasPageCount)
     }
 
 
-    private void updateDisplay(int currentPage, int lastPage, @NonNull PageType pageType, boolean hasPageCount) {
-        String template = hasPageCount ? "%d / %d" : "%d";
-        binding.pageCountText.setText(String.format(Locale.getDefault(), template, currentPage, lastPage));
+    private fun updateDisplay(
+        currentPage: Int,
+        lastPage: Int,
+        pageType: PageType,
+        hasPageCount: Boolean
+    ) {
+        val template = if (hasPageCount) "%d / %d" else "%d"
+        binding.pageCountText.text = String.format(
+            Locale.getDefault(),
+            template,
+            currentPage,
+            lastPage
+        )
         /*
             hide and show the appropriate icons for each state:
             - don't show the prev/next arrow on the first/last page
@@ -126,30 +134,34 @@ public class PageBar extends FrameLayout {
             - if both sides have an arrow (or neither does), show on the left side
             doing all the hiding before the showing should ensure clean transition animations, otherwise you can get stuff appearing on top of its replacement etc
         */
-        switch (pageType) {
-            case SINGLE:
-                binding.prevPage.setVisibility(GONE);
-                binding.nextPage.setVisibility(GONE);
-                binding.refreshAlt.setVisibility(GONE);
-                binding.refresh.setVisibility(VISIBLE);
-                break;
-            case FIRST_OF_MANY:
-                binding.prevPage.setVisibility(GONE);
-                binding.refreshAlt.setVisibility(GONE);
-                binding.refresh.setVisibility(VISIBLE);
-                binding.nextPage.setVisibility(VISIBLE);
-                break;
-            case ONE_OF_MANY:
-                binding.refreshAlt.setVisibility(GONE);
-                binding.prevPage.setVisibility(VISIBLE);
-                binding.refresh.setVisibility(VISIBLE);
-                binding.nextPage.setVisibility(VISIBLE);
-                break;
-            case LAST_OF_MANY:
-                binding.nextPage.setVisibility(GONE);
-                binding.refresh.setVisibility(GONE);
-                binding.prevPage.setVisibility(VISIBLE);
-                binding.refreshAlt.setVisibility(VISIBLE);
+        when (pageType) {
+            PageType.SINGLE -> {
+                binding.prevPage.visibility = GONE
+                binding.nextPage.visibility = GONE
+                binding.refreshAlt.visibility = GONE
+                binding.refresh.visibility = VISIBLE
+            }
+
+            PageType.FIRST_OF_MANY -> {
+                binding.prevPage.visibility = GONE
+                binding.refreshAlt.visibility = GONE
+                binding.refresh.visibility = VISIBLE
+                binding.nextPage.visibility = VISIBLE
+            }
+
+            PageType.ONE_OF_MANY -> {
+                binding.refreshAlt.visibility = GONE
+                binding.prevPage.visibility = VISIBLE
+                binding.refresh.visibility = VISIBLE
+                binding.nextPage.visibility = VISIBLE
+            }
+
+            PageType.LAST_OF_MANY -> {
+                binding.nextPage.visibility = GONE
+                binding.refresh.visibility = GONE
+                binding.prevPage.visibility = VISIBLE
+                binding.refreshAlt.visibility = VISIBLE
+            }
         }
     }
 
@@ -157,76 +169,63 @@ public class PageBar extends FrameLayout {
     /**
      * Set a listener for callbacks when the user interacts with the bar.
      */
-    public void setListener(@Nullable PageBarCallbacks listener) {
-        this.listener = listener;
+    fun setListener(listener: PageBarCallbacks?) {
+        this.listener = listener
     }
 
-    public void onRefreshClicked(ImageButton button) {
-        button.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onRefreshClicked();
-                }
-            }
-        });
+    fun onRefreshClicked(button: ImageButton) {
+        button.setOnClickListener {
+            listener?.onRefreshClicked()
+        }
     }
 
-    public void onNavButtonClicked(ImageButton button) {
-        button.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onPageNavigation(button.getId() == R.id.next_page);
-                }
-            }
-        });
+    fun onNavButtonClicked(button: ImageButton) {
+        button.setOnClickListener {
+            listener?.onPageNavigation(button.id == R.id.next_page)
+        }
     }
 
-    public void onPageNumberClicked(TextView pageNumber) {
-        pageNumber.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onPageNumberClicked();
-                }
-            }
-        });
-
+    fun onPageNumberClicked(pageNumber: TextView) {
+        pageNumber.setOnClickListener {
+            listener?.onPageNumberClicked()
+        }
     }
 
     // TODO: probably best to add a setter for the stuff that uses this
+    val textView: View
+        /**
+         * Get a reference to the page text component on the page bar.
+         */
+        get() = binding.pageCountText
 
-    /**
-     * Get a reference to the page text component on the page bar.
-     */
-    @NonNull
-    public View getTextView() {
-        return binding.pageCountText;
+    fun setTextColour(@ColorInt textColour: Int) {
+        binding.pageCountText.setTextColor(textColour)
     }
 
-    public void setTextColour(@ColorInt int textColour) {
-        binding.pageCountText.setTextColor(textColour);
+    private enum class PageType {
+        SINGLE, FIRST_OF_MANY, LAST_OF_MANY, ONE_OF_MANY
     }
 
-    private enum PageType {SINGLE, FIRST_OF_MANY, LAST_OF_MANY, ONE_OF_MANY}
-
-    public interface PageBarCallbacks {
+    interface PageBarCallbacks {
         /**
          * Called when the user clicks on the next or previous page buttons.
-         *
+         * 
          * @param nextPage true for next page, false for previous
          */
-        void onPageNavigation(boolean nextPage);
+        fun onPageNavigation(nextPage: Boolean)
 
         /**
          * Called when the user clicks on a refresh button.
          */
-        void onRefreshClicked();
+        fun onRefreshClicked()
 
         /**
          * Called when the user clicks on the page number display.
          */
-        void onPageNumberClicked();
+        fun onPageNumberClicked()
+    }
+
+    companion object {
+        const val FIRST_PAGE: Int = 1
     }
 }

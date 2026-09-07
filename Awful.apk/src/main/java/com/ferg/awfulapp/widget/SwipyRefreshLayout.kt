@@ -1,54 +1,52 @@
-package com.ferg.awfulapp.widget;
+package com.ferg.awfulapp.widget
 
-import android.content.Context;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
+import android.content.Context
+import android.util.AttributeSet
+import android.view.MotionEvent
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
 
 /**
  * Created by baka kaba on 15/08/2015.
- * <p>
- * <p>This is a (hopefully) temporary extension of the SwipyRefreshLayout library,
+ * 
+ * 
+ * 
+ * This is a (hopefully) temporary extension of the SwipyRefreshLayout library,
  * to catch and swallow an exception that seems to be caused by an
- * <a href="https://code.google.com/p/android/issues/detail?id=64553">internal bug</a>.</p>
- * <p>
- * <p>When/if this is fixed, remove the same code from {@link com.ferg.awfulapp.SwipeLockViewPager} too thanks!</p>
+ * [internal bug](https://code.google.com/p/android/issues/detail?id=64553).
+ * 
+ * 
+ * 
+ * When/if this is fixed, remove the same code from [com.ferg.awfulapp.SwipeLockViewPager] too thanks!
  */
-public class SwipyRefreshLayout extends com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout {
+class SwipyRefreshLayout : SwipyRefreshLayout {
+    constructor(context: Context) : super(context)
 
-    public SwipyRefreshLayout(Context context) {
-        super(context);
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        return antiCrashEventHandler(ev, true)
     }
 
-    public SwipyRefreshLayout(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return antiCrashEventHandler(ev, true);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        return antiCrashEventHandler(ev, false);
+    override fun onTouchEvent(ev: MotionEvent?): Boolean {
+        return antiCrashEventHandler(ev, false)
     }
 
 
     /**
      * Fix to avoid apparent bug in the support library, with infrequent crashing from an IAE.
-     * (See <a href="https://code.google.com/p/android/issues/detail?id=64553">this issue</a>.)
-     *
+     * (See [this issue](https://code.google.com/p/android/issues/detail?id=64553).)
+     * 
      * @param ev           Motion event being passed
      * @param intercepting Set true when handling onInterceptTouchEvent
      * @return False if the exception was thrown, otherwise the result of the superclass call
      */
-    private boolean antiCrashEventHandler(MotionEvent ev, boolean intercepting) {
-        boolean result = false;
+    private fun antiCrashEventHandler(ev: MotionEvent?, intercepting: Boolean): Boolean {
+        var result = false
         try {
-            result = intercepting ? super.onInterceptTouchEvent(ev) : super.onTouchEvent(ev);
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+            result = if (intercepting) super.onInterceptTouchEvent(ev) else super.onTouchEvent(ev)
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
         }
-        return result;
+        return result
     }
 }

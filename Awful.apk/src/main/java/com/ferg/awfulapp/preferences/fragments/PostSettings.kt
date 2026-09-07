@@ -131,19 +131,21 @@ class PostSettings : SettingsFragment() {
             val maxPages = Constants.ITEMS_PER_PAGE
 
             MinMaxNumberPicker(
-                activity,
+                requireActivity(),
                 minPages,
                 maxPages,
-                mPrefs!!.postPerPage,
-                getString(R.string.setting_posts_per_page)
-            ) { button: Int, resultValue: Int ->
-                if (button == DialogInterface.BUTTON_POSITIVE) {
-                    val key = preference.key
-                    if (key == getString(R.string.pref_key_post_per_page)) {
-                        mPrefs?.setPreference(IntPreference.POST_PER_PAGE, resultValue)
+                mPrefs?.postPerPage ?: 40,
+                getString(R.string.setting_posts_per_page),
+             object: MinMaxNumberPicker.ResultListener {
+                override fun onButtonPressed(button: Int, resultValue: Int) {
+                    if (button == DialogInterface.BUTTON_POSITIVE) {
+                        val key = preference.key
+                        if (key == getString(R.string.pref_key_post_per_page)) {
+                            mPrefs?.setPreference(IntPreference.POST_PER_PAGE, resultValue)
+                        }
                     }
                 }
-            }.show()
+            }).show()
 
             return true
         }

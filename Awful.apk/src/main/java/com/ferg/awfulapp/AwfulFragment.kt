@@ -105,7 +105,11 @@ abstract class AwfulFragment : Fragment(), AwfulPreferences.AwfulPreferenceUpdat
         // set up the probation and progress bar, if we have them - use this ID when adding to a layout!
         progressBar = v.findViewById(R.id.progress_bar)
         probationBar = v.findViewById(R.id.probation_bar)
-        probationBar?.setListener { navigate(NavigationEvent.LepersColony(prefs.userId)) }
+        probationBar?.setListener(object : ProbationBar.Callbacks {
+            override fun onProbationButtonClicked() {
+                navigate(NavigationEvent.LepersColony(prefs.userId))
+            }
+        })
         awfulActivity!!.setPreferredFont(v)
         return v
     }

@@ -1,108 +1,97 @@
-package com.ferg.awfulapp.widget;
+package com.ferg.awfulapp.widget
 
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.os.Build;
-import androidx.annotation.Nullable;
-import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.databinding.ProbationBarBinding;
-import com.ferg.awfulapp.preferences.AwfulPreferences;
-import com.ferg.awfulapp.preferences.BooleanPreference;
-
-import java.text.DateFormat;
-import java.util.Date;
-
+import android.annotation.TargetApi
+import android.content.Context
+import android.os.Build
+import android.util.AttributeSet
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.LinearLayout
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.databinding.ProbationBarBinding
+import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
+import com.ferg.awfulapp.preferences.BooleanPreference
+import java.text.DateFormat
+import java.util.Date
 
 /**
  * Created by baka kaba on 25/05/2016.
- * <p/>
+ * 
+ * 
  * Probation bar widget, for dropping into UI that needs it.
- * <p/>
- * Set the probation time with {@link #setProbation(Long)} to show or hide the widget, and set
- * a click listener with {@link #setListener(Callbacks)} to handle user interaction.
+ * 
+ * 
+ * Set the probation time with [.setProbation] to show or hide the widget, and set
+ * a click listener with [.setListener] to handle user interaction.
  */
-public class ProbationBar extends LinearLayout {
+class ProbationBar : LinearLayout {
+    lateinit var binding: ProbationBarBinding
 
-    ProbationBarBinding binding;
+    private var listener: Callbacks? = null
 
-    @Nullable
-    private Callbacks listener = null;
-
-    public ProbationBar(Context context) {
-        super(context);
-        init();
+    constructor(context: Context?) : super(context) {
+        init()
     }
 
-    public ProbationBar(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
+        init()
     }
 
-    public ProbationBar(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    ) {
+        init()
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public ProbationBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init();
-    }
-
-    private void init() {
-        binding = ProbationBarBinding.inflate(LayoutInflater.from(getContext()), this, true);
-        binding.closeProbationBar.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AwfulPreferences.getInstance().setPreference(BooleanPreference.PROBATION_IGNORE, true);
+    private fun init() {
+        binding = ProbationBarBinding.inflate(LayoutInflater.from(context), this, true)
+        binding.closeProbationBar.setOnClickListener {
+            getInstance().setPreference(
+                BooleanPreference.PROBATION_IGNORE,
+                true
+            )
+        }
+        binding.goToLC.setOnClickListener {
+            if (listener != null) {
+                listener!!.onProbationButtonClicked()
             }
-        });
-        binding.goToLC.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onProbationButtonClicked();
-                }
-            }
-        });
+        }
     }
 
 
     /**
      * Set the listener for user interaction callbacks, i.e. clicking the Leper Colony button
-     *
+     * 
      * @param listener An optional callback listener
      */
-    public void setListener(@Nullable Callbacks listener) {
-        this.listener = listener;
+    fun setListener(listener: Callbacks?) {
+        this.listener = listener
     }
 
 
     /**
      * Display the probation notice for the provided deadline, or hide the probation bar.
-     *
+     * 
      * @param probationTime the probation expiry timestamp, or null to hide the bar
      */
-    public void setProbation(@Nullable Long probationTime) {
+    fun setProbation(probationTime: Long?) {
         if (probationTime == null) {
-            this.setVisibility(View.GONE);
-            return;
+            this.visibility = GONE
+            return
         }
-        this.setVisibility(VISIBLE);
-        String probeEnd = DateFormat.getDateTimeInstance().format(new Date(probationTime));
-        binding.probationMessage.setText(String.format(binding.getRoot().getResources().getString(R.string.probation_message), probeEnd));
+        this.visibility = VISIBLE
+        val probeEnd = DateFormat.getDateTimeInstance().format(Date(probationTime))
+        binding.probationMessage.text = String.format(
+            binding.getRoot().resources.getString(R.string.probation_message), probeEnd
+        )
     }
 
-    public interface Callbacks {
+    interface Callbacks {
         /**
          * Called when the 'go to leper colony' button is clicked on the probation bar
          */
-        void onProbationButtonClicked();
+        fun onProbationButtonClicked()
     }
 }

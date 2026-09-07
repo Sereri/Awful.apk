@@ -26,6 +26,7 @@ import com.ferg.awfulapp.util.bind
 import com.ferg.awfulapp.util.tryGetInt
 import com.ferg.awfulapp.webview.AwfulWebView
 import com.ferg.awfulapp.webview.WebViewJsInterface
+import com.ferg.awfulapp.widget.MinMaxNumberPicker
 import com.ferg.awfulapp.widget.PageBar
 import com.ferg.awfulapp.widget.PagePicker
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
@@ -98,9 +99,11 @@ class LepersColonyFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         pageBar.setListener(object : PageBar.PageBarCallbacks {
             override fun onPageNavigation(nextPage: Boolean) = turnPage(nextPage)
             override fun onRefreshClicked() = refreshPage()
-            override fun onPageNumberClicked() = PagePicker(activity, lastPage, navigationState.page) { button, resultValue ->
-                if (button == BUTTON_POSITIVE) navigationState.copy(page = resultValue).run(::navigate)
-            }.show()
+            override fun onPageNumberClicked() = PagePicker(requireActivity(), lastPage, navigationState.page, object : MinMaxNumberPicker.ResultListener {
+                override fun onButtonPressed(button: Int, resultValue: Int) {
+                    if (button == BUTTON_POSITIVE) navigationState.copy(page = resultValue).run(::navigate)
+                }
+            }).show()
         })
 
         webView.initialise()

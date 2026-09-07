@@ -1,254 +1,243 @@
-package com.ferg.awfulapp.widget;
+package com.ferg.awfulapp.widget
 
+import android.os.Bundle
+import android.util.Log
+import android.util.SparseArray
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.PopupMenu
+import android.widget.Toast
+import androidx.appcompat.view.menu.MenuBuilder
+import androidx.fragment.app.Fragment
+import com.android.volley.VolleyError
+import com.ferg.awfulapp.R
+import com.ferg.awfulapp.constants.Constants.POST_ICON_REQUEST_TYPES
+import com.ferg.awfulapp.forums.Forum
+import com.ferg.awfulapp.forums.ForumRepository.Companion.getInstance
+import com.ferg.awfulapp.forums.ForumStructure
+import com.ferg.awfulapp.network.NetworkUtils.queueRequest
+import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
+import com.ferg.awfulapp.task.PostIconRequest
+import com.ferg.awfulapp.thread.AwfulPostIcon
+import com.github.rubensousa.bottomsheetbuilder.adapter.BottomSheetItemClickListener
 
-import android.content.Context;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.view.menu.MenuBuilder;
-import android.util.Log;
-import android.util.SparseArray;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.Toast;
-
-import com.android.volley.VolleyError;
-import com.ferg.awfulapp.R;
-import com.ferg.awfulapp.constants.Constants;
-import com.ferg.awfulapp.forums.Forum;
-import com.ferg.awfulapp.forums.ForumRepository;
-import com.ferg.awfulapp.forums.ForumStructure;
-import com.ferg.awfulapp.task.AwfulRequest;
-import com.ferg.awfulapp.task.PostIconRequest;
-import com.ferg.awfulapp.thread.AwfulPostIcon;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-
-import static com.ferg.awfulapp.constants.Constants.POST_ICON_REQUEST_TYPES.FORUM_POST;
-import static com.ferg.awfulapp.constants.Constants.POST_ICON_REQUEST_TYPES.PM;
-import static com.ferg.awfulapp.network.NetworkUtils.queueRequest;
-import static com.ferg.awfulapp.thread.AwfulPostIcon.BLANK_ICON;
 
 /**
  * Created by baka kaba on 19/11/2016.
- * <p>
+ * 
+ * 
  * A component that allows the user to select a thread/PM icon.
- * <p>
- * You need to call {@link #useForumIcons(int)} or {@link #usePrivateMessageIcons()} to set the
+ * 
+ * 
+ * You need to call [.useForumIcons] or [.usePrivateMessageIcons] to set the
  * source of the icons the user can pick from, and then the icon view can be clicked to display
- * the icon sheet. Calling {@link #getIcon()} will get the currently selected icon, which defaults
+ * the icon sheet. Calling [.getIcon] will get the currently selected icon, which defaults
  * to a blank 'no icon' version.
- *
- * @see AwfulPostIcon#BLANK_ICON
+ * 
+ * @see AwfulPostIcon.BLANK_ICON
  */
-
-public class ThreadIconPicker extends Fragment {
-
-    private static final String TAG = ThreadIconPicker.class.getSimpleName();
+class ThreadIconPicker : Fragment() {
+    lateinit var selectedIconView: ImageView
 
     /**
-     * fake forum ID so we can mix in the PM icons with the other forum icons
+     * Get the currently selected icon.
      */
-    private static final int PM_FORUM_ID = -324546;
+    var icon: AwfulPostIcon = AwfulPostIcon.BLANK_ICON
+        private set
+    private var currentForumId: Int? = null
+    private var bottomSheet: ThemedBottomSheetDialog? = null
 
-    private static final SparseArray<List<AwfulPostIcon>> iconsCache = new SparseArray<>();
-    ImageView selectedIconView;
-    private AwfulPostIcon currentIcon = BLANK_ICON;
-    @Nullable
-    private Integer currentForumId = null;
-    private ThemedBottomSheetDialog bottomSheet = null;
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.icon_picker, container, true);
-        selectedIconView = view.findViewById(R.id.selected_icon);
-        selectedIconView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPicker();
-            }
-        });
-        selectedIconView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                secretForumCycler();
-                return true;
-            }
-        });
-        return view;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = inflater.inflate(R.layout.icon_picker, container, true)
+        selectedIconView = view.findViewById<ImageView>(R.id.selected_icon)
+        selectedIconView.setOnClickListener { showPicker() }
+        selectedIconView.setOnLongClickListener {
+            secretForumCycler()
+            true
+        }
+        return view
     }
 
 
     /**
      * Set the picker to display the icons for a specific forum.
-     * <p>
+     * 
+     * 
      * This clears any selected icon.
-     * If you need to display the icons for private messages, call {@link #usePrivateMessageIcons()}
+     * If you need to display the icons for private messages, call [.usePrivateMessageIcons]
      * instead of passing an ID here.
-     *
+     * 
      * @param forumId the forum's ID on the site
      */
-    public void useForumIcons(int forumId) {
-        currentForumId = forumId;
-        useIcon(BLANK_ICON);
+    fun useForumIcons(forumId: Int) {
+        currentForumId = forumId
+        useIcon(AwfulPostIcon.BLANK_ICON)
         // check if we already loaded these
         if (iconsCache.get(forumId) != null) {
-            Log.d(TAG, "useForumTags: Already cached for forum id: " + forumId);
-            return;
+            Log.d(TAG, "useForumTags: Already cached for forum id: " + forumId)
+            return
         }
         // we need to fetch them icons
-        loadTags(forumId == PM_FORUM_ID ? PM : FORUM_POST, forumId);
+        loadTags(
+            if (forumId == PM_FORUM_ID) POST_ICON_REQUEST_TYPES.PM else POST_ICON_REQUEST_TYPES.FORUM_POST,
+            forumId
+        )
     }
 
 
     /**
      * Set the picker to display the icons for private messages.
-     * <p>
+     * 
+     * 
      * This clears any selected icon.
      */
-    public void usePrivateMessageIcons() {
-        useForumIcons(PM_FORUM_ID);
+    fun usePrivateMessageIcons() {
+        useForumIcons(PM_FORUM_ID)
     }
 
 
     /**
      * Show the bottom sheet containing the current icon set.
-     * <p>
-     * If an icon source hasn't been selected through {@link #useForumIcons(int)} or
-     * {@link #usePrivateMessageIcons()}, this will do nothing.
+     * 
+     * 
+     * If an icon source hasn't been selected through [.useForumIcons] or
+     * [.usePrivateMessageIcons], this will do nothing.
      */
-    public void showPicker() {
-        if (currentForumId == null) {
-            Log.w(TAG, "The user tried to select an icon before a source forum was set!\nYou should prevent this or initialise with one");
-            return;
+    fun showPicker() {
+        val forumId = currentForumId ?: run {
+            Log.w(TAG,"The user tried to select an icon before a source forum was set!\nYou should prevent this or initialise with one")
+            return
         }
-        List<AwfulPostIcon> icons = iconsCache.get(currentForumId);
-        if (icons == null) {
-            Toast.makeText(getContext(), "Icons not loaded", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        showBottomSheet(icons);
+        val icons: MutableList<AwfulPostIcon> = iconsCache.get(forumId) ?: return Toast.makeText(context, "Icons not loaded", Toast.LENGTH_SHORT).show()
+        showBottomSheet(icons)
     }
 
 
     /**
      * Display the bottom sheet populated with a list of icons the user can select from.
      */
-    private void showBottomSheet(@NonNull List<AwfulPostIcon> icons) {
+    private fun showBottomSheet(icons: MutableList<AwfulPostIcon>) {
         if (bottomSheet != null) {
-            bottomSheet.dismiss();
+            bottomSheet?.dismiss()
         }
-        bottomSheet = new ThemedBottomSheetDialog(generatePostIconMenu(icons));
+        bottomSheet = ThemedBottomSheetDialog(generatePostIconMenu(icons))
         // each icon's ID corresponds to its index in the list
-        bottomSheet.setClickListeners(item -> useIcon(icons.get(item.getItemId())), null, null);
-        bottomSheet.toggleVisible(getActivity());
+        bottomSheet!!.setClickListeners({ item: MenuItem? ->
+            useIcon(
+                icons[item!!.itemId]
+            )
+        }, null, null)
+        bottomSheet!!.toggleVisible(requireActivity())
     }
 
 
     /**
      * Set the currently selected icon.
      */
-    private void useIcon(@NonNull AwfulPostIcon icon) {
-        currentIcon = icon;
+    private fun useIcon(icon: AwfulPostIcon) {
+        this.icon = icon
         if (icon.drawable != null) {
-            selectedIconView.setImageDrawable(icon.drawable);
+            selectedIconView.setImageDrawable(icon.drawable)
         } else {
-            selectedIconView.setImageResource(icon.drawableId);
+            selectedIconView.setImageResource(icon.drawableId)
         }
     }
 
-    public void useIcon(@NonNull String iconId, @NonNull String iconUrl) {
-        AwfulPostIcon newIcon = new AwfulPostIcon(iconId, iconUrl, getContext());
-        useIcon(newIcon);
-    }
-
-    /**
-     * Get the currently selected icon.
-     */
-    @NonNull
-    public AwfulPostIcon getIcon() {
-        return currentIcon;
+    fun useIcon(iconId: String, iconUrl: String) {
+        val newIcon = AwfulPostIcon(iconId, iconUrl, requireContext())
+        useIcon(newIcon)
     }
 
 
-    private void loadTags(@NonNull Constants.POST_ICON_REQUEST_TYPES iconType, int forumId) {
+    private fun loadTags(iconType: POST_ICON_REQUEST_TYPES, forumId: Int) {
         // TODO: 19/11/2016 handle network requests
-        queueRequest(new PostIconRequest(getActivity(), iconType, forumId)
-                .build(null, new AwfulRequest.AwfulResultCallback<ArrayList<AwfulPostIcon>>() {
-
-                    @Override
-                    public void success(ArrayList<AwfulPostIcon> result) {
+        queueRequest(
+            PostIconRequest(requireActivity(), iconType, forumId)
+                .build(null, object : AwfulResultCallback<ArrayList<AwfulPostIcon>> {
+                    override fun success(result: ArrayList<AwfulPostIcon>) {
                         // add a blank 'no icon' icon too
-                        if(!result.isEmpty()) {
-                            result.add(0, BLANK_ICON);
+                        if (!result.isEmpty()) {
+                            result.add(0, AwfulPostIcon.BLANK_ICON)
                         }
                         // update the cache with these new icons
-                        if (iconType == Constants.POST_ICON_REQUEST_TYPES.PM) {
-                            iconsCache.put(PM_FORUM_ID, result);
-                        } else if (iconType == FORUM_POST) {
-                            iconsCache.put(forumId, result);
-                        } else {
-                            throw new RuntimeException("Unhandled post icon request type: " + iconType);
+                        when (iconType) {
+                            POST_ICON_REQUEST_TYPES.PM -> {
+                                iconsCache.put(PM_FORUM_ID, result)
+                            }
+                            POST_ICON_REQUEST_TYPES.FORUM_POST -> {
+                                iconsCache.put(forumId, result)
+                            }
                         }
                     }
 
-                    @Override
-                    public void failure(VolleyError error) {
+                    override fun failure(error: VolleyError?) {
 //                        new AwfulFragment.AlertBuilder().setTitle("Failed to retrieve posticons!").setSubtitle("Draft Saved").show();
-                        Toast.makeText(getActivity(), "Failed to load icons\nForum ID " + forumId, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(
+                            activity,
+                            "Failed to load icons\nForum ID " + forumId,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                }));
+                })
+        )
     }
 
 
     /**
      * Create a menu from a list of icons, with their IDs and Orders set to their index positions.
      */
-    @NonNull
-    private Menu generatePostIconMenu(@NonNull List<AwfulPostIcon> postIcons) {
-        Context context = getContext();
-        Menu menu = new MenuBuilder(context);
+    private fun generatePostIconMenu(postIcons: MutableList<AwfulPostIcon>): Menu {
+        val menu: Menu = PopupMenu(context, view).menu
         // add each icon, setting its ID to its index in the list
-        AwfulPostIcon icon;
-        for (int i = 0; i < postIcons.size(); i++) {
-            icon = postIcons.get(i);
-            MenuItem item = menu.add(Menu.NONE, i, i, "")
-                    .setTitle(icon == BLANK_ICON ? "No icon" : "");
-            if(icon.drawable != null){
-                item.setIcon(icon.drawable);
-            }else {
-                item.setIcon(icon.drawableId);
+        var icon: AwfulPostIcon
+        for (i in postIcons.indices) {
+            icon = postIcons[i]
+            val item = menu.add(Menu.NONE, i, i, "")
+                .setTitle(if (icon == AwfulPostIcon.BLANK_ICON) "No icon" else "")
+            if (icon.drawable != null) {
+                item.icon = icon.drawable
+            } else {
+                item.setIcon(icon.drawableId)
             }
         }
-        return menu;
+        return menu
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Secret test stuff
-    ///////////////////////////////////////////////////////////////////////////
+    /**//////////////////////////////////////////////////////////////////////// */ // Secret test stuff
+    /**//////////////////////////////////////////////////////////////////////// */
+    var allTheForums: MutableIterator<Forum>? = null
 
-    Iterator<Forum> allTheForums = null;
-
-    public boolean secretForumCycler() {
-        if (allTheForums == null || !allTheForums.hasNext()) {
-            ForumRepository repo = ForumRepository.getInstance(getContext());
-            allTheForums = repo.getAllForums().getAsList().formatAs(ForumStructure.ListFormat.FLAT).includeSections(false).build().iterator();
+    fun secretForumCycler(): Boolean {
+        if (allTheForums == null || !allTheForums!!.hasNext()) {
+            val repo = getInstance(context)
+            allTheForums = repo.allForums.asList.formatAs(ForumStructure.ListFormat.FLAT)
+                .includeSections(false).build().iterator()
         }
-        if (allTheForums.hasNext()) {
-            Forum forum = allTheForums.next();
-            useForumIcons(forum.getId());
-            Toast.makeText(getContext(), "Icons from\n" + forum.getTitle(), Toast.LENGTH_SHORT).show();
+        if (allTheForums!!.hasNext()) {
+            val forum = allTheForums!!.next()
+            useForumIcons(forum.id)
+            Toast.makeText(context, "Icons from\n" + forum.title, Toast.LENGTH_SHORT).show()
         }
-        return true;
+        return true
     }
 
+    companion object {
+        private val TAG: String = ThreadIconPicker::class.java.simpleName
+
+        /**
+         * fake forum ID so we can mix in the PM icons with the other forum icons
+         */
+        private val PM_FORUM_ID = -324546
+
+        private val iconsCache = SparseArray<MutableList<AwfulPostIcon>?>()
+    }
 }

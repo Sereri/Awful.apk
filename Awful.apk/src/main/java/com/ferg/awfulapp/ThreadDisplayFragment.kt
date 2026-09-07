@@ -1053,9 +1053,11 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         PagePicker(
             activity,
             this.lastPage,
-            this.pageNumber, MinMaxNumberPicker.ResultListener { button: Int, resultValue: Int ->
-                if (button == DialogInterface.BUTTON_POSITIVE) {
-                    goToPage(resultValue)
+            this.pageNumber, object : MinMaxNumberPicker.ResultListener {
+                override fun onButtonPressed(button: Int, resultValue: Int) {
+                    if (button == DialogInterface.BUTTON_POSITIVE) {
+                        goToPage(resultValue)
+                    }
                 }
             }).show()
     }

@@ -79,11 +79,9 @@ import timber.log.Timber.Forest.d
 import timber.log.Timber.Forest.i
 import timber.log.Timber.Forest.w
 import java.util.Locale
-import kotlin.Array
 import kotlin.Boolean
 import kotlin.Int
 import kotlin.Long
-import kotlin.collections.HashSet
 import kotlin.collections.MutableSet
 import kotlin.collections.mutableSetOf
 import kotlin.math.max
@@ -418,23 +416,27 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
     private fun selectThreadPage(threadId: Int, maxPage: Int) {
         // TODO: this would be better if it got the thread's last page itself
         PagePicker(
-            activity,
+            requireActivity(),
             maxPage,
             maxPage,
-            MinMaxNumberPicker.ResultListener { button: Int, resultValue: Int ->
-                if (button == DialogInterface.BUTTON_POSITIVE) {
-                    viewThread(threadId, resultValue)
+            object : MinMaxNumberPicker.ResultListener {
+                override fun onButtonPressed(button: Int, resultValue: Int) {
+                    if (button == DialogInterface.BUTTON_POSITIVE) {
+                        viewThread(threadId, resultValue)
+                    }
                 }
             }).show()
     }
 
     private fun selectForumPage() {
         PagePicker(
-            activity,
+            requireActivity(),
             this.lastPage,
-            this.page, MinMaxNumberPicker.ResultListener { button: Int, resultValue: Int ->
-                if (button == DialogInterface.BUTTON_POSITIVE) {
-                    goToPage(resultValue)
+            this.page, object : MinMaxNumberPicker.ResultListener {
+                override fun onButtonPressed(button: Int, resultValue: Int) {
+                    if (button == DialogInterface.BUTTON_POSITIVE) {
+                        goToPage(resultValue)
+                    }
                 }
             }).show()
     }
@@ -477,8 +479,8 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         }
     }
 
-    public override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
-        super.onPreferenceChange(prefs, key)
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(preferences, key)
         mPageBar?.let{
             awfulActivity?.setPreferredFont(it.textView)
         }

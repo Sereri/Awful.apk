@@ -203,7 +203,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
             )
         }
 
-        mCursorAdapter = ThreadCursorAdapter(activity as AwfulActivity?, null, this)
+        mCursorAdapter = ThreadCursorAdapter(activity as AwfulActivity, null, this)
         mListView?.let {
             it.adapter = mCursorAdapter
             it.onItemClickListener = onThreadSelected

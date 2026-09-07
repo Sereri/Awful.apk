@@ -129,7 +129,7 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
 
         mPMList?.onItemClickListener = onPMSelected
 
-        mCursorAdapter = AwfulCursorAdapter(activity as AwfulActivity?, null, this)
+        mCursorAdapter = AwfulCursorAdapter(activity as AwfulActivity, null, this)
         mPMList?.adapter = mCursorAdapter
     }
 

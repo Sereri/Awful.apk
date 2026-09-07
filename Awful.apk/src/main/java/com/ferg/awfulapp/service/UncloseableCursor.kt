@@ -1,275 +1,227 @@
-package com.ferg.awfulapp.service;
+package com.ferg.awfulapp.service
 
-import android.content.ContentResolver;
-import android.database.CharArrayBuffer;
-import android.database.ContentObserver;
-import android.database.Cursor;
-import android.database.DataSetObserver;
-import android.net.Uri;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
+import android.content.ContentResolver
+import android.database.CharArrayBuffer
+import android.database.ContentObserver
+import android.database.Cursor
+import android.database.DataSetObserver
+import android.net.Uri
+import android.os.Bundle
 
 /**
- * <p>Created by baka kaba on 19/03/2016.</p>
- *
- * <p>Simple wrapper for a Cursor, to enforce the 'don't close this' requirement in
- * {@link ThreadCursorAdapter#getRow(long)} and {@link AwfulCursorAdapter#getRow(long)}.
- * Calling {@link #close()} throws an UnsupportedOperationException.</p>
+ * 
+ * Created by baka kaba on 19/03/2016.
+ * 
+ * 
+ * Simple wrapper for a Cursor, to enforce the 'don't close this' requirement in
+ * [ThreadCursorAdapter.getRow] and [AwfulCursorAdapter.getRow].
+ * Calling [.close] throws an UnsupportedOperationException.
  */
-public class UncloseableCursor implements Cursor {
-
-    private final Cursor mCursor;
-
-
-    public UncloseableCursor(@NonNull Cursor mCursor) {
-        this.mCursor = mCursor;
+class UncloseableCursor(private val mCursor: Cursor) : Cursor {
+    override fun getCount(): Int {
+        return mCursor.count
     }
 
 
-    @Override
-    public int getCount() {
-        return mCursor.getCount();
+    override fun getPosition(): Int {
+        return mCursor.position
     }
 
 
-    @Override
-    public int getPosition() {
-        return mCursor.getPosition();
+    override fun move(offset: Int): Boolean {
+        return mCursor.move(offset)
     }
 
 
-    @Override
-    public boolean move(int offset) {
-        return mCursor.move(offset);
+    override fun moveToPosition(position: Int): Boolean {
+        return mCursor.moveToPosition(position)
     }
 
 
-    @Override
-    public boolean moveToPosition(int position) {
-        return mCursor.moveToPosition(position);
+    override fun moveToFirst(): Boolean {
+        return mCursor.moveToFirst()
     }
 
 
-    @Override
-    public boolean moveToFirst() {
-        return mCursor.moveToFirst();
+    override fun moveToLast(): Boolean {
+        return mCursor.moveToLast()
     }
 
 
-    @Override
-    public boolean moveToLast() {
-        return mCursor.moveToLast();
+    override fun moveToNext(): Boolean {
+        return mCursor.moveToNext()
     }
 
 
-    @Override
-    public boolean moveToNext() {
-        return mCursor.moveToNext();
+    override fun moveToPrevious(): Boolean {
+        return mCursor.moveToPrevious()
     }
 
 
-    @Override
-    public boolean moveToPrevious() {
-        return mCursor.moveToPrevious();
+    override fun isFirst(): Boolean {
+        return mCursor.isFirst
     }
 
 
-    @Override
-    public boolean isFirst() {
-        return mCursor.isFirst();
+    override fun isLast(): Boolean {
+        return mCursor.isLast
     }
 
 
-    @Override
-    public boolean isLast() {
-        return mCursor.isLast();
+    override fun isBeforeFirst(): Boolean {
+        return mCursor.isBeforeFirst
     }
 
 
-    @Override
-    public boolean isBeforeFirst() {
-        return mCursor.isBeforeFirst();
+    override fun isAfterLast(): Boolean {
+        return mCursor.isAfterLast
     }
 
 
-    @Override
-    public boolean isAfterLast() {
-        return mCursor.isAfterLast();
+    override fun getColumnIndex(columnName: String?): Int {
+        return mCursor.getColumnIndex(columnName)
     }
 
 
-    @Override
-    public int getColumnIndex(String columnName) {
-        return mCursor.getColumnIndex(columnName);
+    @Throws(IllegalArgumentException::class)
+    override fun getColumnIndexOrThrow(columnName: String?): Int {
+        return mCursor.getColumnIndexOrThrow(columnName)
     }
 
 
-    @Override
-    public int getColumnIndexOrThrow(String columnName) throws IllegalArgumentException {
-        return mCursor.getColumnIndexOrThrow(columnName);
+    override fun getColumnName(columnIndex: Int): String? {
+        return mCursor.getColumnName(columnIndex)
     }
 
 
-    @Override
-    public String getColumnName(int columnIndex) {
-        return mCursor.getColumnName(columnIndex);
+    override fun getColumnNames(): Array<String?>? {
+        return mCursor.columnNames
     }
 
 
-    @Override
-    public String[] getColumnNames() {
-        return mCursor.getColumnNames();
+    override fun getColumnCount(): Int {
+        return mCursor.columnCount
     }
 
 
-    @Override
-    public int getColumnCount() {
-        return mCursor.getColumnCount();
+    override fun getBlob(columnIndex: Int): ByteArray? {
+        return mCursor.getBlob(columnIndex)
     }
 
 
-    @Override
-    public byte[] getBlob(int columnIndex) {
-        return mCursor.getBlob(columnIndex);
+    override fun getString(columnIndex: Int): String? {
+        return mCursor.getString(columnIndex)
     }
 
 
-    @Override
-    public String getString(int columnIndex) {
-        return mCursor.getString(columnIndex);
+    override fun copyStringToBuffer(columnIndex: Int, buffer: CharArrayBuffer?) {
+        mCursor.copyStringToBuffer(columnIndex, buffer)
     }
 
 
-    @Override
-    public void copyStringToBuffer(int columnIndex, CharArrayBuffer buffer) {
-        mCursor.copyStringToBuffer(columnIndex, buffer);
+    override fun getShort(columnIndex: Int): Short {
+        return mCursor.getShort(columnIndex)
     }
 
 
-    @Override
-    public short getShort(int columnIndex) {
-        return mCursor.getShort(columnIndex);
+    override fun getInt(columnIndex: Int): Int {
+        return mCursor.getInt(columnIndex)
     }
 
 
-    @Override
-    public int getInt(int columnIndex) {
-        return mCursor.getInt(columnIndex);
+    override fun getLong(columnIndex: Int): Long {
+        return mCursor.getLong(columnIndex)
     }
 
 
-    @Override
-    public long getLong(int columnIndex) {
-        return mCursor.getLong(columnIndex);
+    override fun getFloat(columnIndex: Int): Float {
+        return mCursor.getFloat(columnIndex)
     }
 
 
-    @Override
-    public float getFloat(int columnIndex) {
-        return mCursor.getFloat(columnIndex);
+    override fun getDouble(columnIndex: Int): Double {
+        return mCursor.getDouble(columnIndex)
     }
 
 
-    @Override
-    public double getDouble(int columnIndex) {
-        return mCursor.getDouble(columnIndex);
+    override fun getType(columnIndex: Int): Int {
+        return mCursor.getType(columnIndex)
     }
 
 
-    @Override
-    public int getType(int columnIndex) {
-        return mCursor.getType(columnIndex);
+    override fun isNull(columnIndex: Int): Boolean {
+        return mCursor.isNull(columnIndex)
     }
 
 
-    @Override
-    public boolean isNull(int columnIndex) {
-        return mCursor.isNull(columnIndex);
+    @Deprecated("")
+    override fun deactivate() {
+        mCursor.deactivate()
     }
 
 
-    @Override
-    @Deprecated
-    public void deactivate() {
-        mCursor.deactivate();
+    @Deprecated("")
+    override fun requery(): Boolean {
+        return mCursor.requery()
     }
 
 
-    @Override
-    @Deprecated
-    public boolean requery() {
-        return mCursor.requery();
+    override fun close() {
+        throw UnsupportedOperationException("This cursor cannot be closed! Namaste")
     }
 
 
-    @Override
-    public void close() {
-        throw new UnsupportedOperationException("This cursor cannot be closed! Namaste");
+    override fun isClosed(): Boolean {
+        return mCursor.isClosed
     }
 
 
-    @Override
-    public boolean isClosed() {
-        return mCursor.isClosed();
+    override fun registerContentObserver(observer: ContentObserver?) {
+        mCursor.registerContentObserver(observer)
     }
 
 
-    @Override
-    public void registerContentObserver(ContentObserver observer) {
-        mCursor.registerContentObserver(observer);
+    override fun unregisterContentObserver(observer: ContentObserver?) {
+        mCursor.unregisterContentObserver(observer)
     }
 
 
-    @Override
-    public void unregisterContentObserver(ContentObserver observer) {
-        mCursor.unregisterContentObserver(observer);
+    override fun registerDataSetObserver(observer: DataSetObserver?) {
+        mCursor.registerDataSetObserver(observer)
     }
 
 
-    @Override
-    public void registerDataSetObserver(DataSetObserver observer) {
-        mCursor.registerDataSetObserver(observer);
+    override fun unregisterDataSetObserver(observer: DataSetObserver?) {
+        mCursor.unregisterDataSetObserver(observer)
     }
 
 
-    @Override
-    public void unregisterDataSetObserver(DataSetObserver observer) {
-        mCursor.unregisterDataSetObserver(observer);
+    override fun setNotificationUri(cr: ContentResolver?, uri: Uri?) {
+        mCursor.setNotificationUri(cr, uri)
     }
 
 
-    @Override
-    public void setNotificationUri(ContentResolver cr, Uri uri) {
-        mCursor.setNotificationUri(cr, uri);
+    override fun getNotificationUri(): Uri? {
+        return mCursor.notificationUri
     }
 
 
-    @Override
-    public Uri getNotificationUri() {
-        return mCursor.getNotificationUri();
+    override fun getWantsAllOnMoveCalls(): Boolean {
+        return mCursor.wantsAllOnMoveCalls
     }
 
 
-    @Override
-    public boolean getWantsAllOnMoveCalls() {
-        return mCursor.getWantsAllOnMoveCalls();
+    override fun setExtras(extras: Bundle?) {
+        mCursor.extras = extras
     }
 
 
-    @Override
-    public void setExtras(Bundle extras) {
-        mCursor.setExtras(extras);
+    override fun getExtras(): Bundle? {
+        return mCursor.extras
     }
 
 
-    @Override
-    public Bundle getExtras() {
-        return mCursor.getExtras();
-    }
-
-
-    @Override
-    public Bundle respond(Bundle extras) {
-        return mCursor.respond(extras);
+    override fun respond(extras: Bundle?): Bundle? {
+        return mCursor.respond(extras)
     }
 }

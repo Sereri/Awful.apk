@@ -44,7 +44,7 @@ class AnnouncementsManager private constructor() {
     private val handler = Handler(Looper.getMainLooper())
 
     private val callbacks: MutableMap<AnnouncementListener, Any?> =
-        Collections.synchronizedMap<AnnouncementListener?, Any?>(
+        Collections.synchronizedMap<AnnouncementListener, Any?>(
             WeakHashMap<AnnouncementListener?, Any?>()
         )
 

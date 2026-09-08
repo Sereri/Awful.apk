@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '2.2.21'
+    ext.kotlin_version = '2.4.20'
 
     dependencies {
         classpath 'com.android.tools.build:gradle:9.4.0'
@@ -10,6 +10,7 @@ buildscript {
 plugins {
     id 'com.android.application'
     id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
@@ -20,6 +21,7 @@ android {
         viewBinding = true
         buildConfig = true
         resValues = true
+        compose = true
     }
 
     defaultConfig {
@@ -102,6 +104,11 @@ android {
     }
 }
 
+composeCompiler {
+    reportsDestination = layout.buildDirectory.dir("compose_compiler")
+    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
@@ -146,4 +153,12 @@ dependencies {
     implementation 'androidx.core:core-google-shortcuts:1.1.0'
 
     // updating this might cause the status and navigation bar to become blue, test for this
-    implementation 'androidx.core:core-splashscreen:1.0.0-alpha02'}
+    implementation 'androidx.core:core-splashscreen:1.0.0-alpha02'
+
+    // compose
+    def composeBom = platform('androidx.compose:compose-bom:2026.08.00')
+    implementation composeBom
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+}

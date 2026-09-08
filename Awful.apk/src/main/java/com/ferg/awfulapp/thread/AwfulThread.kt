@@ -494,14 +494,14 @@ class AwfulThread : AwfulPagedItem() {
             } else {
                 threadTag.visibility = View.GONE
             }
-            item.findViewById<View?>(R.id.thread_tag_overlay).visibility = View.GONE
-            item.findViewById<View?>(R.id.thread_tag_overlay_optional).visibility = View.GONE
-            item.findViewById<View?>(R.id.thread_info).visibility = View.INVISIBLE
-            item.findViewById<View?>(R.id.thread_rating).visibility = View.GONE
-            item.findViewById<View?>(R.id.thread_rating_optional).visibility = View.GONE
-            item.findViewById<View?>(R.id.thread_sticky).visibility = if (thread.isSticky) View.VISIBLE else View.GONE
-            item.findViewById<View?>(R.id.thread_locked).visibility = if (thread.isLocked && !thread.isSticky) View.VISIBLE else View.GONE
-            item.findViewById<View?>(R.id.unread_count).visibility = View.GONE
+            item.findViewById<View>(R.id.thread_tag_overlay).visibility = View.GONE
+            item.findViewById<View>(R.id.thread_tag_overlay_optional).visibility = View.GONE
+            item.findViewById<View>(R.id.thread_info).visibility = View.INVISIBLE
+            item.findViewById<View>(R.id.thread_rating).visibility = View.GONE
+            item.findViewById<View>(R.id.thread_rating_optional).visibility = View.GONE
+            item.findViewById<View>(R.id.thread_sticky).visibility = if (thread.isSticky) View.VISIBLE else View.GONE
+            item.findViewById<View>(R.id.thread_locked).visibility = if (thread.isLocked && !thread.isSticky) View.VISIBLE else View.GONE
+            item.findViewById<View>(R.id.unread_count).visibility = View.GONE
         }
 
         /** Utility method to set and show an imageview  */

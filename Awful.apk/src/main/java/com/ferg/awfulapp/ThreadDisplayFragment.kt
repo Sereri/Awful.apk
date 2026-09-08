@@ -1367,7 +1367,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             isGif = StringUtils.contains(lastSegment, ".gif")
                     && !StringUtils.contains(lastSegment, ".gifv")
         }
-        var linkUrl: String? = url
+        var linkUrl: String = url
         val youtube = Pattern.compile("youtube\\.com/watch\\?v=([a-zA-Z0-9-_]+).*").matcher(linkUrl)
         if (youtube.find()) {
             linkUrl =
@@ -1382,7 +1382,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                 "bsky.app"
             )
         ) {
-            linkUrl = path.scheme + "://" + path.authority + path.path
+            linkUrl = "${path.scheme}://${path.authority}${path.path}"
         }
 
         val linkActions = UrlContextMenu.newInstance(

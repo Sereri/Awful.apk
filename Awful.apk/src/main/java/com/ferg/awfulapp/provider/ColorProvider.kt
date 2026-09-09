@@ -5,6 +5,9 @@ import androidx.annotation.ArrayRes
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
@@ -67,6 +70,20 @@ enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
          */
         fun convertToRGB(@ColorInt color: Int): String {
             return "#" + Integer.toHexString(color and 0x00FFFFFF)
+        }
+
+        @Composable
+        @JvmStatic
+        fun getResourceColor(resourceId: Int) : Color {
+            val typedValue = TypedValue()
+
+            LocalContext.current.theme.resolveAttribute(
+                resourceId,
+                typedValue,
+                true
+            )
+
+            return Color(typedValue.data)
         }
 
 

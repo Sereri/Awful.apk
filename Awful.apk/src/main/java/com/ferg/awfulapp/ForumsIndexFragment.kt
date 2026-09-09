@@ -10,12 +10,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.ViewSwitcher
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.platform.ComposeView
 import com.ferg.awfulapp.AwfulApplication.Companion.appStatePrefs
 import com.ferg.awfulapp.databinding.ForumIndexFragmentBinding
 import com.ferg.awfulapp.forums.Forum
-import com.ferg.awfulapp.forums.ForumListAdapter
 import com.ferg.awfulapp.forums.ForumRepository
 import com.ferg.awfulapp.forums.ForumRepository.ForumsUpdateListener
 import com.ferg.awfulapp.forums.ForumStructure
@@ -24,6 +24,7 @@ import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.widget.StatusFrog
 import com.google.android.material.snackbar.Snackbar
 import androidx.core.content.edit
+import com.ferg.awfulapp.forums.ExpandableForumIndexList
 import com.ferg.awfulapp.forums.ForumStructure.ListFormat
 
 
@@ -48,12 +49,14 @@ import com.ferg.awfulapp.forums.ForumStructure.ListFormat
  * to receive data update events, so it can refresh the forum list or display the loading spinner as
  * required.
  */
-class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdapter.EventListener {
-    var forumRecyclerView: RecyclerView? = null
+class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener {
+    lateinit var forumIndexView: ComposeView
+    private val forumListState = LazyListState()
     var forumsListSwitcher: ViewSwitcher? = null
     var statusFrog: StatusFrog? = null
 
-    private var forumListAdapter: ForumListAdapter? = null
+    var forums = mutableStateListOf<Forum>()
+
     private lateinit var forumRepo: ForumRepository
 
     /**
@@ -85,7 +88,16 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
     ): View {
         val binding = ForumIndexFragmentBinding.inflate(getLayoutInflater())
         val view: View = binding.getRoot()
-        forumRecyclerView = binding.forumIndexList
+        forumIndexView = binding.forumIndexList
+        forumIndexView.setContent {
+            ExpandableForumIndexList(
+                forums = forums,
+                showSubtitles = prefs.forumIndexShowSubtitles,
+                onForumClick = ::onForumClicked,
+                onForumFavToggle = ::onForumFavToggle,
+                listState = forumListState
+            )
+        }
         forumsListSwitcher = binding.viewSwitcher
         statusFrog = binding.statusFrog
         probationBar = binding.probationBar
@@ -101,10 +113,6 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
         super.onActivityCreated(aSavedState)
         val context: Context = requireActivity()
         forumRepo = ForumRepository.getInstance(context)
-
-        forumListAdapter = ForumListAdapter.getInstance(context, mutableListOf(), this, prefs)
-        forumRecyclerView?.setAdapter(forumListAdapter)
-        forumRecyclerView?.setLayoutManager(LinearLayoutManager(context))
     }
 
 
@@ -144,7 +152,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
                 appStatePrefs?.edit { putBoolean(KEY_SHOW_FAVOURITES, showFavourites) }
                 invalidateOptionsMenu()
                 refreshForumList()
-                (getActivity() as ForumsIndexActivity).onPageContentChanged()
+                (activity as ForumsIndexActivity).onPageContentChanged()
                 return true
             }
         }
@@ -162,7 +170,8 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
         lastUpdateTime = forumRepo.lastRefreshTime
         // get a new data set (possibly empty if there's no data yet) and give it to the adapter
         val forumList = if (showFavourites) this.favouriteForums else this.allForums
-        forumListAdapter?.updateForumList(forumList)
+        forums.clear()
+        forums.addAll(forumList)
         refreshNoDataView()
     }
 
@@ -185,10 +194,10 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
         }
 
         // work out if we need to switch the empty view to the forum list, or vice versa
-        val noData = forumListAdapter?.parentItemList?.isEmpty() ?: true
-        if (noData && forumsListSwitcher?.currentView === forumRecyclerView) {
+        val noData = forums.isEmpty()
+        if (noData && forumsListSwitcher?.currentView === forumIndexView) {
             forumsListSwitcher?.showNext()
-        } else if (!noData && forumsListSwitcher?.nextView === forumRecyclerView) {
+        } else if (!noData && forumsListSwitcher?.nextView === forumIndexView) {
             forumsListSwitcher?.showNext()
         }
     }
@@ -210,22 +219,16 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
             .build()
 
 
-    /**//////////////////////////////////////////////////////////////////////// */ // Event callbacks
-    /**//////////////////////////////////////////////////////////////////////// */
-    override fun onForumClicked(forum: Forum) {
+    /////////////////////////////////////////////////////////////////////////
+    // Event callbacks
+    /////////////////////////////////////////////////////////////////////////
+    fun onForumClicked(forum: Forum) {
         navigate(NavigationEvent.Forum(forum.id, null))
     }
 
-    override fun onContextMenuCreated(forum: Forum, contextMenu: Menu) {
-        // show an option to set/unset the forum as a favourite
-        val menuItem = contextMenu.add(
-            if (forum.isFavourite) getString(R.string.forums_list_unset_favorite) else getString(R.string.forums_list_set_favorite)
-        )
-        menuItem.setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
-            forumRepo.toggleFavorite(forum)
-            forumListAdapter?.notifyDataSetChanged()
-            true
-        })
+    fun onForumFavToggle(forum: Forum) {
+        forumRepo.toggleFavorite(forum)
+        refreshForumList()
     }
 
     override fun onForumsUpdateStarted() {
@@ -237,7 +240,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
         requireActivity().runOnUiThread(Runnable {
             if (success) {
                 Snackbar.make(
-                    forumRecyclerView!!,
+                    forumIndexView,
                     R.string.forums_updated_message,
                     Snackbar.LENGTH_SHORT
                 ).show()
@@ -253,8 +256,8 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
     }
 
 
-    override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
-        super.onPreferenceChange(prefs, key)
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(preferences, key)
         if (getString(R.string.pref_key_theme) == key) {
             updateViewColours()
         } else if (getString(R.string.pref_key_favourite_forums) == key) {
@@ -262,6 +265,8 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
             if (showFavourites) {
                 refreshForumList()
             }
+        } else if(getString(R.string.pref_key_forum_index_show_section_headers) == key || getString(R.string.pref_key_forum_index_show_subtitles) == key) {
+            refreshForumList()
         }
     }
 
@@ -273,7 +278,7 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
     * Set any colors that need to change according to the current theme
     */
     private fun updateViewColours() {
-        forumRecyclerView?.setBackgroundColor(ColorProvider.BACKGROUND.color)
+        forumIndexView.setBackgroundColor(ColorProvider.BACKGROUND.color)
     }
 
 
@@ -286,9 +291,8 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener, ForumListAdap
 
 
     override fun doScroll(down: Boolean): Boolean {
-        val forum = forumRecyclerView ?: return false
-        val scrollAmount = forum.height / 2
-        forum.smoothScrollBy(0, if (down) scrollAmount else -scrollAmount)
+        val scrollAmount = forumIndexView.height / 2
+        forumListState.dispatchRawDelta( if (down) scrollAmount.toFloat() else -scrollAmount.toFloat() )
         return true
     }
 

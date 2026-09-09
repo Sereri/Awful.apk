@@ -7,20 +7,6 @@ import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowManager
-import com.ToxicBakery.viewpager.transforms.ABaseTransformer
-import com.ToxicBakery.viewpager.transforms.AccordionTransformer
-import com.ToxicBakery.viewpager.transforms.BackgroundToForegroundTransformer
-import com.ToxicBakery.viewpager.transforms.CubeInTransformer
-import com.ToxicBakery.viewpager.transforms.CubeOutTransformer
-import com.ToxicBakery.viewpager.transforms.DepthPageTransformer
-import com.ToxicBakery.viewpager.transforms.ForegroundToBackgroundTransformer
-import com.ToxicBakery.viewpager.transforms.RotateDownTransformer
-import com.ToxicBakery.viewpager.transforms.RotateUpTransformer
-import com.ToxicBakery.viewpager.transforms.StackTransformer
-import com.ToxicBakery.viewpager.transforms.TabletTransformer
-import com.ToxicBakery.viewpager.transforms.ZoomInTransformer
-import com.ToxicBakery.viewpager.transforms.ZoomOutSlideTransformer
-import com.ToxicBakery.viewpager.transforms.ZoomOutTransformer
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
 import com.ferg.awfulapp.provider.DatabaseHelper
@@ -120,27 +106,6 @@ object AwfulUtils {
         }
         Log.i("AwfulTrimDB", "Trimming DB older than 7 days, culled: $rowCount")
     }
-
-    private val transformerMap = mapOf(
-        "Accordion" to AccordionTransformer(),
-        "BackgroundToForeground" to BackgroundToForegroundTransformer(),
-        "CubeIn" to CubeInTransformer(),
-        "CubeOut" to CubeOutTransformer(),
-        "DepthPage" to DepthPageTransformer(),
-        "ForegroundToBackground" to ForegroundToBackgroundTransformer(),
-        "RotateDown" to RotateDownTransformer(),
-        "RotateUp" to RotateUpTransformer(),
-        "Stack" to StackTransformer(),
-        "Tablet" to TabletTransformer(),
-        "ZoomIn" to ZoomInTransformer(),
-        "ZoomOutSlide" to ZoomOutSlideTransformer(),
-        "ZoomOut" to ZoomOutTransformer()
-    )
-    val viewPagerTransformer: ABaseTransformer?
-        get() {
-            return transformerMap[getInstance().transformer]
-        }
-
 
     fun contains(intArray: IntArray, value: Int): Boolean {
         for (cur in intArray) {

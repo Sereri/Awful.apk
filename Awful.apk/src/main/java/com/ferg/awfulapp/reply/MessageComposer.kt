@@ -1,9 +1,6 @@
 package com.ferg.awfulapp.reply
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.ActionMode
 import android.view.LayoutInflater
@@ -16,8 +13,11 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.annotation.ColorInt
+import androidx.core.view.get
+import androidx.core.view.size
 import androidx.fragment.app.Fragment
 import com.ferg.awfulapp.AwfulActivity
+import com.ferg.awfulapp.AwfulSheetActivity
 import com.ferg.awfulapp.EmotePicker
 import com.ferg.awfulapp.EmotePickerListener
 import com.ferg.awfulapp.FontManager
@@ -26,12 +26,6 @@ import com.ferg.awfulapp.R
 import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.reply.BasicTextInserter.BbCodeTag
 import com.ferg.awfulapp.reply.Inserter.Untagged
-import com.github.rubensousa.bottomsheetbuilder.BottomSheetBuilder
-import com.github.rubensousa.bottomsheetbuilder.BottomSheetMenuDialog
-import com.github.rubensousa.bottomsheetbuilder.adapter.BottomSheetItemClickListener
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import androidx.core.view.size
-import androidx.core.view.get
 
 /**
  * Created by baka kaba on 07/11/2016.
@@ -47,7 +41,7 @@ import androidx.core.view.get
  */
 class MessageComposer : Fragment(), EmotePickerListener {
     private lateinit var messageBox: EditText
-    private var bottomSheetMenuDialog: BottomSheetMenuDialog? = null
+    private lateinit var bbCodeMenu: Menu
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,20 +58,20 @@ class MessageComposer : Fragment(), EmotePickerListener {
         messageBox = result.findViewById(R.id.message_edit_text)
         addBbCodeToSelectionMenu(messageBox)
         (activity as AwfulActivity).setPreferredFont(result)
+
+        val sheetMenu = PopupMenu(result.context, result).menu
+        val inflater = MenuInflater(result.context)
+        inflater.inflate(R.menu.insert_into_message, sheetMenu)
+        inflater.inflate(R.menu.format_message, sheetMenu)
+
+        bbCodeMenu = sheetMenu
+
         return result
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (bottomSheetMenuDialog != null) {
-            bottomSheetMenuDialog!!.dismiss()
-        }
-    }
-
-
-    /**//////////////////////////////////////////////////////////////////////// */ // Menu handling
-    /**//////////////////////////////////////////////////////////////////////// */
+    /////////////////////////////////////////////////////////////////////////
+    // Menu handling
+    /////////////////////////////////////////////////////////////////////////
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.message_composer, menu)
         val fm = FontManager.getInstance()
@@ -86,10 +80,21 @@ class MessageComposer : Fragment(), EmotePickerListener {
         }
     }
 
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.show_bbcode_menu) {
+            toggleBottomSheet()
+            return true
+        }
+
+        if (this.handleSheetMenuItem(item)) {
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    fun handleSheetMenuItem(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.show_bbcode_menu -> toggleBottomSheet()
             R.id.bbcode_bold -> insertWith(BbCodeTag.BOLD)
             R.id.bbcode_italics -> insertWith(BbCodeTag.ITALICS)
             R.id.bbcode_underline -> insertWith(BbCodeTag.UNDERLINE)
@@ -98,8 +103,8 @@ class MessageComposer : Fragment(), EmotePickerListener {
             R.id.bbcode_superscript -> insertWith(BbCodeTag.SUPERSCRIPT)
             R.id.bbcode_subscript -> insertWith(BbCodeTag.SUBSCRIPT)
             R.id.bbcode_fixed_width -> insertWith(BbCodeTag.FIXED)
-            R.id.emotes -> EmotePicker().show(getChildFragmentManager(), "emotes")
-            R.id.bbcode_image -> insertWith(ImageInserter::smartInsert as Untagged)
+            R.id.emotes -> EmotePicker().show(childFragmentManager, "emotes")
+            R.id.bbcode_image -> insertWith (ImageInserter::smartInsert)
 
             R.id.bbcode_imgur -> if (AwfulPreferences.getInstance().imgurAccount != null) {
                 val imgurInserter = ImgurInserter()
@@ -109,21 +114,14 @@ class MessageComposer : Fragment(), EmotePickerListener {
             } else {
                 (activity as AwfulActivity).navigate(NavigationEvent.Settings("account"))
             }
-
-            R.id.bbcode_video -> insertWith(VideoInserter::smartInsert as Untagged)
-
-            R.id.bbcode_url -> insertWith(UrlInserter::smartInsert as Untagged)
-
-            R.id.bbcode_quote -> insertWith(QuoteInserter::smartInsert as Untagged)
-
-            R.id.bbcode_list -> insertWith(ListInserter::smartInsert as Untagged)
-
-            R.id.bbcode_code -> insertWith(CodeInserter::smartInsert as Untagged)
-
+            R.id.bbcode_video -> insertWith(VideoInserter::smartInsert)
+            R.id.bbcode_url -> insertWith(UrlInserter::smartInsert)
+            R.id.bbcode_quote -> insertWith(QuoteInserter::smartInsert)
+            R.id.bbcode_list -> insertWith(ListInserter::smartInsert)
+            R.id.bbcode_code -> insertWith(CodeInserter::smartInsert)
             R.id.bbcode_pre -> insertWith(BbCodeTag.PRE)
-            else -> return super.onOptionsItemSelected(item)
+            else -> return false
         }
-
         return true
     }
 
@@ -135,8 +133,9 @@ class MessageComposer : Fragment(), EmotePickerListener {
         BasicTextInserter.smartInsert(messageBox, bbCodeTag, requireActivity())
     }
 
-    /**//////////////////////////////////////////////////////////////////////// */ // Callbacks
-    /**//////////////////////////////////////////////////////////////////////// */
+    /////////////////////////////////////////////////////////////////////////
+    // Callbacks
+    /////////////////////////////////////////////////////////////////////////
     fun onImageUploaded(url: String, useThumbnail: Boolean) {
         ImageInserter.insertWithoutDialog(messageBox, url, useThumbnail)
     }
@@ -252,73 +251,7 @@ class MessageComposer : Fragment(), EmotePickerListener {
         editText.customInsertionActionModeCallback = callback
     }
 
-
-    /**
-     * Display or hide the bottom sheet as appropriate.
-     */
-    @SuppressLint("ResourceType")
     private fun toggleBottomSheet() {
-        // if we already have a sheet, get rid of it
-        if (bottomSheetMenuDialog != null) {
-            bottomSheetMenuDialog?.dismissWithAnimation()
-            bottomSheetMenuDialog = null
-            return
-        }
-
-        // Stupid hack to ensure the text selected when the options are shown is still selected
-        // when an option is chosen. This is all because older versions use a Contextual Action Bar
-        // for text selection, which a) deselects the text when you pick an option from it,
-        // and b) covers the action bar so you can't use the menu item there that works fine
-        val selectionRange = if (!messageBox.hasSelection()) null else intArrayOf(
-            messageBox.selectionStart,
-            messageBox.selectionEnd
-        )
-
-        // build a full menu to populate the sheet with
-        val activity = getActivity()
-        val sheetMenu = PopupMenu(activity, view).menu
-        val inflater = MenuInflater(activity)
-        inflater.inflate(R.menu.insert_into_message, sheetMenu)
-        inflater.inflate(R.menu.format_message, sheetMenu)
-
-        // need to apply themed background and text colors programmatically it seems
-        val a = requireActivity().theme.obtainStyledAttributes(
-            intArrayOf(
-                R.attr.bottomSheetBackgroundColor,
-                R.attr.bottomSheetItemTextColor
-            )
-        )
-        val backgroundColour = a.getResourceId(0, 0)
-        val itemTextColour = a.getResourceId(1, 0)
-        a.recycle()
-
-        bottomSheetMenuDialog = with(BottomSheetBuilder(activity)) {
-            setBackgroundColorResource(backgroundColour)
-            setItemTextColorResource(itemTextColour)
-            setMode(BottomSheetBuilder.MODE_GRID)
-            setMenu(sheetMenu)
-            setItemClickListener { item: MenuItem? ->
-                // restore any selection in the EditText before invoking the format/insert options
-                if (selectionRange != null) {
-                    messageBox.setSelection(selectionRange[0], selectionRange[1])
-                }
-                onOptionsItemSelected(item!!)
-            }
-            createDialog()
-        }
-
-        val bsmDialog = bottomSheetMenuDialog ?: return
-
-        // drop the reference to an existing sheet when it goes away
-        bsmDialog.setOnCancelListener { _: DialogInterface? ->
-            bottomSheetMenuDialog = null
-        }
-        bsmDialog.setOnDismissListener { _: DialogInterface? ->
-            bottomSheetMenuDialog = null
-        }
-
-        bsmDialog.show()
-        // force the dialog to expand since peek/collapsed has some measurement issue in landscape
-        bsmDialog.behavior.setState(BottomSheetBehavior.STATE_EXPANDED)
+        (activity as AwfulSheetActivity).toggleBottomSheet(bbCodeMenu, ::handleSheetMenuItem)
     }
 }

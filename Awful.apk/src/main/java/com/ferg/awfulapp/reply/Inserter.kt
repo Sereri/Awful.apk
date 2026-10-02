@@ -20,7 +20,7 @@ internal abstract class Inserter {
     /**
      * Functional interface for the various untagged inserters
      */
-    internal interface Untagged {
+    internal fun interface Untagged {
         fun smartInsert(replyMessage: EditText, activity: Activity)
     }
 

@@ -5,7 +5,7 @@ import androidx.appcompat.widget.Toolbar
 import com.ferg.awfulapp.MessageFragment.PrivateMessageCallbacks
 import com.ferg.awfulapp.constants.Constants
 
-class MessageDisplayActivity : AwfulActivity(), PrivateMessageCallbacks {
+class MessageDisplayActivity : AwfulSheetActivity(), PrivateMessageCallbacks {
     var mToolbar: Toolbar? = null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +25,8 @@ class MessageDisplayActivity : AwfulActivity(), PrivateMessageCallbacks {
                     Constants.PARAM_PRIVATE_MESSAGE_ID, 0
                 )
             )
+
+            setupBottomSheet()
 
             val transaction = supportFragmentManager.beginTransaction()
             transaction.replace(R.id.fragment_pane, fragment)

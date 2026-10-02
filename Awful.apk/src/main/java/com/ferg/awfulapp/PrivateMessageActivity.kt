@@ -28,14 +28,17 @@ package com.ferg.awfulapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import com.ferg.awfulapp.MessageFragment.PrivateMessageCallbacks
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.preferences.AwfulPreferences
 
-class PrivateMessageActivity : AwfulActivity(), PrivateMessageCallbacks {
+class PrivateMessageActivity : AwfulSheetActivity(), PrivateMessageCallbacks {
     private var paneTwo: View? = null
     private var pmIntentID: String? = null
 
@@ -84,8 +87,17 @@ class PrivateMessageActivity : AwfulActivity(), PrivateMessageCallbacks {
 
     fun showMessage(name: String?, id: Int) {
         if (paneTwo != null) {
+
+            val fragment = MessageFragment(name, id)
+
+            val sheetMenu = PopupMenu(this, window.decorView as ViewGroup).menu
+            val inflater = MenuInflater(this)
+            inflater.inflate(R.menu.insert_into_message, sheetMenu)
+            inflater.inflate(R.menu.format_message, sheetMenu)
+            setupBottomSheet()
+
             supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_pane_two, MessageFragment(name, id), MESSAGE_FRAGMENT_TAG)
+                .replace(R.id.fragment_pane_two, fragment, MESSAGE_FRAGMENT_TAG)
                 .commit()
         } else {
             val intent = Intent().setClass(this, MessageDisplayActivity::class.java)

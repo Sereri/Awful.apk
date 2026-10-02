@@ -29,14 +29,17 @@
 package com.ferg.awfulapp
 
 import android.os.Bundle
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.ferg.awfulapp.databinding.PostThreadActivityBinding
 
-class PostThreadActivity : AwfulActivity() {
+class PostThreadActivity : AwfulSheetActivity() {
     var mToolbar: Toolbar? = null
     var threadFragment: PostThreadFragment? = null
 
@@ -49,8 +52,15 @@ class PostThreadActivity : AwfulActivity() {
         setSupportActionBar(mToolbar)
         setUpActionBar()
 
+        val sheetMenu = PopupMenu(this, window.decorView as ViewGroup).menu
+        val inflater = MenuInflater(this)
+        inflater.inflate(R.menu.insert_into_message, sheetMenu)
+        inflater.inflate(R.menu.format_message, sheetMenu)
+
         val fm = supportFragmentManager
         threadFragment = fm.findFragmentById(R.id.thread_fragment) as PostThreadFragment?
+
+        setupBottomSheet()
 
         ViewCompat.setOnApplyWindowInsetsListener(
             binding.getRoot()

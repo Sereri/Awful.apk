@@ -222,9 +222,6 @@ class ForumsPagerController(
 
     fun onPreferenceChange(prefs: AwfulPreferences) {
         setSwipeEnabled(!prefs.lockScrolling)
-        //if (!AwfulUtils.isTablet(prefs.context) && AwfulUtils.isAtLeast(Build.VERSION_CODES.JELLY_BEAN_MR1) && prefs.transformer != "Disabled") {
-        //    viewPager.setPageTransformer(true, AwfulUtils.viewPagerTransformer)
-        //}
     }
 
     fun onConfigurationChange(prefs: AwfulPreferences) {

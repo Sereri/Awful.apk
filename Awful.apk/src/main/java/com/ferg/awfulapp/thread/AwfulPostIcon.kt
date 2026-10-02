@@ -43,7 +43,7 @@ class AwfulPostIcon {
             Handler(Looper.getMainLooper()).post {
                 imageLoader?.get(iconUrl, object : ImageListener {
                     override fun onResponse(response: ImageContainer, isImmediate: Boolean) {
-                        drawable = getClassicIconDrawable(response.bitmap, context)
+                        drawable = getClassicIconDrawable(response.bitmap ?: return, context)
                     }
 
                     override fun onErrorResponse(error: VolleyError?) {}

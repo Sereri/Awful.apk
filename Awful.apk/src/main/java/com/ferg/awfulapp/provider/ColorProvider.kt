@@ -8,6 +8,7 @@ import androidx.annotation.ColorRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
@@ -74,16 +75,30 @@ enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
 
         @Composable
         @JvmStatic
-        fun getResourceColor(resourceId: Int) : Color {
+        fun getResourceColor(resourceId: Int): Color {
+            val context = LocalContext.current
+            val resources = LocalResources.current
+            val theme = context.theme
+
             val typedValue = TypedValue()
+            theme.resolveAttribute(resourceId, typedValue, true)
 
-            LocalContext.current.theme.resolveAttribute(
-                resourceId,
-                typedValue,
-                true
-            )
+            return when {
+                typedValue.type in TypedValue.TYPE_FIRST_COLOR_INT..TypedValue.TYPE_LAST_COLOR_INT -> {
+                    Color(typedValue.data)
+                }
 
-            return Color(typedValue.data)
+                typedValue.resourceId != 0 -> {
+                    val colorStateList = resources.getColorStateList(
+                        typedValue.resourceId,
+                        theme
+                    )
+
+                    Color(colorStateList.defaultColor)
+                }
+
+                else -> Color.Unspecified
+            }
         }
 
 

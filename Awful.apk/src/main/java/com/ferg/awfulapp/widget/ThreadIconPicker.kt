@@ -5,16 +5,14 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.Menu
-import android.view.MenuItem
 import android.view.View
-import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.Toast
-import androidx.appcompat.view.menu.MenuBuilder
 import androidx.fragment.app.Fragment
 import com.android.volley.VolleyError
+import com.ferg.awfulapp.AwfulSheetActivity
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.constants.Constants.POST_ICON_REQUEST_TYPES
 import com.ferg.awfulapp.forums.Forum
@@ -24,7 +22,6 @@ import com.ferg.awfulapp.network.NetworkUtils.queueRequest
 import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
 import com.ferg.awfulapp.task.PostIconRequest
 import com.ferg.awfulapp.thread.AwfulPostIcon
-import com.github.rubensousa.bottomsheetbuilder.adapter.BottomSheetItemClickListener
 
 
 /**
@@ -50,7 +47,6 @@ class ThreadIconPicker : Fragment() {
     var icon: AwfulPostIcon = AwfulPostIcon.BLANK_ICON
         private set
     private var currentForumId: Int? = null
-    private var bottomSheet: ThemedBottomSheetDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -126,17 +122,14 @@ class ThreadIconPicker : Fragment() {
      * Display the bottom sheet populated with a list of icons the user can select from.
      */
     private fun showBottomSheet(icons: MutableList<AwfulPostIcon>) {
-        if (bottomSheet != null) {
-            bottomSheet?.dismiss()
-        }
-        bottomSheet = ThemedBottomSheetDialog(generatePostIconMenu(icons))
-        // each icon's ID corresponds to its index in the list
-        bottomSheet!!.setClickListeners({ item: MenuItem? ->
-            useIcon(
-                icons[item!!.itemId]
+        val bottomSheetActivity = activity as? AwfulSheetActivity
+        bottomSheetActivity?.let {
+            it.showBottomSheet(
+                menu = generatePostIconMenu(icons),
+                onItemClick = { item -> useIcon(icons[item.itemId])
+                }
             )
-        }, null, null)
-        bottomSheet!!.toggleVisible(requireActivity())
+        }
     }
 
 
@@ -165,7 +158,7 @@ class ThreadIconPicker : Fragment() {
                 .build(null, object : AwfulResultCallback<ArrayList<AwfulPostIcon>> {
                     override fun success(result: ArrayList<AwfulPostIcon>) {
                         // add a blank 'no icon' icon too
-                        if (!result.isEmpty()) {
+                        if (result.isNotEmpty()) {
                             result.add(0, AwfulPostIcon.BLANK_ICON)
                         }
                         // update the cache with these new icons
@@ -180,7 +173,6 @@ class ThreadIconPicker : Fragment() {
                     }
 
                     override fun failure(error: VolleyError?) {
-//                        new AwfulFragment.AlertBuilder().setTitle("Failed to retrieve posticons!").setSubtitle("Draft Saved").show();
                         Toast.makeText(
                             activity,
                             "Failed to load icons\nForum ID " + forumId,
@@ -198,11 +190,11 @@ class ThreadIconPicker : Fragment() {
     private fun generatePostIconMenu(postIcons: MutableList<AwfulPostIcon>): Menu {
         val menu: Menu = PopupMenu(context, view).menu
         // add each icon, setting its ID to its index in the list
-        var icon: AwfulPostIcon
+
         for (i in postIcons.indices) {
-            icon = postIcons[i]
+            val icon = postIcons[i]
             val item = menu.add(Menu.NONE, i, i, "")
-                .setTitle(if (icon == AwfulPostIcon.BLANK_ICON) "No icon" else "")
+                .setTitle("")
             if (icon.drawable != null) {
                 item.icon = icon.drawable
             } else {

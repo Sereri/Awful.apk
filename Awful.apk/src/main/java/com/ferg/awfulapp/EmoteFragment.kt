@@ -94,9 +94,9 @@ class EmotePicker : AwfulDialogFragment() {
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.emote_picker_container_fragment, container, false);
-        awfulActivity?.setPreferredFont(view)
-        return view;
+        val view = inflater.inflate(R.layout.emote_picker_container_fragment, container, false)
+        awfulActivity.setPreferredFont(view)
+        return view
     }
 
     override fun onActivityCreated(aSavedState: Bundle?) {
@@ -190,7 +190,7 @@ class EmoteHistoryFragment : EmoteGridFragment() {
             filterExactCode = true
             currentFilter = EmoteHistory.getRecent().let { recent ->
                 // a blank filter list will show all emotes, so we need a term that shouldn't match anything...
-                if (recent.isBlank()) "match_nothing_thanks" else recent
+                recent.ifBlank { "match_nothing_thanks" }
             }
         }
     }
@@ -214,9 +214,9 @@ abstract class EmoteGridFragment : AwfulFragment() {
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(layoutId, container, false);
+        val view = inflater.inflate(layoutId, container, false)
         awfulActivity?.setPreferredFont(view)
-        return view;
+        return view
     }
 
 

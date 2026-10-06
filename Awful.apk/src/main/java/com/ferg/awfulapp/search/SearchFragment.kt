@@ -66,6 +66,8 @@ import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.lang3.ArrayUtils
 import timber.log.Timber
 import java.util.Locale.getDefault
+import androidx.core.view.size
+import androidx.core.view.get
 
 class SearchFragment : AwfulFragment() {
 
@@ -208,8 +210,8 @@ class SearchFragment : AwfulFragment() {
         super.onPrepareOptionsMenu(menu)
 
         val fm = FontManager.getInstance()
-        for (i in 0 until menu.size()) {
-            fm.setMenuItemFont(menu.getItem(i))
+        for (i in 0 until menu.size) {
+            fm.setMenuItemFont(menu[i])
         }
     }
 

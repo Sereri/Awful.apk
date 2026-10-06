@@ -75,7 +75,7 @@ class LepersColonyFragment : AwfulFragment() {
         private const val KEY_CURRENT_PAGE = "current page"
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
             inflateView(R.layout.rap_sheet, container, inflater)
 
 

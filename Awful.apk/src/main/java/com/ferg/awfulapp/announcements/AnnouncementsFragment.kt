@@ -93,7 +93,7 @@ class AnnouncementsFragment : AwfulFragment() {
     }
 
 
-    public override fun onActivityCreated(aSavedState: Bundle?) {
+    override fun onActivityCreated(aSavedState: Bundle?) {
         super.onActivityCreated(aSavedState)
         showAnnouncements()
     }
@@ -140,7 +140,7 @@ class AnnouncementsFragment : AwfulFragment() {
     }
 
 
-    public override fun getTitle(): String {
+    override fun getTitle(): String {
         return getString(R.string.announcements)
     }
 

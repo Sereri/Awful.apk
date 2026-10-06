@@ -161,8 +161,7 @@ class AwfulLoginActivity : AwfulActivity() {
                         }
                         if (response != null && response.statusCode == HttpStatus.SC_MOVED_TEMPORARILY) {
                             val result =
-                                !CookieController.getCookieString(Constants.COOKIE_PREF_PASSWORD)
-                                    .isEmpty()
+                                CookieController.getCookieString(Constants.COOKIE_PREF_PASSWORD).isNotEmpty()
                             if (result) {
                                 // TODO: this should probably be handled by firing a ProfileRequest and getting the username from there, maybe through SyncManager
                                 val prefs = AwfulPreferences.getInstance(applicationContext)

@@ -5,11 +5,13 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.util.Log
+import androidx.core.content.edit
 import com.android.volley.VolleyError
 import com.ferg.awfulapp.AwfulApplication.Companion.appStatePrefs
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.preferences.AwfulPreferences
+import com.ferg.awfulapp.preferences.StringPreference
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.provider.DatabaseHelper
 import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
@@ -18,12 +20,8 @@ import com.ferg.awfulapp.task.IndexIconRequest.Companion.REQUEST_TAG
 import com.ferg.awfulapp.thread.AwfulForum
 import org.apache.commons.lang3.StringUtils
 import java.sql.Timestamp
-import java.util.Arrays
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.concurrent.Volatile
-import androidx.core.content.edit
-import com.ferg.awfulapp.preferences.StringPreference
-import com.ferg.awfulapp.preferences.StringSetPreference
 
 /**
  * Created by baka kaba on 04/04/2016.
@@ -45,7 +43,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
 
     // using a COW array to make listener de/registration and iteration ~fairly~ thread-safe
     private val listeners: MutableSet<ForumsUpdateListener> =
-        CopyOnWriteArraySet<ForumsUpdateListener>()
+        CopyOnWriteArraySet()
     private val context: Context = context.applicationContext
 
     fun registerListener(listener: ForumsUpdateListener) {
@@ -332,13 +330,13 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
      * @return The resulting list of Forums
      */
     private fun loadForumData(cursor: Cursor?): MutableList<Forum?> {
-        val forumList: MutableList<Forum?> = ArrayList<Forum?>()
+        val forumList: MutableList<Forum?> = ArrayList()
         if (cursor == null) {
             return forumList
         }
 
         var forum: Forum?
-        val favouriteForumIds = Arrays.asList<String?>(*favouriteForumIds)
+        val favouriteForumIds = listOf<String?>(*favouriteForumIds)
         while (cursor.moveToNext()) {
             forum = Forum(
                 cursor.getInt(cursor.getColumnIndexOrThrow(AwfulForum.ID)),
@@ -380,7 +378,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
         val timestamp = System.currentTimeMillis()
         this.lastRefreshTime = timestamp
         val updateTime = Timestamp(timestamp).toString()
-        val allForums: MutableList<Forum> = ArrayList<Forum>()
+        val allForums: MutableList<Forum> = ArrayList()
 
         // add any special forums not on the main hierarchy
         val bookmarks = Forum(Constants.USERCP_ID, TOP_LEVEL_PARENT_ID, "Bookmarks", "")
@@ -415,7 +413,7 @@ class ForumRepository private constructor(context: Context) : UpdateTask.ResultL
         forums: MutableList<Forum>,
         updateTime: String
     ): Array<ContentValues?> {
-        val allContentValues: MutableList<ContentValues?> = ArrayList<ContentValues?>(forums.size)
+        val allContentValues: MutableList<ContentValues?> = ArrayList(forums.size)
         var contentValues: ContentValues?
 
         for (forum in forums) {

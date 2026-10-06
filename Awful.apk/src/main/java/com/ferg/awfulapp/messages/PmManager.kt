@@ -6,8 +6,6 @@ import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.task.ThreadListRequest
 import org.jsoup.nodes.Document
-import java.util.Collections
-import java.util.WeakHashMap
 import kotlin.concurrent.Volatile
 
 /**
@@ -27,7 +25,7 @@ object PmManager {
     /**
      * Gotta synchronise things since the html to parse is coming in on a network thread
      */
-    private val callbacks: MutableMap<Listener, Any?> = mutableMapOf<Listener, Any?>()
+    private val callbacks: MutableMap<Listener, Any?> = mutableMapOf()
 
     @Volatile
     private var lastNotifiedPmUrl: String? = null

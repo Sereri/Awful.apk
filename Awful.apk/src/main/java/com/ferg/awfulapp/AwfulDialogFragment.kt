@@ -164,8 +164,8 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
 
     override fun requestStarted(req: AwfulRequest<*>) {
         val aa = this.awfulActivity
-        aa?.setSupportProgressBarVisibility(false)
-        aa?.setSupportProgressBarIndeterminateVisibility(true)
+        aa.setSupportProgressBarVisibility(false)
+        aa.setSupportProgressBarIndeterminateVisibility(true)
     }
 
     override fun requestUpdate(req: AwfulRequest<*>, percent: Int) {
@@ -174,10 +174,8 @@ abstract class AwfulDialogFragment : DialogFragment(), ActionMode.Callback,
 
     override fun requestEnded(req: AwfulRequest<*>, error: VolleyError?) {
         val aa = this.awfulActivity
-        if (aa != null) {
-            aa.setSupportProgressBarIndeterminateVisibility(false)
-            aa.setSupportProgressBarVisibility(false)
-        }
+        aa.setSupportProgressBarIndeterminateVisibility(false)
+        aa.setSupportProgressBarVisibility(false)
         if (error is AwfulError) {
             this.alertView?.show(error)
         } else if (error != null) {

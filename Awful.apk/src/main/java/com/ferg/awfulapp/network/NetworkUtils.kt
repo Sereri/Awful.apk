@@ -170,11 +170,11 @@ object NetworkUtils {
         try {
             var separator = ""
 
-            for (entry in parameters.entries) {
+            for ((key, value) in parameters) {
                 result.append(separator)
-                    .append(entry.key)
+                    .append(key)
                     .append("=")
-                    .append(URLEncoder.encode(entry.value, "UTF-8"))
+                    .append(URLEncoder.encode(value, "UTF-8"))
 
                 separator = "&"
             }

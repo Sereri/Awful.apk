@@ -46,6 +46,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.net.HttpCookie
+import androidx.core.net.toUri
+import androidx.core.content.edit
 
 /**
  * Base class for requests to the Something Awful forums site, with HTML response and error handling.
@@ -138,7 +140,7 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
         // if it's a GET request, we need to build the full parameterised URL here
         val requestUrl =
                 if (parameters is GetParams) {
-                    val builder = Uri.parse(baseUrl).buildUpon()
+                    val builder = baseUrl.toUri().buildUpon()
                     parameters.params.entries
                             .fold(builder) { uri, (k, v) -> uri.appendQueryParameter(k, v) }
                             .build().toString()
@@ -251,11 +253,11 @@ abstract class AwfulRequest<T>(protected val context: Context, private val baseU
                     COOKIE_PREFERENCE,
                     Context.MODE_PRIVATE
                 )
-                val edit = prefs.edit()
-                cookieMap.forEach {
-                    edit.putString(it.key, it.value)
+                prefs.edit {
+                    cookieMap.forEach {
+                        putString(it.key, it.value)
+                    }
                 }
-                edit.apply()
             }
         }
     }

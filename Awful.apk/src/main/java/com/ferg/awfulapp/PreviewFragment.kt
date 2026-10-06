@@ -61,7 +61,7 @@ class PreviewFragment : AwfulDialogFragment() {
 
         dialog?.setCanceledOnTouchOutside(true)
         postPreView?.setContent(this.blankPage)
-        awfulActivity?.setPreferredFont(dialogView)
+        awfulActivity.setPreferredFont(dialogView)
 
         return dialogView
     }

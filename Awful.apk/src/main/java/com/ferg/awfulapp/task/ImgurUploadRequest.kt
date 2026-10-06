@@ -133,8 +133,8 @@ class ImgurUploadRequest private constructor(
     @Throws(AuthFailureError::class)
     override fun getHeaders(): MutableMap<String?, String?> {
         val bearer = getInstance().imgurAccountToken
-        val headers: MutableMap<String?, String?> = ArrayMap<String?, String?>(1)
-        headers.put("Authorization", "Bearer $bearer")
+        val headers: MutableMap<String?, String?> = ArrayMap(1)
+        headers["Authorization"] = "Bearer $bearer"
         return headers
     }
 
@@ -166,7 +166,7 @@ class ImgurUploadRequest private constructor(
                 response.data,
                 charset(HttpHeaderParser.parseCharset(response.headers))
             )
-            return Response.success<JSONObject?>(
+            return Response.success(
                 JSONObject(json),
                 HttpHeaderParser.parseCacheHeaders(response)
             )

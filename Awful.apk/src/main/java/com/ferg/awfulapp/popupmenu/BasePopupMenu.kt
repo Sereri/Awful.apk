@@ -77,7 +77,7 @@ abstract class BasePopupMenu<T : AwfulAction?> internal constructor() : AwfulDia
         actionsView.setLayoutManager(LinearLayoutManager(context))
 
         dialog?.setCanceledOnTouchOutside(true)
-        awfulActivity?.setPreferredFont(result)
+        awfulActivity.setPreferredFont(result)
         return result
     }
 
@@ -132,7 +132,7 @@ abstract class BasePopupMenu<T : AwfulAction?> internal constructor() : AwfulDia
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActionHolder {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.action_item, parent, false)
-            awfulActivity?.setPreferredFont(view)
+            awfulActivity.setPreferredFont(view)
             return ActionHolder(view)
         }
 

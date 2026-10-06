@@ -1,6 +1,5 @@
 package com.ferg.awfulapp.forums
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -9,14 +8,12 @@ import android.graphics.PorterDuff
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
-import android.os.Build
 import android.util.AttributeSet
-import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
 import com.ferg.awfulapp.R
 import kotlin.math.min
-import androidx.core.graphics.toColorInt
 
 /**
  * Created by baka kaba on 14/05/2016.

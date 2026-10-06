@@ -103,7 +103,7 @@ class PrivateMessageListFragment : AwfulFragment() {
 
         mFAB = result.findViewById<View?>(R.id.just_pm) as FloatingActionButton
         mFAB?.setOnClickListener(onButtonClick)
-        mFAB?.setVisibility((if (prefs.noFAB) View.GONE else View.VISIBLE))
+        mFAB?.visibility = (if (prefs.noFAB) View.GONE else View.VISIBLE)
 
         awfulActivity?.setPreferredFont(result)
         return result
@@ -242,7 +242,7 @@ class PrivateMessageListFragment : AwfulFragment() {
     override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
         super.onPreferenceChange(prefs, key)
         if ("no_fab" == key) {
-            mFAB?.setVisibility((if (prefs.noFAB) View.GONE else View.VISIBLE))
+            mFAB?.visibility = (if (prefs.noFAB) View.GONE else View.VISIBLE)
             invalidateOptionsMenu()
         }
     }

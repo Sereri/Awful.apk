@@ -67,7 +67,7 @@ object SyncManager {
     private fun updateAnnouncements(context: Context) {
         // rubbish hack to avoid the Announcements and PM snackbars from appearing simultaneously and cancelling each other
         Handler(Looper.getMainLooper())
-            .postDelayed(Runnable { AnnouncementsManager.updateAnnouncements(context) }, 10000L)
+            .postDelayed({ AnnouncementsManager.updateAnnouncements(context) }, 10000L)
     }
 
 
@@ -162,13 +162,13 @@ object SyncManager {
             } else {
                 if (noForumData) {
                     val handler = Handler(context.mainLooper)
-                    handler.post(Runnable {
+                    handler.post {
                         Toast.makeText(
                             context,
                             R.string.forums_update_failure_message,
                             Toast.LENGTH_LONG
                         ).show()
-                    })
+                    }
                 }
                 forumRepo.unregisterListener(this)
             }

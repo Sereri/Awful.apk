@@ -48,7 +48,7 @@ internal object BasicTextInserter : Inserter() {
         val layout = getDialogLayout(R.layout.insert_text_dialog, activity)
         val textField = layout!!.findViewById<View?>(R.id.text_field) as EditText
         if (tag == BbCodeTag.FIXED) {
-            textField.setTypeface(Typeface.MONOSPACE)
+            textField.typeface = Typeface.MONOSPACE
         }
         setToSelection(textField, replyMessage)
 

@@ -3,7 +3,6 @@ package com.ferg.awfulapp.forums
 import android.content.Context
 import androidx.annotation.WorkerThread
 import com.ferg.awfulapp.constants.Constants.DEBUG
-import com.ferg.awfulapp.forums.UpdateTask.ResultListener
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.task.AwfulRequest
 import com.ferg.awfulapp.util.AwfulError

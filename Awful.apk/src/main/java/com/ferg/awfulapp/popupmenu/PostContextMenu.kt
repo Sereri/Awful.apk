@@ -37,7 +37,7 @@ class PostContextMenu : BasePopupMenu<PostMenuAction>() {
         editable = args.getBoolean(ARG_EDITABLE)
         posterHasPlat = args.getBoolean(ARG_POSTER_HAS_PLAT)
         val posterRole = args.getString(ARG_POSTER_ROLE, "")
-        posterHasRole = !posterRole.isEmpty()
+        posterHasRole = posterRole.isNotEmpty()
         posterIsUnreportable = "admin" == posterRole || "coder" == posterRole
         threadId = args.getInt(ARG_THREAD_ID)
         postId = args.getInt(ARG_POST_ID)
@@ -90,9 +90,7 @@ class PostContextMenu : BasePopupMenu<PostMenuAction>() {
         }
         val activity = activity as AwfulActivity?
         when (action) {
-            PostMenuAction.SEND_PM -> if (activity != null) {
-                activity.navigate(ComposePrivateMessage(posterUsername))
-            }
+            PostMenuAction.SEND_PM -> activity?.navigate(ComposePrivateMessage(posterUsername))
 
             PostMenuAction.QUOTE -> parent.displayPostReplyDialog(
                 threadId,
@@ -114,10 +112,7 @@ class PostContextMenu : BasePopupMenu<PostMenuAction>() {
                 posterUsername
             )
 
-            PostMenuAction.RAP_SHEET -> if (activity != null) {
-                // TODO: when/if this is refactored to Kotlin, pls remove the JvmOverloads constructor stuff from NavigationEvent.LepersColony that's providing a default page here
-                activity.navigate(LepersColony(posterUserId))
-            }
+            PostMenuAction.RAP_SHEET -> activity?.navigate(LepersColony(posterUserId))
 
             PostMenuAction.UNMARK_USER, PostMenuAction.MARK_USER -> parent.toggleMarkUser(
                 posterUsername
@@ -137,7 +132,7 @@ class PostContextMenu : BasePopupMenu<PostMenuAction>() {
         return String.format(action.menuLabel, posterUsername)
     }
 
-    public override fun getTitle(): String {
+    override fun getTitle(): String {
         return "Select an action"
     }
 

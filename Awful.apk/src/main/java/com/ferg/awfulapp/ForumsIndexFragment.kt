@@ -232,12 +232,12 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener {
     }
 
     override fun onForumsUpdateStarted() {
-        requireActivity().runOnUiThread(Runnable { statusFrog?.showSpinner(true) })
+        requireActivity().runOnUiThread { statusFrog?.showSpinner(true) }
     }
 
 
     override fun onForumsUpdateCompleted(success: Boolean) {
-        requireActivity().runOnUiThread(Runnable {
+        requireActivity().runOnUiThread {
             if (success) {
                 Snackbar.make(
                     forumIndexView,
@@ -247,12 +247,12 @@ class ForumsIndexFragment : AwfulFragment(), ForumsUpdateListener {
                 refreshForumList()
             }
             statusFrog?.showSpinner(false)
-        })
+        }
     }
 
 
     override fun onForumsUpdateCancelled() {
-        requireActivity().runOnUiThread(Runnable { statusFrog?.showSpinner(false) })
+        requireActivity().runOnUiThread { statusFrog?.showSpinner(false) }
     }
 
 

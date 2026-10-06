@@ -127,7 +127,7 @@ abstract class SettingsFragment : PreferenceFragmentCompat(), NavigationEventHan
      */
     @JvmField
     protected var prefClickListeners: MutableMap<Preference.OnPreferenceClickListener?, IntArray?> =
-        ArrayMap<Preference.OnPreferenceClickListener?, IntArray?>()
+        ArrayMap()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -279,10 +279,8 @@ abstract class SettingsFragment : PreferenceFragmentCompat(), NavigationEventHan
         var tempPref: Preference?
         var keyName: String?
 
-        for (entry in prefClickListeners.entries) {
-            val prefKeyIds = entry.value
+        for ((listener, prefKeyIds) in prefClickListeners) {
             if (prefKeyIds != null) {
-                val listener = entry.key
                 for (keyResId in prefKeyIds) {
                     keyName = getString(keyResId)
                     if ((findPreference<Preference?>(keyName).also { tempPref = it }) != null) {

@@ -173,7 +173,6 @@ enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
          * @return The resolved color
          * @see getThemeColorResId
          */
-        @Suppress("deprecation")
         @ColorInt
         private fun getThemeColor(
             @AttrRes colorAttr: Int,

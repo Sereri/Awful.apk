@@ -63,9 +63,11 @@ class PunishmentContextMenu : BasePopupMenu<PunishmentContextMenu.PunishmentMenu
 
     override fun generateMenuItems() =
             mutableListOf<PunishmentMenuAction?>()
-                    .apply { badPostUrl?.let { add(GO_TO_BAD_POST) } }
-                    .apply { if (!isRapSheet) add(USER_RAP_SHEET) }
-//                    .apply { add(MORE_BY_ADMIN) }
+                    .apply {
+                        add(GO_TO_BAD_POST)
+                        if (!isRapSheet) add(USER_RAP_SHEET)
+                        // add(MORE_BY_ADMIN)
+                    }
 
     override fun getMenuLabel(action: PunishmentMenuAction) =
             String.format(action.menuLabel, punishedUser.username)
@@ -73,7 +75,7 @@ class PunishmentContextMenu : BasePopupMenu<PunishmentContextMenu.PunishmentMenu
     // TODO: this doesn't really NEED a title, maybe make it optional (with the title area removed)?
     // this would probably be better with a disabled menu entry (a new MISSING_POST Action or something)
     // but I ain't rewriting the whole context menu system to make that happen right now
-    override fun getTitle() = badPostUrl.let { "Select an action" } ?: "(post is unavailable)"
+    override fun getTitle() = badPostUrl.let { "Select an action" }
 
     override fun onActionClicked(action: PunishmentMenuAction) {
         fun tryNavigate(e: NavigationEvent) {

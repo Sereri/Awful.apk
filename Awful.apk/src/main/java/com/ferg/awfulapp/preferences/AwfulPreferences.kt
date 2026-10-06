@@ -31,7 +31,6 @@
 package com.ferg.awfulapp.preferences
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
@@ -41,7 +40,7 @@ import android.net.Uri
 import android.preference.PreferenceManager
 import android.util.Log
 import android.util.TypedValue
-import androidx.annotation.StringRes
+import androidx.core.content.edit
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.constants.Constants
 import com.google.gson.Gson
@@ -52,7 +51,6 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Date
 import java.util.WeakHashMap
-import androidx.core.content.edit
 
 /**
  * This class acts as a convenience wrapper and simple cache for commonly used preference values.
@@ -232,7 +230,7 @@ class AwfulPreferences private constructor(
         updateValues()
         upgradePreferences()
 
-        longKeys = HashSet<String?>()
+        longKeys = HashSet()
         longKeys.add(mResources.getString(R.string.pref_key_probation_time))
         longKeys.add(mResources.getString(R.string.pref_key_imgur_token_expires))
     }
@@ -337,7 +335,7 @@ class AwfulPreferences private constructor(
         transformer = getPreference(StringPreference.TRANSFORMER, "Default")
         amberDefaultPos = getPreference(BooleanPreference.AMBER_DEFAULT_POS, false)
         hideIgnoredPosts = getPreference(BooleanPreference.HIDE_IGNORED_POSTS, false)
-        markedUsers = getPreference(StringSetPreference.MARKED_USERS, HashSet<String?>())
+        markedUsers = getPreference(StringSetPreference.MARKED_USERS, HashSet())
         forumIndexShowSections = getPreference(BooleanPreference.FORUM_INDEX_SHOW_SECTIONS, true)
         forumIndexShowSubtitles = getPreference(BooleanPreference.FORUM_INDEX_SHOW_SUBTITLES, true)
         forumIndexHideSubforums = getPreference(BooleanPreference.FORUM_INDEX_HIDE_SUBFORUMS, true)
@@ -517,7 +515,7 @@ class AwfulPreferences private constructor(
         try {
             val `in` = this.context.contentResolver.openInputStream(settingsUri)
             if (`in` == null) {
-                Log.w(TAG, "importSettings: unable to get input stream for uri: " + settingsUri)
+                Log.w(TAG, "importSettings: unable to get input stream for uri: $settingsUri")
                 return false
             }
             br = BufferedReader(InputStreamReader(`in`))
@@ -529,7 +527,7 @@ class AwfulPreferences private constructor(
         // read settings JSON file and deserialise into the types SharedPreferences dumps as
         val settings: MutableMap<String?, Any?>
         try {
-            settings = Gson().fromJson<MutableMap<String?, Any?>>(
+            settings = Gson().fromJson(
                 br,
                 object : TypeToken<MutableMap<String?, Any?>?>() {
                 }.type
@@ -541,9 +539,8 @@ class AwfulPreferences private constructor(
         sharedPrefs.edit {
 
             // TODO: 15/12/2017 there's no checking here at all - need to handle any errors safely. What happens when a pref no longer exists, or has its type changed between versions?
-            for (entry in settings.entries) {
-                val key = entry.key
-                val value: Any = entry.value!!
+            for ((key, value1) in settings) {
+                val value: Any = value1!!
                 // basically switching on the value type so we can call the correct setter method :/
                 if (value is Boolean) {
                     putBoolean(key, value)
@@ -553,7 +550,7 @@ class AwfulPreferences private constructor(
                     putFloat(key, value)
                 } else if (value is MutableList<*>) {
                     // this one's a little different, list -> string set
-                    val values: MutableSet<String?> = HashSet<String?>()
+                    val values: MutableSet<String?> = HashSet()
                     for (item in value) {
                         values.add(item.toString())
                     }
@@ -589,14 +586,14 @@ class AwfulPreferences private constructor(
     }
 
     fun markUser(username: String?) {
-        val newMarkedUsers: MutableSet<String?> = HashSet<String?>(markedUsers)
+        val newMarkedUsers: MutableSet<String?> = HashSet(markedUsers)
         newMarkedUsers.add(username)
         setPreference(StringSetPreference.MARKED_USERS, newMarkedUsers)
         markedUsers = newMarkedUsers
     }
 
     fun unmarkUser(username: String?) {
-        val newMarkedUsers: MutableSet<String?> = HashSet<String?>(markedUsers)
+        val newMarkedUsers: MutableSet<String?> = HashSet(markedUsers)
         newMarkedUsers.remove(username)
         setPreference(StringSetPreference.MARKED_USERS, newMarkedUsers)
         markedUsers = newMarkedUsers

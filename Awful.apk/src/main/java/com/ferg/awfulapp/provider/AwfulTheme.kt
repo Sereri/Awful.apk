@@ -15,7 +15,6 @@ import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.preferences.AwfulPreferences.Companion.getInstance
 import org.apache.commons.lang3.StringUtils
 import java.io.File
-import java.util.Arrays
 import java.util.Collections
 
 /**

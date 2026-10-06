@@ -1,6 +1,5 @@
 package com.ferg.awfulapp.webview
 
-import android.R
 import android.os.Message
 import android.util.Log
 import android.view.View
@@ -97,7 +96,7 @@ open class LoggingWebChromeClient(private val webView: WebView) : WebChromeClien
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         fullscreenContentDialog =
-            AlertDialog.Builder(webView.context, R.style.Theme_Black_NoTitleBar_Fullscreen)
+            AlertDialog.Builder(webView.context, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
                 .setView(view).show()
         view.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         customViewCallback = callback

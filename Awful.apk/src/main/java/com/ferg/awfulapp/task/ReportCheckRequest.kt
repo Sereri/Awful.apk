@@ -28,9 +28,9 @@ class ReportCheckRequest(context: Context, postId: Int)
             return ReportCheckResult(alreadyReported = true)
         }
         val warning = body.select("span.warningsmalltext")
-            ?.mapNotNull { it.text().takeIf(String::isNotBlank) }
-            ?.joinToString("\n")
-            ?.takeIf(String::isNotEmpty)
+            .mapNotNull { it.text().takeIf(String::isNotBlank) }
+            .joinToString("\n")
+            .takeIf(String::isNotEmpty)
         return ReportCheckResult(alreadyReported = false, warning = warning)
     }
 }

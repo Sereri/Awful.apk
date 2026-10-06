@@ -2,26 +2,26 @@ package com.ferg.awfulapp
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
-import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.ViewGroup
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
-import android.util.AttributeSet
-import android.view.MotionEvent
-import android.view.ViewGroup
-import com.ferg.awfulapp.Pages.*
+import com.ferg.awfulapp.Pages.ForumDisplay
+import com.ferg.awfulapp.Pages.ForumIndex
+import com.ferg.awfulapp.Pages.ThreadDisplay
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.util.AwfulUtils
 import timber.log.Timber
 import kotlin.properties.Delegates
-import androidx.core.graphics.drawable.toDrawable
 
 /**
  * Created by baka kaba on 04/11/2017.
@@ -362,7 +362,7 @@ class SwipeLockViewPager @JvmOverloads constructor(
 ) : ViewPager(context, attrs) {
 
     /** Enable or disable swiping on this viewpager */
-    var swipeEnabled by Delegates.observable(true, { _, _, enabled -> if (!enabled) cancelSwipe() })
+    var swipeEnabled by Delegates.observable(true) { _, _, enabled -> if (!enabled) cancelSwipe() }
     private var ignoreMotion = false
 
     /** Forcibly end the current swipe, and ignore any further motion events (avoids regaining focus during a swipe and seeing it as a large, sudden move) */

@@ -16,7 +16,6 @@ import java.io.FileReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.Reader
-import java.util.Arrays
 
 /**
  * Created by baka kaba on 04/06/2017.
@@ -210,7 +209,7 @@ object AwfulHtmlPage {
         }
 
         // should be fine to re-use this since we rewrite every mapping each time
-        val postData: MutableMap<String?, String?> = ArrayMap<String?, String?>()
+        val postData: MutableMap<String?, String?> = ArrayMap()
         postData["notOnProbation"] = if (aPrefs.isOnProbation) null else "notOnProbation"
 
         // run each post's data through the template, and combine into a final HTML string

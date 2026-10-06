@@ -50,7 +50,7 @@ object CookieController {
         val finalCookies: String = (captchaCookie.orElse("")
                 + Optional.ofNullable<String>(cookie).orElse(""))
 
-        if (!finalCookies.isEmpty()) {
+        if (finalCookies.isNotEmpty()) {
             headers[COOKIE_HEADER] = finalCookies
         }
     }

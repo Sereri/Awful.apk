@@ -79,8 +79,8 @@ class NavigationDrawer(val activity: AwfulActivity, toolbar: Toolbar, val prefs:
         drawerLayout.setDrawerListener(drawerToggle)
 
         val nav = navigationMenu.getHeaderView(0)
-        username = nav.findViewById(R.id.sidebar_username) as TextView
-        avatar = nav.findViewById(R.id.sidebar_avatar) as ImageView
+        username = nav.findViewById(R.id.sidebar_username)
+        avatar = nav.findViewById(R.id.sidebar_avatar)
 
         prefs.registerCallback(object: AwfulPreferences.AwfulPreferenceUpdate {
             override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {

@@ -132,7 +132,7 @@ dependencies {
     implementation 'com.jakewharton.threetenabp:threetenabp:1.4.9'
     implementation 'com.samskivert:jmustache:1.16'
 
-    implementation group: 'cz.msebera.android' , name: 'httpclient', version: '4.4.1.1'
+    implementation 'cz.msebera.android:httpclient:4.4.1.1'
     implementation ('org.apache.httpcomponents:httpmime:4.3.1') {
         exclude module: "httpclient"
     }

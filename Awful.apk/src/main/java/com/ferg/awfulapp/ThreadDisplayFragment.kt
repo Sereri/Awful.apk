@@ -203,7 +203,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler {
     private var keepScreenOn = false
 
     //oh god i'm replicating core android functionality, this is a bad sign.
-    private val backStack: LinkedList<AwfulStackEntry?> = LinkedList<AwfulStackEntry?>()
+    private val backStack: LinkedList<AwfulStackEntry?> = LinkedList()
     private var bypassBackStack = false
 
     private var mTitle: String? = null
@@ -508,7 +508,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler {
 
             // Add the captcha cookie if it is present.
             val captchaCookie = CookieController.getCookieString(Constants.COOKIE_NAME_CAPTCHA)
-            if (!captchaCookie.isEmpty()) {
+            if (captchaCookie.isNotEmpty()) {
                 cookieMonster.setCookie(Constants.COOKIE_DOMAIN_CAPTCHA, captchaCookie)
             }
 
@@ -537,11 +537,9 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler {
         val lockUnlock = menu.findItem(R.id.lock_unlock)
         if (lockUnlock != null) {
             lockUnlock.isVisible = threadLockableUnlockable
-            lockUnlock.setTitle(
-                (if (threadLocked) getString(R.string.thread_unlock) else getString(
-                    R.string.thread_lock
-                ))
-            )
+            lockUnlock.title = (if (threadLocked) getString(R.string.thread_unlock) else getString(
+                R.string.thread_lock
+            ))
         }
         val find = menu.findItem(R.id.find)
         if (find != null) {
@@ -556,7 +554,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler {
             if (threadArchived) {
                 bk.title = getString(R.string.bookmarkarchived)
             } else {
-                bk.setTitle((if (threadBookmarked) getString(R.string.unbookmark) else getString(R.string.bookmark)))
+                bk.title = (if (threadBookmarked) getString(R.string.unbookmark) else getString(R.string.bookmark))
             }
             bk.isEnabled = !threadArchived
         }
@@ -1343,7 +1341,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler {
         var isGif = false
         // TODO: parsing fails on magic webdev urls like http://tpm2016.zoffix.com/#/40
         // it thinks the # is the start of the ref section of the url, so the Path for that url is '/'
-        val path = Uri.parse(url)
+        val path = url.toUri()
         var lastSegment = path.lastPathSegment
         // null-safe path checking (there may be no path segments, e.g. a link to a domain name)
         if (lastSegment != null) {
@@ -1473,7 +1471,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler {
 
     override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
         super.onPreferenceChange(preferences, key)
-        i("onPreferenceChange" + (if (key != null) ":$key" else ""))
+        i("onPreferenceChange%s", (if (key != null) ":$key" else ""))
         if (null != awfulActivity && pageBar != null) {
             awfulActivity?.setPreferredFont(pageBar?.textView)
             pageBar?.setTextColour(ColorProvider.ACTION_BAR_TEXT.color)

@@ -27,7 +27,7 @@ import com.ferg.awfulapp.constants.Constants
  */
 internal class ElementCollection(description: String?) {
     private val TAG: String = Class::class.java.simpleName + (if (description == null) "" else ":$description")
-    private val elements: MutableList<Element> = ArrayList<Element>()
+    private val elements: MutableList<Element> = ArrayList()
 
     /**
      * This is the ID representing a missing or unidentified element.
@@ -141,7 +141,7 @@ internal class ElementCollection(description: String?) {
      * Use these to build up a collection of known items in a handler, like
      * a list of all known ratings the site might throw at us.
      */
-    private inner class Element(
+    private class Element(
         /**
          * A constant used to group elements into categories, such as
          * different rating types, which forum a secondary tag belongs to, etc.

@@ -6,7 +6,6 @@ import com.ferg.awfulapp.constants.Constants.FUNCTION_MEMBER
 import com.ferg.awfulapp.constants.Constants.PARAM_ACTION
 import com.ferg.awfulapp.constants.Constants.PARAM_USER_ID
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.preferences.BooleanPreference
 import com.ferg.awfulapp.preferences.IntPreference
 import com.ferg.awfulapp.preferences.StringPreference
 import com.ferg.awfulapp.util.AwfulError

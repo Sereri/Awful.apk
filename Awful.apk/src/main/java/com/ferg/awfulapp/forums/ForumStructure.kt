@@ -1,7 +1,6 @@
 package com.ferg.awfulapp.forums
 
 import android.util.Log
-import androidx.annotation.IntDef
 
 /**
  * Created by baka kaba on 09/04/2016.
@@ -43,10 +42,10 @@ class ForumStructure private constructor(private val forumTree: MutableList<Foru
             orderedForums: MutableList<Forum?>,
             topLevelParentId: Int?
         ): ForumStructure {
-            val forumTree: MutableList<Forum> = ArrayList<Forum>()
+            val forumTree: MutableList<Forum> = ArrayList()
 
             // linked hashmap so we maintain the list's ordering
-            val forumsById: MutableMap<Int?, Forum> = LinkedHashMap<Int?, Forum>()
+            val forumsById: MutableMap<Int?, Forum> = LinkedHashMap()
             for (forum in orderedForums) {
                 forum?.let {
                     val forumCopy = Forum(it)
@@ -59,7 +58,7 @@ class ForumStructure private constructor(private val forumTree: MutableList<Foru
          */
             var parentForum: Forum?
             for (forum in forumsById.values) {
-                parentForum = forumsById.get(forum.parentId)
+                parentForum = forumsById[forum.parentId]
 
                 // check if this forum is a top-level category 'forum' like Main or Community
                 if (topLevelParentId == null && parentForum == null || topLevelParentId != null && forum.parentId == topLevelParentId) {
@@ -90,7 +89,7 @@ class ForumStructure private constructor(private val forumTree: MutableList<Foru
          * @return A ForumStructure with the same hierarchy
          */
         fun buildFromTree(forumTree: MutableList<Forum>, topLevelId: Int): ForumStructure {
-            val newForumTree: MutableList<Forum> = ArrayList<Forum>()
+            val newForumTree: MutableList<Forum> = ArrayList()
             copyTreeWithParentId(forumTree, newForumTree, topLevelId)
             return ForumStructure(newForumTree)
         }
@@ -211,7 +210,7 @@ class ForumStructure private constructor(private val forumTree: MutableList<Foru
         }
 
         fun build(): MutableList<Forum> {
-            val generatedList: MutableList<Forum> = ArrayList<Forum>()
+            val generatedList: MutableList<Forum> = ArrayList()
 
             for (rootForum in forumTree) {
                 val rootForumCopy = Forum(rootForum)
@@ -230,15 +229,19 @@ class ForumStructure private constructor(private val forumTree: MutableList<Foru
                         generatedList.add(forumCopy)
                     }
 
-                    if (listFormat == ListFormat.FLAT) {
-                        // flat list - add main forum and everything below it to the top level
-                        collectSubforums(mainForum.subforums, generatedList)
-                    } else if (listFormat == ListFormat.TWO_LEVEL) {
-                        // two-level list - add main forum to the top level, and everything below it into its subforum list
-                        collectSubforums(mainForum.subforums, forumCopy.subforums)
-                    } else if (listFormat == ListFormat.FULL_TREE) {
-                        // full tree structure
-                        copyForumTree(mainForum.subforums, forumCopy.subforums)
+                    when (listFormat) {
+                        ListFormat.FLAT -> {
+                            // flat list - add main forum and everything below it to the top level
+                            collectSubforums(mainForum.subforums, generatedList)
+                        }
+                        ListFormat.TWO_LEVEL -> {
+                            // two-level list - add main forum to the top level, and everything below it into its subforum list
+                            collectSubforums(mainForum.subforums, forumCopy.subforums)
+                        }
+                        ListFormat.FULL_TREE -> {
+                            // full tree structure
+                            copyForumTree(mainForum.subforums, forumCopy.subforums)
+                        }
                     }
                 }
             }

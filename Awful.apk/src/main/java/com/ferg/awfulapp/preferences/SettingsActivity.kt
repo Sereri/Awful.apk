@@ -55,8 +55,8 @@ class SettingsActivity : AwfulActivity(), AwfulPreferenceUpdate, SettingsFragmen
 
     private val importData: Intent? = null
 
-    protected override fun onCreate(savedInstanceState: Bundle?) {
-        prefs = AwfulPreferences.getInstance(this, this)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        prefs = getInstance(this, this)
         currentThemeName = prefs?.theme
         updateTheme()
         // theme needs to be set BEFORE the super call, or it'll be inconsistent
@@ -69,12 +69,10 @@ class SettingsActivity : AwfulActivity(), AwfulPreferenceUpdate, SettingsFragmen
         }
 
         val page = intent.getStringExtra(Constants.SETTINGS_PAGE)
-
-        var startFragment: SettingsFragment? = null
-        if ("account" == page) {
-            startFragment = AccountSettings()
+        val startFragment = if ("account" == page) {
+            AccountSettings()
         } else {
-            startFragment = RootSettings()
+            RootSettings()
         }
 
         val fm = supportFragmentManager
@@ -218,7 +216,7 @@ class SettingsActivity : AwfulActivity(), AwfulPreferenceUpdate, SettingsFragmen
 
     override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
         // update the summaries on any loaded fragments
-        for (tag in arrayOf<String>(ROOT_FRAGMENT_TAG, SUBMENU_FRAGMENT_TAG)) {
+        for (tag in arrayOf(ROOT_FRAGMENT_TAG, SUBMENU_FRAGMENT_TAG)) {
             val fragment = supportFragmentManager.findFragmentByTag(tag) as SettingsFragment?
             fragment?.setSummaries()
         }

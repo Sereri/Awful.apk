@@ -54,7 +54,7 @@ class ThreadIconPicker : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.icon_picker, container, true)
-        selectedIconView = view.findViewById<ImageView>(R.id.selected_icon)
+        selectedIconView = view.findViewById(R.id.selected_icon)
         selectedIconView.setOnClickListener { showPicker() }
         selectedIconView.setOnLongClickListener {
             secretForumCycler()
@@ -175,7 +175,7 @@ class ThreadIconPicker : Fragment() {
                     override fun failure(error: VolleyError?) {
                         Toast.makeText(
                             activity,
-                            "Failed to load icons\nForum ID " + forumId,
+                            "Failed to load icons\nForum ID $forumId",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -228,7 +228,7 @@ class ThreadIconPicker : Fragment() {
         /**
          * fake forum ID so we can mix in the PM icons with the other forum icons
          */
-        private val PM_FORUM_ID = -324546
+        private const val PM_FORUM_ID = -324546
 
         private val iconsCache = SparseArray<MutableList<AwfulPostIcon>?>()
     }

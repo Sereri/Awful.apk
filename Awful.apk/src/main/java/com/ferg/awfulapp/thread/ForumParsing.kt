@@ -3,13 +3,12 @@ package com.ferg.awfulapp.thread
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
-import android.net.Uri
+import androidx.core.net.toUri
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.provider.AwfulProvider
 import com.ferg.awfulapp.provider.DatabaseHelper
-import com.ferg.awfulapp.thread.AwfulPost.*
 import com.ferg.awfulapp.thread.AwfulPost.Companion.AVATAR
 import com.ferg.awfulapp.thread.AwfulPost.Companion.AVATAR_SECOND
 import com.ferg.awfulapp.thread.AwfulPost.Companion.AVATAR_TEXT
@@ -40,10 +39,13 @@ import org.jsoup.nodes.Element
 import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.concurrent.*
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import androidx.core.net.toUri
 
 /**
  * Created by baka kaba on 10/11/2017.
@@ -154,7 +156,7 @@ class PostParseTask(
 
             // grab the custom title, and also avatar and alternate avatar if there are any
             postData.selectFirst(".title")
-                ?.also { put(AVATAR_TEXT, it.text() ?: "") }
+                ?.also { put(AVATAR_TEXT, it.text()) }
                 ?.select("img")
                 ?.take(2)
                 ?.forEachIndexed { index, image ->
@@ -216,8 +218,7 @@ class PostParseTask(
             }
 
             postData.getElementsByClass("editedBy")
-                .mapNotNull { it.children().first() }
-                .firstOrNull()
+                .firstNotNullOfOrNull { it.children().first() }
                 ?.let { put(EDITED, "<i>${it.text()}</i>") }
 
             put(EDITABLE, postData.getElementsByAttributeValue("alt", "Edit").isNotEmpty().sqlBool)
@@ -234,11 +235,11 @@ class PostParseTask(
         author.classNames().find { it.startsWith("role-") }?.substring(5) ?: ""
 
     private fun getCustomIcon(author: Element): String? {
-        val iconClass = author.classNames().last();
+        val iconClass = author.classNames().last()
         if(!iconClass.startsWith("role") && !arrayOf("author", "op", "platinum").contains(iconClass)) {
-            return iconClass;
+            return iconClass
         }
-        return null;
+        return null
     }
 
     private fun Element.hasDescendantWithClass(cssClass: String): Boolean =

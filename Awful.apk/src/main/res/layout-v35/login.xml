@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
@@ -23,10 +24,10 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_marginTop="50dp"
-        android:drawableLeft="@drawable/emot_goonsay"
         android:drawablePadding="4dp"
         android:text="@string/login_message"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        app:drawableStartCompat="@drawable/emot_goonsay" />
 
     <LinearLayout
         android:id="@+id/login_text_container"
@@ -69,8 +70,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/login_text_container"
-        android:layout_alignParentLeft="true"
-        android:layout_marginRight="5dip"
+        android:layout_alignParentStart="true"
+        android:layout_marginEnd="5dip"
         android:layout_marginTop="5dip" />
 
 
@@ -79,16 +80,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/login_text_container"
-        android:layout_toLeftOf="@id/login"
-        android:layout_toRightOf="@id/login_accept"
-        android:layout_marginRight="15dip"
+        android:layout_toStartOf="@id/login"
+        android:layout_toEndOf="@id/login_accept"
+        android:layout_marginEnd="15dip"
         android:text="@string/terms_and_conditions" />
 
     <Button
         android:id="@+id/login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_below="@+id/login_text_container"
         android:background="#AAFFFFFF"
         android:drawablePadding="15dip"

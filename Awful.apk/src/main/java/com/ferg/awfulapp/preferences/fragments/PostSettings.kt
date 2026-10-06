@@ -112,7 +112,7 @@ class PostSettings : SettingsFragment() {
                 }
                 FIXED_FONT_SIZE_KEY -> {
                     bar.progress = mPrefs!!.postFixedFontSizeSp - MIN_SIZE
-                    mFontSizeText.setTypeface(Typeface.MONOSPACE)
+                    mFontSizeText.typeface = Typeface.MONOSPACE
                 }
                 else -> Log.w(TAG, "Tried to set font size for: " + prefKey + ", not a valid key!")
             }

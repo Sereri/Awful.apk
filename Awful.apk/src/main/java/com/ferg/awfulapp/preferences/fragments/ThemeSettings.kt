@@ -80,8 +80,8 @@ class ThemeSettings : SettingsFragment() {
      * Replaces all entries with the stock app themes, and adds any custom ones it can find.
      */
     private fun refreshThemePreference() {
-        val themeNames: MutableList<CharSequence?> = ArrayList<CharSequence?>()
-        val themeValues: MutableList<CharSequence?> = ArrayList<CharSequence?>()
+        val themeNames: MutableList<CharSequence?> = ArrayList()
+        val themeValues: MutableList<CharSequence?> = ArrayList()
         val themePref = findPrefById(R.string.pref_key_theme) as ListPreference?
             ?: throw RuntimeException("Theme or layout preference is missing!")
 
@@ -129,9 +129,9 @@ class ThemeSettings : SettingsFragment() {
         val layoutPref = findPrefById(R.string.pref_key_layout) as ListPreference?
             ?: throw RuntimeException("Theme or layout preference is missing!")
         val layoutNames: MutableList<CharSequence?> =
-            ArrayList<CharSequence?>(listOf(*layoutPref.entries))
+            ArrayList(listOf(*layoutPref.entries))
         val layoutValues: MutableList<CharSequence?> =
-            ArrayList<CharSequence?>(listOf(*layoutPref.entryValues))
+            ArrayList(listOf(*layoutPref.entryValues))
 
         val customDir = this.customDir ?: return
         // add all '.mustache' files, using the bit before the extension as the display name
@@ -189,7 +189,7 @@ class ThemeSettings : SettingsFragment() {
 
     private fun requestStoragePermissions() {
         requestPermissions(
-            arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE),
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
             Constants.AWFUL_PERMISSION_READ_EXTERNAL_STORAGE
         )
     }

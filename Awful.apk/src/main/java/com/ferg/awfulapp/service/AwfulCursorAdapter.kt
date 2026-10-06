@@ -60,10 +60,6 @@ class AwfulCursorAdapter(
         fragment
     )
 
-    fun setId(id: Int) {
-        mId = id
-    }
-
     override fun bindView(current: View, context: Context?, data: Cursor) {
         if (data.getColumnIndex(AwfulThread.BOOKMARKED) >= 0) { //unique to threads
             AwfulThread.setDataOnThreadListItem(current, mPrefs, data, mFragment)

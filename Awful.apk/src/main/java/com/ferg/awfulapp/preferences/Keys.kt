@@ -1,6 +1,5 @@
 package com.ferg.awfulapp.preferences
 
-import androidx.annotation.StringRes
 import com.ferg.awfulapp.R
 
 /**

@@ -31,7 +31,7 @@ internal class DropdownParserTask(context: Context) : UpdateTask(context) {
     private val parsedForums = mutableListOf<Forum?>()
 
 
-    private inner class DropdownParseRequest : UpdateTask.ForumParseTask(FUNCTION_FORUM) {
+    private inner class DropdownParseRequest : ForumParseTask(FUNCTION_FORUM) {
 
         init {
             parameters.add(PARAM_FORUM_ID, FORUM_ID_GOLDMINE.toString())

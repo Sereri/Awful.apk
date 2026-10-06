@@ -56,13 +56,13 @@ class AnnouncementsManager private constructor() {
     /**
      * The current announcements marked as read - this is a subset of currentAnnouncements
      */
-    private val readAnnouncements: MutableSet<String?> = HashSet<String?>()
+    private val readAnnouncements: MutableSet<String?> = HashSet()
     private var hasUpdatedFromSite = false
 
     /**
      * The last set of announcements parsed
      */
-    private var currentAnnouncements: MutableSet<String?> = HashSet<String?>()
+    private var currentAnnouncements: MutableSet<String?> = HashSet()
 
 
     /**
@@ -80,7 +80,7 @@ class AnnouncementsManager private constructor() {
      * Forum pages only, thanks!
      */
     fun parseForumPage(page: Document) {
-        val parsedAnnouncements: MutableSet<String?> = HashSet<String?>()
+        val parsedAnnouncements: MutableSet<String?> = HashSet()
         var newCount = 0
         var oldUnreadCount = 0
         var oldReadCount = 0
@@ -142,14 +142,14 @@ class AnnouncementsManager private constructor() {
         isFirstUpdate: Boolean
     ) {
         for (listener in callbacks.keys) {
-            handler.post(Runnable {
+            handler.post {
                 listener.onAnnouncementsUpdated(
                     newCount,
                     oldUnreadCount,
                     oldReadCount,
                     isFirstUpdate
                 )
-            })
+            }
         }
     }
 
@@ -161,7 +161,7 @@ class AnnouncementsManager private constructor() {
      * Only holds a weak reference, so keep your own reference if necessary.
      */
     fun registerListener(listener: AnnouncementListener) {
-        callbacks.put(listener, Any())
+        callbacks[listener] = Any()
     }
 
 
@@ -229,28 +229,16 @@ class AnnouncementsManager private constructor() {
             readAnnouncements.clear()
             currentAnnouncements.addAll(
                 appState!!.getStringSet(
-                    AnnouncementsManager.Companion.PREF_KEY_CURRENT_ANNOUNCEMENTS,
-                    kotlin.collections.mutableSetOf<kotlin.String?>()
+                    PREF_KEY_CURRENT_ANNOUNCEMENTS,
+                    kotlin.collections.mutableSetOf<String?>()
                 )!!
             )
             readAnnouncements.addAll(
                 appState.getStringSet(
-                    AnnouncementsManager.Companion.PREF_KEY_READ_ANNOUNCEMENTS,
-                    kotlin.collections.mutableSetOf<kotlin.String?>()
+                    PREF_KEY_READ_ANNOUNCEMENTS,
+                    kotlin.collections.mutableSetOf<String?>()
                 )!!
             )
-        }
-    }
-
-
-    /**
-     * Wipes all stored announcement data
-     */
-    fun clearState() {
-        synchronized(stateLock) {
-            currentAnnouncements.clear()
-            readAnnouncements.clear()
-            saveState()
         }
     }
 
@@ -328,7 +316,7 @@ class AnnouncementsManager private constructor() {
                             if (Constants.DEBUG) {
                                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                             }
-                            Log.w(AnnouncementsManager::class.java.getSimpleName(), message)
+                            Log.w(AnnouncementsManager::class.java.simpleName, message)
                         }
                     })
             )

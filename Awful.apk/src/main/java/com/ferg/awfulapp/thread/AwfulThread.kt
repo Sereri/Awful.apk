@@ -292,9 +292,9 @@ class AwfulThread : AwfulPagedItem() {
         ) {
             val startTime = System.currentTimeMillis()
             // TODO: 03/06/2017 see issue #503 on GitHub - filtering by user means the thread data gets overwritten by the pages from this new, shorter thread containing their posts
-            val BLANK_USER_ID = 0
+            // val BLANK_USER_ID = 0
             // TODO: 05/01/2018 this filtering on userID thing isn't actually doing anything...
-            val filteringOnUserId = filterUserId > BLANK_USER_ID
+            // val filteringOnUserId = filterUserId > BLANK_USER_ID
 
             // finally write new thread data to the database
             val cv = ThreadPageParseTask(

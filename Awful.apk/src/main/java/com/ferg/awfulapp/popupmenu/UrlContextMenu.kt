@@ -1,6 +1,5 @@
 package com.ferg.awfulapp.popupmenu
 
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,11 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.DrawableRes
+import androidx.core.net.toUri
 import com.ferg.awfulapp.R
 import com.ferg.awfulapp.ThreadDisplayFragment
 import com.ferg.awfulapp.popupmenu.UrlContextMenu.UrlMenuAction
 import com.ferg.awfulapp.provider.ColorProvider
-import androidx.core.net.toUri
 
 /**
  * Created by baka kaba on 22/05/2017.
@@ -42,7 +41,7 @@ class UrlContextMenu : BasePopupMenu<UrlMenuAction>() {
     }
 
 
-    public override fun onCreateView(
+    override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -95,7 +94,7 @@ class UrlContextMenu : BasePopupMenu<UrlMenuAction>() {
     }
 
 
-    public override fun getTitle(): String {
+    override fun getTitle(): String {
         return url
     }
 
@@ -123,11 +122,10 @@ class UrlContextMenu : BasePopupMenu<UrlMenuAction>() {
             subhead.text = subheadingText
             subhead.visibility = View.VISIBLE
         } else {
-            subhead.animate()?.alpha(0f)?.withEndAction(Runnable {
+            subhead.animate()?.alpha(0f)?.withEndAction {
                 subhead.text = subheadingText
                 subhead.animate()?.alpha(1f)
             }
-            )
         }
     }
 

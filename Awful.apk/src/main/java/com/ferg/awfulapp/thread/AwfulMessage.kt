@@ -117,7 +117,7 @@ object AwfulMessage : AwfulPagedItem() {
             else -> R.drawable.ic_drafts_dark
         }
         val icon = data.getString(data.getColumnIndexOrThrow(ICON))
-        if (icon != null && !icon.isEmpty()) {
+        if (icon != null && icon.isNotEmpty()) {
             val localFileName = "@drawable/" + icon.substring(icon.lastIndexOf('/') + 1, icon.lastIndexOf('.'))
                     .replace('-', '_').lowercase(Locale.getDefault())
             val imageID = current.resources.getIdentifier(localFileName, null, current.context.packageName)

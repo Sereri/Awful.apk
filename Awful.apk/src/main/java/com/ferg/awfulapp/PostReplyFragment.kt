@@ -162,7 +162,7 @@ class PostReplyFragment : AwfulFragment() {
         mReplyType = intent.getIntExtra(Constants.EDITING, -999)
         mPostId = intent.getIntExtra(Constants.REPLY_POST_ID, 0)
         mThreadId = intent.getIntExtra(Constants.REPLY_THREAD_ID, 0)
-        setActionBarTitle(getTitle()!!)
+        setActionBarTitle(getTitle())
 
         // perform some sanity checking
         var badRequest = false
@@ -762,7 +762,7 @@ class PostReplyFragment : AwfulFragment() {
             val content = messageComposer!!.text
             // don't save if the message is empty/whitespace
             // not trimming the actual content, so we retain any whitespace e.g. blank lines after quotes
-            if (!content.trim { it <= ' ' }.isEmpty()) {
+            if (content.trim { it <= ' ' }.isNotEmpty()) {
                 Log.i(Companion.TAG, "Saving reply! $content")
                 val post = if (replyData == null) ContentValues() else ContentValues(replyData)
                 post.put(AwfulMessage.ID, mThreadId)
@@ -935,10 +935,8 @@ class PostReplyFragment : AwfulFragment() {
 
 
     private fun getFilePath(uri: Uri): String? {
-        val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-
         // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(this.activity, uri)) {
+        if (DocumentsContract.isDocumentUri(this.activity, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)

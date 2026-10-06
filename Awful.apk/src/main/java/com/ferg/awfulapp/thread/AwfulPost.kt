@@ -83,7 +83,7 @@ class AwfulPost {
             Pattern.compile("^\\(USER WAS (?:BANNED|AUTOBANNED|PERMABANNED|PUT ON PROBATION) FOR THIS POST\\)$")
 
         private val HTTPS_SUPPORTED_DOMAINS: MutableList<String?> =
-            Collections.unmodifiableList<String?>(
+            Collections.unmodifiableList(
                 mutableListOf<String?>("imgur.com", "somethingawful.com", "giphy.com")
             )
 

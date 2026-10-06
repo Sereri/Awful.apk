@@ -251,9 +251,7 @@ class ForumsIndexActivity :
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val pagerItem = forumsPager.getCurrentFragment()
-        return if (mPrefs.volumeScroll && pagerItem?.attemptVolumeScroll(event) == true) {
-            true
-        } else super.dispatchKeyEvent(event)
+        return mPrefs.volumeScroll && pagerItem?.attemptVolumeScroll(event) == true || super.dispatchKeyEvent(event)
     }
 
     override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {

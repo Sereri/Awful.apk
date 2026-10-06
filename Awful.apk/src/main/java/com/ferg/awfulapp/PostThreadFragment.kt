@@ -89,6 +89,7 @@ import timber.log.Timber.Forest.v
 import timber.log.Timber.Forest.w
 import java.io.File
 import java.util.Locale
+import androidx.core.net.toUri
 
 class PostThreadFragment : AwfulFragment() {
     // UI components
@@ -675,7 +676,7 @@ class PostThreadFragment : AwfulFragment() {
             val content = messageComposer!!.text
             // don't save if the message is empty/whitespace
             // not trimming the actual content, so we retain any whitespace e.g. blank lines after quotes
-            if (!content.trim { it <= ' ' }.isEmpty()) {
+            if (content.trim { it <= ' ' }.isNotEmpty()) {
                 Log.i(Companion.TAG, "Saving thread! $content")
                 val post = if (threadData == null) ContentValues() else ContentValues(threadData)
                 post.put(AwfulMessage.ID, mForumId)
@@ -844,10 +845,8 @@ class PostThreadFragment : AwfulFragment() {
 
 
     private fun getFilePath(uri: Uri): String? {
-        val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-
         // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(this.activity, uri)) {
+        if (DocumentsContract.isDocumentUri(this.activity, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
@@ -863,7 +862,7 @@ class PostThreadFragment : AwfulFragment() {
             } else if (isDownloadsDocument(uri)) {
                 val id = DocumentsContract.getDocumentId(uri)
                 val contentUri = ContentUris.withAppendedId(
-                    Uri.parse("content://downloads/public_downloads"), id.toLong()
+                    "content://downloads/public_downloads".toUri(), id.toLong()
                 )
 
                 return getDataColumn(contentUri, null, null)

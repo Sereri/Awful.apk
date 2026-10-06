@@ -1,12 +1,11 @@
 package com.ferg.awfulapp.forums
 
+import androidx.core.graphics.get
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.ImageLoader.ImageContainer
 import com.android.volley.toolbox.ImageLoader.ImageListener
-import com.android.volley.toolbox.NetworkImageView
 import com.ferg.awfulapp.network.NetworkUtils
 import org.apache.commons.lang3.StringUtils
-import androidx.core.graphics.get
 
 /**
  * Created by baka kaba on 14/05/2016.

@@ -9,6 +9,7 @@ import com.ferg.awfulapp.util.AwfulError
 import org.jsoup.nodes.Document
 import timber.log.Timber
 import java.util.*
+import androidx.core.net.toUri
 
 /**
  *
@@ -81,7 +82,7 @@ internal class CrawlerTask(context: Context, priority: Priority) : UpdateTask(co
      * Parse a forum's url to retrieve its ID, or null if it couldn't be found
      */
     private fun getForumId(url: String): Int? =
-            Uri.parse(url).getQueryParameter(PARAM_FORUM_ID)?.toIntOrNull()
+        url.toUri().getQueryParameter(PARAM_FORUM_ID)?.toIntOrNull()
 
 
     /**
@@ -114,7 +115,7 @@ internal class CrawlerTask(context: Context, priority: Priority) : UpdateTask(co
     /**
      * A request that fetches the main forums page and parses it for sections (Main etc)
      */
-    private inner class MainForumRequest : UpdateTask.ForumParseTask(BASE_URL) {
+    private inner class MainForumRequest : ForumParseTask(BASE_URL) {
 
         override fun onRequestSucceeded(doc: Document) {
             Timber.i("Parsing main page")
@@ -133,7 +134,7 @@ internal class CrawlerTask(context: Context, priority: Priority) : UpdateTask(co
      * This loads a URL representing a [forum], and parses the resulting page, adding the data to
      * the [forum] object.
      */
-    private inner class ParseSubforumsRequest(private val forum: Forum, url: String) : UpdateTask.ForumParseTask(url) {
+    private inner class ParseSubforumsRequest(private val forum: Forum, url: String) : ForumParseTask(url) {
 
         override fun onRequestSucceeded(doc: Document) {
             parseSubforums(forum, doc)

@@ -70,11 +70,6 @@ class AlertView(private val activity: FragmentActivity?) {
         return this
     }
 
-    fun setIconAnimation(animation: Animation?): AlertView {
-        this.animation = animation
-        return this
-    }
-
     fun setDisplayLength(length: Int): AlertView {
         this.displayLength = length
         return this

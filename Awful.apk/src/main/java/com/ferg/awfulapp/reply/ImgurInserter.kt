@@ -89,7 +89,7 @@ class ImgurInserter : DialogFragment() {
         // get the dialog's 'upload' positive button so we can enable and disable it
         // setting the click listener directly prevents the dialog from dismissing, so the upload can run
         uploadButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-        uploadButton.setOnClickListener(View.OnClickListener { view: View? -> startUpload() })
+        uploadButton.setOnClickListener { _: View? -> startUpload() }
         // TODO: 05/06/2017 is that method guaranteed to be fired when the system creates the spinner and sets the first item?
         binding.uploadType.setSelection(
             appStatePrefs!!.getInt(
@@ -111,11 +111,7 @@ class ImgurInserter : DialogFragment() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-        binding.uploadImageSection.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                launchImagePicker()
-            }
-        })
+        binding.uploadImageSection.setOnClickListener { launchImagePicker() }
         binding.uploadUrlEdittext.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
@@ -273,7 +269,7 @@ class ImgurInserter : DialogFragment() {
                 return Pair<String?, Long?>(name, size)
             } else {
                 // no data for this Uri
-                return Pair<String?, Long?>(null, null)
+                return Pair(null, null)
             }
         }
     }

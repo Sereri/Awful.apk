@@ -210,7 +210,7 @@ enum class AwfulTheme(val displayName: String, val cssFilename: String, @field:S
          * instead, if it has one.
          */
         @JvmStatic
-        fun forForum(forumId: Int?): AwfulTheme {
+        fun forForum(forumId: Int? = null): AwfulTheme {
             // if we're using per-forum themes, try to get and return one, otherwise use the current theme in prefs
             var forumTheme: AwfulTheme? = null
             val prefs = getInstance()

@@ -47,7 +47,6 @@ import com.android.volley.VolleyError
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.preferences.AwfulPreferences
 import com.ferg.awfulapp.provider.AwfulProvider
-import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.service.AwfulCursorAdapter
 import com.ferg.awfulapp.task.AwfulRequest.AwfulResultCallback
 import com.ferg.awfulapp.task.PMListRequest
@@ -55,13 +54,12 @@ import com.ferg.awfulapp.thread.AwfulForum
 import com.ferg.awfulapp.thread.AwfulMessage
 import com.ferg.awfulapp.util.AwfulUtils
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
+import com.ferg.awfulapp.widget.AwfulRefreshLayout
 import timber.log.Timber.Forest.tag
 import timber.log.Timber.Forest.w
 
 
-class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListener {
+class PrivateMessageListFragment : AwfulFragment() {
     companion object {
         private const val TAG = "PrivateMessageList"
 
@@ -75,7 +73,7 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
     private var mCursorAdapter: AwfulCursorAdapter? = null
     private val mPMDataCallback = PMIndexCallback(handler)
 
-    private var mSRL: SwipyRefreshLayout? = null
+    private var mSRL: AwfulRefreshLayout? = null
 
     private var mFAB: FloatingActionButton? = null
 
@@ -93,7 +91,12 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
     ): View {
         super.onCreateView(aInflater, aContainer, aSavedState)
 
-        val result = aInflater.inflate(R.layout.private_message_list_fragment, aContainer, false)
+        val result = inflateView(
+            R.layout.private_message_list_fragment,
+            aContainer,
+            aInflater
+        )
+
 
         mPMList = result.findViewById<View?>(R.id.message_listview) as ListView
 
@@ -109,11 +112,10 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        mSRL = view.findViewById<View?>(R.id.pm_swipe) as SwipyRefreshLayout
+        mSRL = view.findViewById<View?>(R.id.pm_swipe) as AwfulRefreshLayout
         mSRL?.let {
-            it.setOnRefreshListener(this)
-            it.setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
-            it.setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null))
+            it.onLoadMore = ::loadAllMessages
+            it.onRefresh = ::syncPMs
         }
     }
 
@@ -137,7 +139,6 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
     }
 
     private fun syncPMs(loadAll: Boolean = isAllMessages) {
-        mSRL?.isRefreshing = true
         if (activity != null) {
             queueRequest(
                 PMListRequest(requireActivity(), currentFolder, loadAll).build(
@@ -145,14 +146,14 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
                     object : AwfulResultCallback<Void?> {
                         override fun success(result: Void?) {
                             restartLoader(Constants.PRIVATE_MESSAGE_THREAD, null, mPMDataCallback)
-                            mSRL?.isRefreshing = false
+                            mSRL?.finishedLoading()
                             mPMList?.setSelectionAfterHeaderView()
                         }
 
                         override fun failure(error: VolleyError?) {
                             w("Failed to sync PMs! Error: %s", error?.message)
                             // TODO: 28/01/2018 might be able to remove this everywhere - it's being set in AwfulFragment#onRequestEnded
-                            mSRL?.isRefreshing = false
+                            mSRL?.finishedLoading()
                         }
                     })
             )
@@ -286,11 +287,8 @@ class PrivateMessageListFragment : AwfulFragment(), SwipyRefreshLayout.OnRefresh
         }
     }
 
-
-    override fun onRefresh(swipyRefreshLayoutDirection: SwipyRefreshLayoutDirection?) {
-        if (swipyRefreshLayoutDirection == SwipyRefreshLayoutDirection.BOTTOM) {
-            isAllMessages = true
-        }
-        syncPMs(isAllMessages)
+    fun loadAllMessages() {
+        isAllMessages = true
+        syncPMs()
     }
 }

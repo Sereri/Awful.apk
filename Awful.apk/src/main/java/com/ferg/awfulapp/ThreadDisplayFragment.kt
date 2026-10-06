@@ -121,8 +121,6 @@ import com.ferg.awfulapp.widget.PageBar.PageBarCallbacks
 import com.ferg.awfulapp.widget.PagePicker
 import com.ferg.awfulapp.widget.WebViewSearchBar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.Strings
 import timber.log.Timber.Forest.d
@@ -148,8 +146,7 @@ import com.ferg.awfulapp.preferences.StringSetPreference
  * 
  * Can also handle an HTTP intent that refers to an SA showthread.php? url.
  */
-class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
-    SwipyRefreshLayout.OnRefreshListener {
+class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler {
 
     companion object {
         private const val THREAD_ID_KEY = "thread_id"
@@ -282,12 +279,18 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         mFAB?.setOnClickListener(onButtonClick)
         mFAB?.hide()
 
-        allowedSwipeRefreshDirections = SwipyRefreshLayoutDirection.BOTH
-        swipyLayout = view.findViewById(R.id.thread_swipe)
-        swipyLayout?.let {
-            it.setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
-            it.setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null))
-            it.isEnabled = !prefs.disablePullNext
+        refreshLayout = view.findViewById(R.id.thread_swipe)
+        refreshLayout?.let {
+            it.onRefresh = ::refresh
+            if (!prefs.disablePullNext) {
+                it.onLoadMore = {
+                    if(!displayingFullPage){
+                        refresh()
+                    } else {
+                        turnPage(true)
+                    }
+                }
+            }
         }
     }
 
@@ -436,9 +439,6 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         pageBar?.updatePagePosition(this.pageNumber, this.lastPage)
         if (activity != null) {
             invalidateOptionsMenu()
-        }
-        if (mThreadView != null) {
-            swipyLayout?.setOnRefreshListener(if (prefs.disablePullNext) null else this)
         }
     }
 
@@ -906,6 +906,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                 ThreadPageRequest(activity, this.threadId, pageNumber, userId)
                     .build(this, object : AwfulResultCallback<Void?> {
                         override fun success(result: Void?) {
+                            refreshLayout?.finishedLoading()
                             refreshInfo()
                             setProgress(75)
                             refreshPosts()
@@ -914,6 +915,7 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
                         override fun failure(error: VolleyError?) {
                             error?.let {handleCaptchaChallenge(activity, it)}
                             w("Failed to sync thread! Error: %s", error?.message)
+                            refreshLayout?.finishedLoading()
                             refreshInfo()
                             refreshPosts()
                         }
@@ -1187,18 +1189,6 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             // If we've already left the activity the webview may still be working to populate,
             // just log it
             e(e, "populateThreadView: display failed")
-        }
-    }
-
-    override fun onRefresh(swipyRefreshLayoutDirection: SwipyRefreshLayoutDirection?) {
-        if (swipyRefreshLayoutDirection == SwipyRefreshLayoutDirection.TOP) {
-            // no page turn when swiping at the top of the page
-            refresh()
-        } else if (!displayingFullPage) {
-            // always refresh if there could be more posts
-            refresh()
-        } else {
-            turnPage(true)
         }
     }
 
@@ -1488,6 +1478,10 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
             awfulActivity?.setPreferredFont(pageBar?.textView)
             pageBar?.setTextColour(ColorProvider.ACTION_BAR_TEXT.color)
         }
+        refreshLayout?.let {
+            it.spinnerTint = ColorProvider.getARLActiveColor(parentForumId)
+            it.spinnerTintInert = ColorProvider.getARLInertColor(parentForumId)
+        }
 
         mThreadView?.let {
 
@@ -1523,6 +1517,11 @@ class ThreadDisplayFragment : AwfulFragment(), NavigationEventHandler,
         // TODO: probably more things can be put in here, there's a lot to unravel
         updatePageBar()
         refreshProbationBar()
+
+        refreshLayout?.let {
+            it.spinnerTint = ColorProvider.getARLActiveColor(parentForumId)
+            it.spinnerTintInert = ColorProvider.getARLInertColor(parentForumId)
+        }
     }
 
 

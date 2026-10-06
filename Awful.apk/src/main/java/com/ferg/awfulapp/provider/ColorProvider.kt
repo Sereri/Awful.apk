@@ -131,8 +131,8 @@ enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
          * @return the ID for the appropriate color resource
          */
         @ColorRes
-        fun getSRLBackgroundColor(forumId: Int?): Int {
-            return getThemeColorResId(R.attr.srlBackgroundColor, forumId, getInstance())
+        fun getARLInertColor(forumId: Int? = null): Int {
+            return getThemeColorResId(R.attr.arlInertColor, forumId, getInstance())
         }
 
 
@@ -144,16 +144,8 @@ enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
          * 
          * @return the forum's themed color resources (if any), otherwise the default set
          */
-        fun getSRLProgressColors(forumId: Int?): IntArray {
-            val prefs = getInstance()
-            val colorsRef = TypedValue()
-            val foundThemedColors = forForum(forumId)
-                .getTheme(prefs)
-                .resolveAttribute(R.attr.srlProgressColors, colorsRef, true)
-
-            @ArrayRes val colorArrayResId =
-                if (foundThemedColors) colorsRef.data else R.array.defaultSrlProgressColors
-            return getColorResIds(colorArrayResId)
+        fun getARLActiveColor(forumId: Int? = null): Int {
+            return getThemeColorResId(R.attr.arlActiveColor, forumId, getInstance())
         }
 
 
@@ -185,7 +177,7 @@ enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
         @ColorInt
         private fun getThemeColor(
             @AttrRes colorAttr: Int,
-            forumId: Int?,
+            forumId: Int? = null,
             prefs: AwfulPreferences
         ): Int {
             val resId: Int = getThemeColorResId(colorAttr, forumId, prefs)
@@ -208,7 +200,7 @@ enum class ColorProvider(@param:AttrRes private val colorAttr: Int) {
         @ColorRes
         private fun getThemeColorResId(
             @AttrRes colorAttr: Int,
-            forumId: Int?,
+            forumId: Int? = null,
             prefs: AwfulPreferences
         ): Int {
             val colorValue = TypedValue()

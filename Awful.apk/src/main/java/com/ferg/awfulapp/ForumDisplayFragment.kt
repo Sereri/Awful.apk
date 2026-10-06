@@ -73,8 +73,6 @@ import com.ferg.awfulapp.widget.MinMaxNumberPicker
 import com.ferg.awfulapp.widget.PageBar
 import com.ferg.awfulapp.widget.PageBar.PageBarCallbacks
 import com.ferg.awfulapp.widget.PagePicker
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import timber.log.Timber.Forest.d
 import timber.log.Timber.Forest.i
 import timber.log.Timber.Forest.w
@@ -95,8 +93,7 @@ import kotlin.math.min
  * 
  * Can also handle an HTTP intent that refers to an SA forumdisplay.php? url.
  */
-class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListener,
-    NavigationEventHandler {
+class ForumDisplayFragment : AwfulFragment(), NavigationEventHandler {
 
 
     companion object {
@@ -177,13 +174,8 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // TODO: move P2R stuff into AwfulFragment
-        swipyLayout = view.findViewById(R.id.forum_swipe)
-        swipyLayout?.let {
-            it.setOnRefreshListener(this)
-            it.setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
-            it.setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null))
-        }
+        refreshLayout = view.findViewById(R.id.forum_swipe)
+        refreshLayout?.onRefresh = { syncForum() }
     }
 
     override fun onActivityCreated(aSavedState: Bundle?) {
@@ -569,10 +561,8 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
                     object : AwfulResultCallback<Void?> {
                         override fun success(result: Void?) {
                             lastRefresh = System.currentTimeMillis()
-                            // TODO: what does this even do
-//                            mRefreshBar.setColorFilter(0);
-//                            mToggleSidebar.setColorFilter(0);
                             loadFailed = false
+                            refreshLayout?.finishedLoading()
                             refreshInfo()
                             mListView?.setSelectionAfterHeaderView()
                         }
@@ -677,10 +667,6 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
                     }
                 })
         )
-    }
-
-    override fun onRefresh(swipyRefreshLayoutDirection: SwipyRefreshLayoutDirection?) {
-        syncForum()
     }
 
     private inner class ForumContentsCallback : LoaderManager.LoaderCallbacks<Cursor> {
@@ -814,5 +800,7 @@ class ForumDisplayFragment : AwfulFragment(), SwipyRefreshLayout.OnRefreshListen
         val backgroundColor = ColorProvider.BACKGROUND.getColor(currentForumId)
         mListView?.setBackgroundColor(backgroundColor)
         mListView?.cacheColorHint = backgroundColor
+        refreshLayout?.spinnerTint = ColorProvider.getARLActiveColor(currentForumId)
+        refreshLayout?.spinnerTintInert = ColorProvider.getARLInertColor(currentForumId)
     }
 }

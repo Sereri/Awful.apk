@@ -55,21 +55,19 @@ import com.ferg.awfulapp.R
 import com.ferg.awfulapp.constants.Constants
 import com.ferg.awfulapp.network.NetworkUtils
 import com.ferg.awfulapp.preferences.AwfulPreferences
-import com.ferg.awfulapp.provider.ColorProvider
 import com.ferg.awfulapp.task.AwfulRequest
 import com.ferg.awfulapp.task.SearchRequest
 import com.ferg.awfulapp.task.SearchResultPageRequest
 import com.ferg.awfulapp.thread.AwfulSearch
 import com.ferg.awfulapp.thread.AwfulSearchResult
 import com.ferg.awfulapp.thread.AwfulURL
-import com.ferg.awfulapp.widget.SwipyRefreshLayout
+import com.ferg.awfulapp.widget.AwfulRefreshLayout
 import com.google.android.material.snackbar.Snackbar
-import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection
 import org.apache.commons.lang3.ArrayUtils
 import timber.log.Timber
 import java.util.Locale.getDefault
 
-class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout.OnRefreshListener {
+class SearchFragment : AwfulFragment() {
 
     private val mSearchQuery by lazy { requireView().findViewById<EditText>(R.id.search_query)!! }
 
@@ -90,13 +88,10 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
     }
     private var mSearchResults: MutableList<AwfulSearch> = mutableListOf()
 
-    private val mSRL: SwipyRefreshLayout by lazy {
-        (requireView().findViewById<SwipyRefreshLayout>(R.id.search_srl)!!)
+    private val mSRL: AwfulRefreshLayout by lazy {
+        (requireView().findViewById<AwfulRefreshLayout>(R.id.search_srl)!!)
                 .apply {
-                    setOnRefreshListener(this@SearchFragment)
-                    setColorSchemeResources(*ColorProvider.getSRLProgressColors(null))
-                    setProgressBackgroundColor(ColorProvider.getSRLBackgroundColor(null))
-                    isEnabled = false
+                    onLoadMore = ::loadSearchResults
                 }
     }
 
@@ -126,8 +121,8 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
     }
 
 
-    override fun onPreferenceChange(prefs: AwfulPreferences, key: String?) {
-        super.onPreferenceChange(prefs, key)
+    override fun onPreferenceChange(preferences: AwfulPreferences, key: String?) {
+        super.onPreferenceChange(preferences, key)
         invalidateOptionsMenu()
     }
 
@@ -159,7 +154,9 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
                                 mSearchResultList.adapter?.notifyDataSetChanged()
 
                                 mMaxPageQueried = 1
-                                mSRL.isEnabled = (queryId != 0 && mMaxPageQueried < pages)
+                                if(queryId == 0 || mMaxPageQueried >= pages) {
+                                    refreshLayout?.onLoadMore = {}
+                                }
                             }
                             Timber.e("resultsFound: %s\nmQueryPages: %s\nmQueryId: %s", result.resultsFound, mQueryPages, mQueryId)
                         }
@@ -236,7 +233,7 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
     }
 
 
-    override fun onRefresh(direction: SwipyRefreshLayoutDirection) {
+    fun loadSearchResults() {
         Timber.i("onRefresh: %s", mMaxPageQueried)
         val preItemCount = mSearchResultList.adapter?.itemCount ?: 0
         NetworkUtils.queueRequest(SearchResultPageRequest(this.requireContext(), mQueryId, mMaxPageQueried + 1).build(null, object : AwfulRequest.AwfulResultCallback<MutableList<AwfulSearch>> {
@@ -246,15 +243,15 @@ class SearchFragment : AwfulFragment(), com.orangegangsters.github.swipyrefreshl
                 mSearchResults.addAll(result)
                 mMaxPageQueried++
                 if (mMaxPageQueried >= mQueryPages) {
-                    mSRL.isEnabled = false
+                    mSRL.onLoadMore = {}
                 }
                 mSearchResultList.adapter?.notifyDataSetChanged()
-                mSRL.isRefreshing = false
+                mSRL.finishedLoading()
                 mSearchResultList.smoothScrollToPosition(preItemCount + 1)
             }
 
             override fun failure(error: VolleyError?) {
-                mSRL.isRefreshing = false
+                mSRL.finishedLoading()
             }
         }))
     }
